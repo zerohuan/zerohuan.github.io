@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Spring容器的启动和IoC容器原理 | Zerohuan的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="#1. Spring配置的几种方式：
+目前最新的Spring一般有3种配置方式：基于XML配置；混合配置（XML配置+注解+XML配置扫描路径）；基于代码配置（Spring3.1后，可以完全使用注解+WebApplicationInitializer）；通过XML配置Spring的基本做法：
+&amp;lt;!---①从类路径下加载spring配置文件-&amp;gt;
+&amp;lt;context-param&amp;gt;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring容器的启动和IoC容器原理">
+<meta property="og:url" content="http://blog.ssearch.cn/2015/11/30/Spring容器的启动和IoC容器原理/index.html">
+<meta property="og:site_name" content="Zerohuan的博客">
+<meta property="og:description" content="#1. Spring配置的几种方式：
+目前最新的Spring一般有3种配置方式：基于XML配置；混合配置（XML配置+注解+XML配置扫描路径）；基于代码配置（Spring3.1后，可以完全使用注解+WebApplicationInitializer）；通过XML配置Spring的基本做法：
+&amp;lt;!---①从类路径下加载spring配置文件-&amp;gt;
+&amp;lt;context-param&amp;gt;">
+<meta property="og:updated_time" content="2015-11-29T16:40:06.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spring容器的启动和IoC容器原理">
+<meta name="twitter:description" content="#1. Spring配置的几种方式：
+目前最新的Spring一般有3种配置方式：基于XML配置；混合配置（XML配置+注解+XML配置扫描路径）；基于代码配置（Spring3.1后，可以完全使用注解+WebApplicationInitializer）；通过XML配置Spring的基本做法：
+&amp;lt;!---①从类路径下加载spring配置文件-&amp;gt;
+&amp;lt;context-param&amp;gt;">
+  
+    <link rel="alternative" href="/atom.xml" title="Zerohuan的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+	<header id="header" class="inner">
+		<a href="/" class="profilepic">
+			
+			<img lazy-src="/avatar.jpg" class="js-avatar">
+			
+		</a>
+
+		<hgroup>
+		  <h1 class="header-author"><a href="/">Zerohuan</a></h1>
+		</hgroup>
+
+		
+		<p class="header-subtitle">我在路上</p>
+		
+
+		
+			<div class="switch-btn">
+				<div class="icon">
+					<div class="icon-ctn">
+						<div class="icon-wrap icon-house" data-idx="0">
+							<div class="birdhouse"></div>
+							<div class="birdhouse_holes"></div>
+						</div>
+						<div class="icon-wrap icon-ribbon hide" data-idx="1">
+							<div class="ribbon"></div>
+						</div>
+						
+						<div class="icon-wrap icon-link hide" data-idx="2">
+							<div class="loopback_l"></div>
+							<div class="loopback_r"></div>
+						</div>
+						
+						
+						<div class="icon-wrap icon-me hide" data-idx="3">
+							<div class="user"></div>
+							<div class="shoulder"></div>
+						</div>
+						
+					</div>
+					
+				</div>
+				<div class="tips-box hide">
+					<div class="tips-arrow"></div>
+					<ul class="tips-inner">
+						<li>菜单</li>
+						<li>标签</li>
+						
+						<li>友情链接</li>
+						
+						
+						<li>关于我</li>
+						
+					</ul>
+				</div>
+			</div>
+		
+
+		<div class="switch-area">
+			<div class="switch-wrap">
+				<section class="switch-part switch-part1">
+					<nav class="header-menu">
+						<ul>
+						
+							<li><a href="/">主页</a></li>
+				        
+							<li><a href="/archives">所有文章</a></li>
+				        
+						</ul>
+					</nav>
+					<nav class="header-nav">
+						<div class="social">
+							
+								<a class="github" target="_blank" href="https://github.com/zerohuan" title="github">github</a>
+					        
+								<a class="weibo" target="_blank" href="/#" title="weibo">weibo</a>
+					        
+								<a class="zhihu" target="_blank" href="http://www.zhihu.com/people/yan-jin-heng" title="zhihu">zhihu</a>
+					        
+								<a class="mail" target="_blank" href="mailto:yanjinheng@qq.com" title="mail">mail</a>
+					        
+						</div>
+					</nav>
+				</section>
+				
+				
+				<section class="switch-part switch-part2">
+					<div class="widget tagcloud" id="js-tagcloud">
+						<a href="/tags/JVM/" style="font-size: 20px;">JVM</a> <a href="/tags/Java基础知识/" style="font-size: 10px;">Java基础知识</a>
+					</div>
+				</section>
+				
+				
+				
+				<section class="switch-part switch-part3">
+					<div id="js-friends">
+					
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">奥巴马的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">卡卡的美丽传说</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">本泽马的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">吉格斯的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">习大大大不同</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">托蒂的博客</a>
+			        
+			        </div>
+				</section>
+				
+
+				
+				
+				<section class="switch-part switch-part4">
+				
+					<div id="js-aboutme">现南京大学研究生一枚，目前专注于Java Web方向。</div>
+				</section>
+				
+			</div>
+		</div>
+	</header>				
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+  	<div class="overlay">
+  		<div class="slider-trigger"></div>
+  		<h1 class="header-author js-mobile-header hide">Zerohuan</h1>
+  	</div>
+	<div class="intrude-less">
+		<header id="header" class="inner">
+			<div class="profilepic">
+				<img lazy-src="/avatar.jpg" class="js-avatar">
+			</div>
+			<hgroup>
+			  <h1 class="header-author">Zerohuan</h1>
+			</hgroup>
+			
+			<p class="header-subtitle">我在路上</p>
+			
+			<nav class="header-menu">
+				<ul>
+				
+					<li><a href="/">主页</a></li>
+		        
+					<li><a href="/archives">所有文章</a></li>
+		        
+		        <div class="clearfix"></div>
+				</ul>
+			</nav>
+			<nav class="header-nav">
+				<div class="social">
+					
+						<a class="github" target="_blank" href="https://github.com/zerohuan" title="github">github</a>
+			        
+						<a class="weibo" target="_blank" href="/#" title="weibo">weibo</a>
+			        
+						<a class="zhihu" target="_blank" href="http://www.zhihu.com/people/yan-jin-heng" title="zhihu">zhihu</a>
+			        
+						<a class="mail" target="_blank" href="mailto:yanjinheng@qq.com" title="mail">mail</a>
+			        
+				</div>
+			</nav>
+		</header>				
+	</div>
+</nav>
+      <div class="body-wrap"><article id="post-Spring容器的启动和IoC容器原理" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/11/30/Spring容器的启动和IoC容器原理/" class="article-date">
+  	<time datetime="2015-11-29T16:30:52.000Z" itemprop="datePublished">2015-11-30</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Spring容器的启动和IoC容器原理
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+        
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>#1. Spring配置的几种方式：</p>
+<p>目前最新的Spring一般有3种配置方式：<br>基于XML配置；<br>混合配置（XML配置+注解+XML配置扫描路径）；<br>基于代码配置（Spring3.1后，可以完全使用注解+WebApplicationInitializer）；<br>通过XML配置Spring的基本做法：</p>
+<pre><code><span class="variable">&lt;!---①从类路径下加载spring配置文件-&gt;</span>
+<span class="variable">&lt;context-param&gt;</span>
+    <span class="variable">&lt;param-name&gt;</span>contextConfigLocation<span class="variable">&lt;/param-name&gt;</span>
+    <span class="variable">&lt;param-value&gt;</span>
+        classpath<span class="keyword">*</span>:config/spring/common/appcontext-<span class="keyword">*</span>.xml,
+        classpath<span class="keyword">*</span>:config/spring/local/appcontext-<span class="keyword">*</span>.xml,
+        classpath<span class="keyword">*</span>:/config/spring/abtest/appcontext-<span class="keyword">*</span>.xml,
+        classpath<span class="keyword">*</span>:/config/spring/pagelet/appcontext-pagelet-core.xml
+    <span class="variable">&lt;/param-value&gt;</span>
+<span class="variable">&lt;/context-param&gt;</span>
+
+<span class="variable">&lt;!--②负责启动spring容器的监听器，它将使用①处的上下文参数获得spring配置文件地址--&gt;</span>
+<span class="variable">&lt;listener&gt;</span>
+    <span class="variable">&lt;listener-class&gt;</span><span class="variable">&lt;span style="color:#ff0000;"&gt;</span>org.springframework.web.context.ContextLoaderListener<span class="variable">&lt;/span&gt;</span><span class="variable">&lt;/listener-class&gt;</span>
+<span class="variable">&lt;/listener&gt;</span>
+</code></pre><p>通过<strong>WebApplicationInitializer</strong>的基本做法：</p>
+<pre><code>@Override
+<span class="keyword">public</span> <span class="keyword">void</span> onStartup(ServletContext <span class="keyword">container</span>) throws ServletException {
+    logger.info(<span class="string">"Initializer startUp..."</span>);
+    <span class="keyword">container</span>.getServletRegistration(<span class="string">"default"</span>).addMapping(<span class="string">"/resource/*"</span>);
+
+    <span class="comment">//Use ContextLoaderListener to create a root context, it is father of contexts used in dispatcherServlet</span>
+    AnnotationConfigWebApplicationContext rootContext = <span class="keyword">new</span> AnnotationConfigWebApplicationContext();
+    rootContext.register(RootContextConfiguration.class);
+    &lt;span style=<span class="string">"color:#ff0000;"</span>&gt;<span class="keyword">container</span>.addListener(<span class="keyword">new</span> ContextLoaderListener(rootContext));&lt;/span&gt;
+}
+</code></pre><p>这里使用初始化器启动Spring，初始化器ServletContainerInitializer是Java EE6中一个新接口，它会在所有监听器启动之前调用它们的的onStartUp方法，并且它不需要通过web.xml部署描述符来定义，需要在/META-INF/services/javax.servlet.ServletContainerInitializer中列出具体的实现，Servlet容器在启动时会自动加载它们并调用onStartUp方法。</p>
+<p>但是文件不能放在WAR文件的/META-INF/services中，而是需要放在JAR文件的/META-INF/services中，这样就很不方便。Spring Framework提供了一个桥接口，在Spring中SpringServletContainerInitializer类实现了ServletContainerInitializer接口，Spring的JAR中列出了SpringServletContainerInitializer，如下。在SpringServletContainerInitializer中会扫描所有WebApplicationInitializer的实现，调用它们的onStartUp方法，因此我们不必在劳神费心了。</p>
+<p>通过XML和Java代码两种方式我们可以看到实际上Spring是通过ContextLoaderListener来启动的。基于Servlet容器启动的顺序应该有：Initializer—&gt;listener-&gt;filter-&gt;servlet。<br>因此我们来看看ContextLoaderListener作为ServletContextListener到底是如何启动Spring的。</p>
+<p>#2. Spring的初始化和启动：</p>
+<p>ContextLoaderListener的contextInitialized方法委托ContextLoader的initWebApplicationContext方法进行上文初始化，我们来看看一些关键步骤：<br>步骤一：创建上文对象实例：</p>
+<pre><code><span class="keyword">if</span> (<span class="keyword">this</span>.context == <span class="literal">null</span>) {
+    <span class="keyword">this</span>.context = createWebApplicationContext(servletContext);
+}
+</code></pre><p>在基于代码的配置中由于手动创建了AnnotationConfigWebApplication实例，因此此时context已经创建，如果通过XML配置，createWebApplicaitonContext方法会首先检查Servlet定义中有没有定义参数contextClass指明Context的类型，如果没有通过反射创建默认类型org.springframework.web.context.support.XmlWebApplicationContext的实例。</p>
+<p>步骤二：开始配置刷新Spring上下文：</p>
+<pre><code><span class="keyword">if</span> (<span class="keyword">this</span>.context <span class="keyword">instanceof</span> ConfigurableWebApplicationContext) {
+                ConfigurableWebApplicationContext cwac = (ConfigurableWebApplicationContext) <span class="keyword">this</span>.context;
+                <span class="keyword">if</span> (!cwac.isActive()) {
+                    <span class="comment">// The context has not yet been refreshed -&gt; provide services such as</span>
+                    <span class="comment">// setting the parent context, setting the application context id, etc</span>
+                    <span class="keyword">if</span> (cwac.getParent() == <span class="literal">null</span>) {
+                        <span class="comment">// The context instance was injected without an explicit parent -&gt;</span>
+                        <span class="comment">// determine parent for root web application context, if any.</span>
+                        ApplicationContext parent = loadParentContext(servletContext);
+                        cwac.setParent(parent);
+                    }
+                    configureAndRefreshWebApplicationContext(cwac, servletContext);
+                }
+            }
+</code></pre><p>因为AnnotationConfigWebApplication和XmlWebApplicationContext都是ConfigurableWebApplicationContext实现（实际的web项目中Context一般都是继承于AbstractRefreshableWebApplicationContext的），所以对上下文进行配置和刷新，关键在于configureAndRefreshWebApplicationContext方法，下面我们同样看看该方法的关键部分。</p>
+<p>步骤三：加载重要初始化参数：</p>
+<pre><code><span class="keyword">if</span> (ObjectUtils.identityToString(wac).equals(wac.getId())) {
+            <span class="comment">// The application context id is still set to its original default value</span>
+            <span class="comment">// -&gt; assign a more useful id based on available information</span>
+            <span class="built_in">String</span> idParam = sc.getInitParameter(CONTEXT_ID_PARAM);
+            <span class="keyword">if</span> (idParam != <span class="literal">null</span>) {
+                wac.setId(idParam);
+            }
+            <span class="keyword">else</span> {
+                <span class="comment">// Generate default id...</span>
+                wac.setId(ConfigurableWebApplicationContext.APPLICATION_CONTEXT_ID_PREFIX +
+                        ObjectUtils.getDisplayString(sc.getContextPath()));
+            }
+        }
+
+        wac.setServletContext(sc);
+        <span class="built_in">String</span> configLocationParam = sc.getInitParameter(CONFIG_LOCATION_PARAM);
+        <span class="keyword">if</span> (configLocationParam != <span class="literal">null</span>) {
+            wac.setConfigLocation(configLocationParam);
+        }
+
+        <span class="comment">// The wac environment's #initPropertySources will be called in any case when the context</span>
+        <span class="comment">// is refreshed; do it eagerly here to ensure servlet property sources are in place for</span>
+        <span class="comment">// use in any post-processing or initialization that occurs below prior to #refresh</span>
+        ConfigurableEnvironment env = wac.getEnvironment();
+        <span class="keyword">if</span> (env <span class="keyword">instanceof</span> ConfigurableWebEnvironment) {
+            ((ConfigurableWebEnvironment) env).initPropertySources(sc, <span class="literal">null</span>);
+        }
+</code></pre><p>（1）首先加载contextId，同样检查有无配置，否则使用默认的；<br>（2）绑定ServletContext；<br>（3）绑定config文件的位置，这一步将我们在部署描述符中设置上下文参数contextConfigLocation指定的配置文件位置载入；<br>（4）绑定环境和profile；</p>
+<p>步骤四：加载自定义上下文初始化器并按指定顺序执行初始化方法：</p>
+<pre><code>customizeContext<span class="list">(<span class="keyword">sc</span>, wac)</span><span class="comment">;</span>
+</code></pre><p>Spring提供了一个ApplicationContextInitializer接口，可以通过context-param和init-param指定类名，这里同样是通过反射创建实例，并根据Order注解大小排序，按序执行初始化方法；进行context一些值的设置比如说setAllowBeanDefinitionOverriding(false)；<br>步骤五：开始刷新Bean工厂构建Bean关系网：</p>
+<p>configureAndRefreshWebApplication方法的最后一行也是最核心的一行：<br>wac.refresh();<br>这个方法完成了：<br>（1）构建BeanFactory；<br>（2）注册可能感兴趣的事件；<br>（3）创建Bean实例对象；<br>（4）触发被监听的事件；<br>“这个方法就是构建整个IoC容器过程的完整代码，了解了里面的每一行代码，基本上就了解大部分Spring的原理和功能”（摘自《深入理解Java Web技术内幕》）。这个方法的实现在AbstractApplicationContext中，让我们来看看它是如何工作：</p>
+<pre><code><span class="annotation">@Override</span>
+<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">refresh</span><span class="params">()</span> <span class="keyword">throws</span> BeansException, IllegalStateException </span>{
+    <span class="keyword">synchronized</span> (<span class="keyword">this</span>.startupShutdownMonitor) {
+        <span class="comment">// Prepare this context for refreshing.</span>
+        prepareRefresh();
+
+        <span class="comment">// Tell the subclass to refresh the internal bean factory.</span>
+        ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
+
+        <span class="comment">// Prepare the bean factory for use in this context.</span>
+        prepareBeanFactory(beanFactory);
+
+        <span class="keyword">try</span> {
+            <span class="comment">// Allows post-processing of the bean factory in context subclasses.</span>
+            postProcessBeanFactory(beanFactory);
+
+            <span class="comment">// Invoke factory processors registered as beans in the context.</span>
+            invokeBeanFactoryPostProcessors(beanFactory);
+
+            <span class="comment">// Register bean processors that intercept bean creation.</span>
+            registerBeanPostProcessors(beanFactory);
+
+            <span class="comment">// Initialize message source for this context.</span>
+            initMessageSource();
+
+            <span class="comment">// Initialize event multicaster for this context.</span>
+            initApplicationEventMulticaster();
+
+            <span class="comment">// Initialize other special beans in specific context subclasses.</span>
+            onRefresh();
+
+            <span class="comment">// Check for listener beans and register them.</span>
+            registerListeners();
+
+            <span class="comment">// Instantiate all remaining (non-lazy-init) singletons.</span>
+            finishBeanFactoryInitialization(beanFactory);
+
+            <span class="comment">// Last step: publish corresponding event.</span>
+            finishRefresh();
+        }
+
+        <span class="keyword">catch</span> (BeansException ex) {
+            logger.warn(<span class="string">"Exception encountered during context initialization - cancelling refresh attempt"</span>, ex);
+
+            <span class="comment">// Destroy already created singletons to avoid dangling resources.</span>
+            destroyBeans();
+
+            <span class="comment">// Reset 'active' flag.</span>
+            cancelRefresh(ex);
+
+            <span class="comment">// Propagate exception to caller.</span>
+            <span class="keyword">throw</span> ex;
+        }
+
+        <span class="keyword">finally</span> {
+            <span class="comment">// Reset common introspection caches in Spring's core, since we</span>
+            <span class="comment">// might not ever need metadata for singleton beans anymore...</span>
+            resetCommonCaches();
+        }
+    }
+}
+</code></pre><p>接下来详细说明Spring是如何创建BeanFactory并构建包含事件监听的Bean关系网的：</p>
+<p>步骤五-1：创建并准备BeanFactory：</p>
+<p>核心的三行代码：</p>
+<pre><code>// <span class="operator"><span class="keyword">Prepare</span> this <span class="keyword">context</span> <span class="keyword">for</span> refreshing.包括设置开始时间，活跃标志，初始化并验证environment属性集，初始化earlyApplicationEvents；
+prepareRefresh();</span>
+
+// Tell the subclass to refresh the internal bean factory.关键在于refreshBeanFactory
+ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
+
+// <span class="operator"><span class="keyword">Prepare</span> the bean factory <span class="keyword">for</span> <span class="keyword">use</span> <span class="keyword">in</span> this <span class="keyword">context</span>.
+prepareBeanFactory(beanFactory);</span>
+</code></pre><p>刷新并创建BeanFactory的关键方法：</p>
+<pre><code><span class="annotation">@Override</span>
+<span class="keyword">protected</span> <span class="keyword">final</span> <span class="function"><span class="keyword">void</span> <span class="title">refreshBeanFactory</span><span class="params">()</span> <span class="keyword">throws</span> BeansException </span>{
+    <span class="keyword">if</span> (hasBeanFactory()) {
+        destroyBeans();
+        closeBeanFactory();
+    }
+    <span class="keyword">try</span> {
+        DefaultListableBeanFactory beanFactory = createBeanFactory();
+        beanFactory.setSerializationId(getId());
+        customizeBeanFactory(beanFactory);
+        loadBeanDefinitions(beanFactory);
+        <span class="keyword">synchronized</span> (<span class="keyword">this</span>.beanFactoryMonitor) {
+            <span class="keyword">this</span>.beanFactory = beanFactory;
+        }
+    }
+    <span class="keyword">catch</span> (IOException ex) {
+        <span class="keyword">throw</span> <span class="keyword">new</span> ApplicationContextException(<span class="string">"I/O error parsing bean definition source for "</span> + getDisplayName(), ex);
+    }
+}
+</code></pre><p>（1）首先，如果当前上下文中如果已经存在BeanFactory，先删除所有缓存的Bean（使用LinkedHashSet缓存的单例，prototype的bean是不会缓存的），并将this.beanFactory置为null；<br>（2）创建DefaultListableBeanFactory，它继承了ConfigurableListableBeanFactory和AbstractAutowireCapableBeanFactory；因此它具有完整的BeanFactory功能；<br>（3）customizeBeanFactory将Context的两个配置项：allowBeanDefinitionOverriding和allowCircularReference传入BeanFactory中；<br>（4）loadBeanDefinition：查看类图可以看到还包括Bean的registry相关的类，在loadBeanDefinitions中很清除的展示了Registry接口的作用：读取用户对Bean定义，将其加载为BeanDefinition也就是IoC容器特定的数据结构；loadBeanDefinitions方法因此和读取方式有关，AnnotationWebApplicationContext和XmlWebApplicationContext有具体的实现；</p>
+<p>执行完refreshBeanFactory之后，在refresh方法中的下一步是<strong>prepareBeanFactory</strong>，这一步对刚刚建立的BeanFactory设置了重要的属性：<br>（1）设置加载类的加载器，默认为当前线程上下文加载器；<br>（2）注册ApplicaitonContextAwareProcessor，并在BeanFactory中忽略ApplicationContextAwareProcessor已经处理的一些Aware接口：EnvironmentAware，MessageSourceAware，ApplicationContextAware，ApplicationEventPublisherAware，ResourceLoaderAware，这些接口通常由Bean实现，这些类型不应该使用自动装配注入，它们用于获取对应的实例，而实例对象我们已经看到是Bean的上下文，因此，ApplicationContextAwareProcessor会在postProcessorBeforeInitialization中调用这些接口的回调方法，将当前上下文对象注入；<br>（3）注册一些特殊的类型：BeanFactory，ApplicationContext，ApplicationEventPublisher，ResourceLoader，实例对象仍然是当前Context对象；<br>（4）织入处理器和特定的类加载器，Environment相关Bean注册；</p>
+<p>AbstractApplicationContext的refresh方法接下来三行代码对Spring的扩展性起到了至关重要的作用，前两行是对已经创建的BeanFactory的配置做修改，扩展方式仍然是通过回调接口，这里是BeanFactoryPostProcessor，值得注意的是回调接口中使用的是onfigurableLIstableBeanFactory，通过这一“视图”可以防止一些不当的修改；；</p>
+<pre><code><span class="comment">// Allows post-processing of the bean factory in context subclasses.</span>
+                <span class="function">postProcessBeanFactory</span>(beanFactory);
+
+                <span class="comment">// Invoke factory processors registered as beans in the context.</span>
+                <span class="function">invokeBeanFactoryPostProcessors</span>(beanFactory);
+
+                <span class="comment">// Register bean processors that intercept bean creation.</span>
+                <span class="function">registerBeanPostProcessors</span>(beanFactory);
+</code></pre><p>步骤五-2：初始化事件多播器，注册事件监听：</p>
+<pre><code><span class="comment">// Initialize message source for this context.</span>
+<span class="function">initMessageSource</span>();
+
+<span class="comment">// Initialize event multicaster for this context.</span>
+<span class="function">initApplicationEventMulticaster</span>();
+
+<span class="comment">// Initialize other special beans in specific context subclasses.</span>
+<span class="function">onRefresh</span>();
+
+<span class="comment">// Check for listener beans and register them.</span>
+<span class="function">registerListeners</span>();
+步骤五-3：创建Bean实例对象：
+
+<span class="comment">// Instantiate all remaining (non-lazy-init) singletons.</span>
+<span class="function">finishBeanFactoryInitialization</span>(beanFactory);
+</code></pre><p>在finishBeanFactoryInitialization方法将完成Bean的初始化工作：</p>
+<pre><code>protected <span class="keyword">void</span> finishBeanFactoryInitialization(ConfigurableListableBeanFactory beanFactory) {
+    <span class="comment">// Initialize conversion service for this context.</span>
+    <span class="keyword">if</span> (beanFactory.containsBean(CONVERSION_SERVICE_BEAN_NAME) &amp;&amp;
+            beanFactory.isTypeMatch(CONVERSION_SERVICE_BEAN_NAME, ConversionService.<span class="keyword">class</span>)) {
+        beanFactory.setConversionService(
+                beanFactory.getBean(CONVERSION_SERVICE_BEAN_NAME, ConversionService.<span class="keyword">class</span>));
+    }
+
+    <span class="comment">// Initialize LoadTimeWeaverAware beans early to allow for registering their transformers early.</span>
+    <span class="built_in">String</span>[] weaverAwareNames = beanFactory.getBeanNamesForType(LoadTimeWeaverAware.<span class="keyword">class</span>, <span class="keyword">false</span>, <span class="keyword">false</span>);
+    <span class="keyword">for</span> (<span class="built_in">String</span> weaverAwareName : weaverAwareNames) {
+        getBean(weaverAwareName);
+    }
+
+    <span class="comment">// Stop using the temporary ClassLoader for type matching.</span>
+    beanFactory.setTempClassLoader(<span class="keyword">null</span>);
+
+    <span class="comment">// Allow for caching all bean definition metadata, not expecting further changes.</span>
+    beanFactory.freezeConfiguration();
+
+    <span class="comment">// Instantiate all remaining (non-lazy-init) singletons.</span>
+    beanFactory.preInstantiateSingletons();
+}
+</code></pre><p>这里首先初始化了使用织入的Bean，之后就停止使用暂时的Classloader了，并锁定了BeanFactory不允许修改；在preInstantiateSingletons方法中，将开始创建Bean实例的工作。</p>
+<p><strong>Mark：</strong>未完待续</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2015/11/29/Java中的final参数-变量-匿名内部类/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Java中的final参数/变量+匿名内部类的字节码分析，以及Java 8中的使用</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<div class="share">
+	<!-- JiaThis Button BEGIN -->
+	<div class="jiathis_style">
+		<span class="jiathis_txt">分享到：</span>
+		<a class="jiathis_button_tsina"></a>
+		<a class="jiathis_button_cqq"></a>
+		<a class="jiathis_button_douban"></a>
+		<a class="jiathis_button_weixin"></a>
+		<a class="jiathis_button_tumblr"></a>
+		<a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jtico jtico_jiathis" target="_blank"></a>
+	</div>
+	<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=1405949716054953" charset="utf-8"></script>
+	<!-- JiaThis Button END -->
+</div>
+
+
+
+<div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="Spring容器的启动和IoC容器原理" data-title="Spring容器的启动和IoC容器原理" data-url="http://blog.ssearch.cn/2015/11/30/Spring容器的启动和IoC容器原理/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"true"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+
+
+</div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info">
+    	<div class="footer-left">
+    		&copy; 2015 Zerohuan
+    	</div>
+      	<div class="footer-right">
+      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
+      	</div>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+
+<script>
+	var yiliaConfig = {
+		fancybox: true,
+		mathjax: true,
+		animate: true,
+		isHome: false,
+		isPost: true,
+		isArchive: false,
+		isTag: false,
+		isCategory: false,
+		open_in_new: true
+	}
+</script>
+<script src="http://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js" type="text/javascript"></script>
+<script src="/js/main.js" type="text/javascript"></script>
+
+
+
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  </div>
+</body>
+</html>

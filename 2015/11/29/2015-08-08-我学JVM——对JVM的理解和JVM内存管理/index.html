@@ -3,21 +3,21 @@
 <head>
   <meta charset="utf-8">
   
-  <title>对JVM的理解和JVM体系结构 | Zerohuan的博客</title>
+  <title>对JVM的理解和JVM体系结构详解 | Zerohuan的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="Java虚拟机是Java运行的平台和基础。通过字节码技术和JVM才有了Java平台无关性的实现。
 1. 对JVM的理解JVM，顾名思义，它是对计算机的抽象。现代计算机的计算功能有：指令集，计算单元，存储单元，寻址方式，寄存器定义组成。对应于JVM，也有自己的指令集，同样有自己的内存布局（存储单元），执行引擎（计算单元和寄存器），通过引用（符号引用和直接引用）来定位资源。
 JVM同样具有公有设计和私">
 <meta property="og:type" content="article">
-<meta property="og:title" content="对JVM的理解和JVM体系结构">
+<meta property="og:title" content="对JVM的理解和JVM体系结构详解">
 <meta property="og:url" content="http://blog.ssearch.cn/2015/11/29/2015-08-08-我学JVM——对JVM的理解和JVM内存管理/index.html">
 <meta property="og:site_name" content="Zerohuan的博客">
 <meta property="og:description" content="Java虚拟机是Java运行的平台和基础。通过字节码技术和JVM才有了Java平台无关性的实现。
 1. 对JVM的理解JVM，顾名思义，它是对计算机的抽象。现代计算机的计算功能有：指令集，计算单元，存储单元，寻址方式，寄存器定义组成。对应于JVM，也有自己的指令集，同样有自己的内存布局（存储单元），执行引擎（计算单元和寄存器），通过引用（符号引用和直接引用）来定位资源。
 JVM同样具有公有设计和私">
-<meta property="og:updated_time" content="2015-11-29T12:30:51.000Z">
+<meta property="og:updated_time" content="2015-11-29T16:29:14.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="对JVM的理解和JVM体系结构">
+<meta name="twitter:title" content="对JVM的理解和JVM体系结构详解">
 <meta name="twitter:description" content="Java虚拟机是Java运行的平台和基础。通过字节码技术和JVM才有了Java平台无关性的实现。
 1. 对JVM的理解JVM，顾名思义，它是对计算机的抽象。现代计算机的计算功能有：指令集，计算单元，存储单元，寻址方式，寄存器定义组成。对应于JVM，也有自己的指令集，同样有自己的内存布局（存储单元），执行引擎（计算单元和寄存器），通过引用（符号引用和直接引用）来定位资源。
 JVM同样具有公有设计和私">
@@ -218,7 +218,7 @@ JVM同样具有公有设计和私">
         
   
     <h1 class="article-title" itemprop="name">
-      对JVM的理解和JVM体系结构
+      对JVM的理解和JVM体系结构详解
     </h1>
   
 
@@ -239,17 +239,17 @@ JVM同样具有公有设计和私">
     <div class="article-entry" itemprop="articleBody">
       
         <p>Java虚拟机是Java运行的平台和基础。通过字节码技术和JVM才有了Java平台无关性的实现。</p>
-<h1 id="1-_对JVM的理解">1. 对JVM的理解</h1><p>JVM，顾名思义，它是对计算机的抽象。<br>现代计算机的计算功能有：指令集，计算单元，存储单元，寻址方式，寄存器定义组成。对应于JVM，也有自己的指令集，同样有自己的内存布局（存储单元），执行引擎（计算单元和寄存器），通过引用（符号引用和直接引用）来定位资源。</p>
-<p>JVM同样具有<strong>公有设计和私有实现</strong>的特性：JVM规范定义了公有的必须实现的规范，各个厂商可以在此规范下具体的实现。</p>
+<h1 id="1-_对JVM的理解">1. 对JVM的理解</h1><p>JVM，顾名思义，它是对计算机的抽象。<br>现代计算机的计算功能有：<strong>指令集，计算单元，存储单元，寻址方式，寄存器</strong>定义组成。对应于JVM，也有自己的指令集，同样有自己的内存布局（存储单元），执行引擎（计算单元和寄存器），通过引用（符号引用和直接引用）来定位资源。</p>
+<p>JVM同样具有<strong>公有设计和私有实现</strong>的特性：JVM规范定义了公有的必须实现的规范，各个厂商可以在此规范下具体的实现，每一个Java进程基于一个JVM实例。</p>
 <h2 id="1-2_JVM的体系架构">1.2 JVM的体系架构</h2><p>JVM的体系架构包括4个部分：</p>
 <ol>
-<li>类加载器；</li>
-<li>执行引擎；</li>
-<li>内存区域：运行时常量池；</li>
-<li>本地方法调用；</li>
+<li><strong>类加载器</strong>；</li>
+<li><strong>执行引擎</strong>；</li>
+<li><strong>内存区域：运行时数据区域</strong>；</li>
+<li><strong>本地方法调用</strong>；</li>
 </ol>
 <h3 id="1-2-1_运行时常量池">1.2.1 运行时常量池</h3><p>JVM内存划分几个不同的部分，类加载和线程都是动态分配内存的；类加载器加载class文件（广义上的二进制字节码流）经过加载，连接（验证，准备，解析），类型信息及Class对象到了<strong>方法区</strong>，对象实例到了<strong>堆</strong>，常量到了<strong>运行时常量池（在方法区中）</strong>，线程对应一个执行引擎的实例分配一个<strong>虚拟机栈</strong>，每个方法对一个<strong>栈帧</strong>，每个栈都包含一个<strong>PC寄存器</strong>，本地方法对应<strong>本地方法栈</strong>，而对象实例则保存到了<strong>堆</strong>中。</p>
-<p><strong>（1）PC寄存器（程序计数器）</strong>：</p>
+<p><strong>（1）PC寄存器（PC Register）</strong>：<br>每个线程有自己的PC寄存器。<br>PC寄存器指向下一行字节码指令的地址（这个地址是基于方法Code属性的行号，一个方法的Code_length是u4，实际不能超过65535；还是内存的虚拟地址）。<br>方法调用/返回的关系：<br>（1）方法正常返回时，调用者方法的寄存器值可以作为被调用者的方法返回地址，被调用者正常返回时，栈帧回收，返回值压入被调用者栈帧的操作数栈，PC寄存器可以用这个返回地址恢复到指向调用者方法的下一个字节码指令地址；<br>（2）方法异常返回时，返回地址通过异常表确定。<br>（3）如果是调用natvie方法，PC寄存器中保存值为空（undefined）；</p>
 
       
     </div>
@@ -294,7 +294,7 @@ JVM同样具有公有设计和私">
 
 <div class="duoshuo">
 	<!-- 多说评论框 start -->
-	<div class="ds-thread" data-thread-key="2015-08-08-我学JVM——对JVM的理解和JVM内存管理" data-title="对JVM的理解和JVM体系结构" data-url="http://blog.ssearch.cn/2015/11/29/2015-08-08-我学JVM——对JVM的理解和JVM内存管理/"></div>
+	<div class="ds-thread" data-thread-key="2015-08-08-我学JVM——对JVM的理解和JVM内存管理" data-title="对JVM的理解和JVM体系结构详解" data-url="http://blog.ssearch.cn/2015/11/29/2015-08-08-我学JVM——对JVM的理解和JVM内存管理/"></div>
 	<!-- 多说评论框 end -->
 	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
 	<script type="text/javascript">
