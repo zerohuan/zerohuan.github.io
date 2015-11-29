@@ -196,71 +196,6 @@
 </nav>
       <div class="body-wrap">
   
-    <article id="post-2015-08-08-我学JVM——对JVM的理解和JVM内存管理" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/11/29/2015-08-08-我学JVM——对JVM的理解和JVM内存管理/" class="article-date">
-  	<time datetime="2015-11-29T08:42:04.000Z" itemprop="datePublished">2015-11-29</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/11/29/2015-08-08-我学JVM——对JVM的理解和JVM内存管理/">对JVM的理解和JVM内存管理</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>Java虚拟机是Java运行的平台和基础。通过字节码技术和JVM才有了Java平台无关性的实现。</p>
-<h1 id="1-_对JVM的理解">1. 对JVM的理解</h1><p>JVM，顾名思义，它是对计算机的抽象。<br>现代计算机的计算功能有：指令集，计算单元，存储单元，寻址方式，寄存器定义组成。对应于JVM，也有自己的指令集，同样有自己的内存布局（存储单元），执行引擎（计算单元和寄存器），通过引用（符号引用和直接引用）来定位资源。</p>
-<p>JVM同样具有<strong>公有设计和私有实现</strong>的特性：JVM规范定义了公有的必须实现的规范，各个厂商可以在此规范下具体的实现。</p>
-<h2 id="1-2_JVM的体系架构">1.2 JVM的体系架构</h2><p>JVM的体系架构包括4个部分：</p>
-<ol>
-<li>类加载器；</li>
-<li>执行引擎；</li>
-<li>内存区域：运行时常量池；</li>
-<li>本地方法调用；</li>
-</ol>
-<h3 id="1-2-1_运行时常量池">1.2.1 运行时常量池</h3><p>JVM内存划分几个不同的部分，类加载和线程都是动态分配内存的；类加载器加载class文件（广义上的二进制字节码流）经过加载，连接（验证，准备，解析），类型信息及Class对象到了<strong>方法区</strong>，对象实例到了<strong>堆</strong>，常量到了<strong>运行时常量池（在方法区）</strong>，线程对应一个执行引擎的实例分配一个<strong>虚拟机栈</strong>，每个方法对一个<strong>栈帧</strong>，本地方法对应<strong>本地方法栈</strong>。</p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
     <article id="post-2015-11-28-Java基础知识总结（二）——类和接口" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
@@ -497,6 +432,71 @@ public <span class="class"><span class="keyword">class</span> <span class="title
       
 	<div class="article-tag tagcloud">
 		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-2015-08-08-我学JVM——对JVM的理解和JVM内存管理" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/11/29/2015-08-08-我学JVM——对JVM的理解和JVM内存管理/" class="article-date">
+  	<time datetime="2015-11-29T08:42:04.000Z" itemprop="datePublished">2015-11-29</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/11/29/2015-08-08-我学JVM——对JVM的理解和JVM内存管理/">对JVM的理解和JVM内存管理</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Java虚拟机是Java运行的平台和基础。通过字节码技术和JVM才有了Java平台无关性的实现。</p>
+<h1 id="1-_对JVM的理解">1. 对JVM的理解</h1><p>JVM，顾名思义，它是对计算机的抽象。<br>现代计算机的计算功能有：指令集，计算单元，存储单元，寻址方式，寄存器定义组成。对应于JVM，也有自己的指令集，同样有自己的内存布局（存储单元），执行引擎（计算单元和寄存器），通过引用（符号引用和直接引用）来定位资源。</p>
+<p>JVM同样具有<strong>公有设计和私有实现</strong>的特性：JVM规范定义了公有的必须实现的规范，各个厂商可以在此规范下具体的实现。</p>
+<h2 id="1-2_JVM的体系架构">1.2 JVM的体系架构</h2><p>JVM的体系架构包括4个部分：</p>
+<ol>
+<li>类加载器；</li>
+<li>执行引擎；</li>
+<li>内存区域：运行时常量池；</li>
+<li>本地方法调用；</li>
+</ol>
+<h3 id="1-2-1_运行时常量池">1.2.1 运行时常量池</h3><p>JVM内存划分几个不同的部分，类加载和线程都是动态分配内存的；类加载器加载class文件（广义上的二进制字节码流）经过加载，连接（验证，准备，解析），类型信息及Class对象到了<strong>方法区</strong>，对象实例到了<strong>堆</strong>，常量到了<strong>运行时常量池（在方法区）</strong>，线程对应一个执行引擎的实例分配一个<strong>虚拟机栈</strong>，每个方法对一个<strong>栈帧</strong>，本地方法对应<strong>本地方法栈</strong>。</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li></ul>
 	</div>
 
       
