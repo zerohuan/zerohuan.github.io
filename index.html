@@ -253,7 +253,7 @@ final byte[] val<span class="variable">$bytes</span>;
 final com.jvm.showByteCode.FinalParameter this<span class="variable">$0</span>;
   descriptor: Lcom/jvm/showByteCode/FinalParameter;
   flags: ACC_FINAL, ACC_SYNTHETIC
-</code></pre><p>可以看到编译器为我们添加了3个字段，分别是：<br><strong>val$a，val$bytes，this$0；</strong><br>其中this$0是指向外围类对象实例的引用，而前两个正是从外围类方法局部变量bytes和a生成而来的，并且它们是final的。<br>再来看看FinalParameter$1类的<init>()方法：<br>描述符：</init></p>
+</code></pre><p>可以看到编译器为我们添加了3个字段，分别是：<br><strong>val\$a，val\$bytes，this\$0；</strong><br>其中this\$0是指向外围类对象实例的引用，而前两个正是从外围类方法局部变量bytes和a生成而来的，并且它们是final的。<br>再来看看FinalParameter\$1类的<init>()方法：<br>描述符：</init></p>
 <pre><code><span class="label">descriptor:</span> (Lcom/jvm/showByteCode/FinalParameter<span class="comment">;I[B)V</span>
 </code></pre><p><strong>Code属性（方法实现）</strong>：</p>
 <pre><code>Code:

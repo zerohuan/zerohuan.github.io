@@ -13,7 +13,7 @@
 <meta property="og:site_name" content="Zerohuan的博客">
 <meta property="og:description" content="在Java 8之前一个常识就是如果要在方法中定义一个匿名内部类并使用该方法内的局部变量（包括参数），需要使用final关键字修饰。网上也有很多对这种机制的解释和说明，但是大部分都是一种抽象的认识。如果能够分析一下字节码，这个问题其实很清楚。
 显然的一个事实是局部变量（称为变量a）是保存在栈帧的局部变量表中的（引用或基本类型），这里把定义匿名内部类的方法称为方法A，匿名内部类的中使用这个局部变量的方">
-<meta property="og:updated_time" content="2015-11-29T13:54:30.000Z">
+<meta property="og:updated_time" content="2015-11-29T13:57:06.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java中的final参数/变量+匿名内部类的字节码分析，以及Java 8中的使用">
 <meta name="twitter:description" content="在Java 8之前一个常识就是如果要在方法中定义一个匿名内部类并使用该方法内的局部变量（包括参数），需要使用final关键字修饰。网上也有很多对这种机制的解释和说明，但是大部分都是一种抽象的认识。如果能够分析一下字节码，这个问题其实很清楚。
@@ -266,7 +266,7 @@ final byte[] val<span class="variable">$bytes</span>;
 final com.jvm.showByteCode.FinalParameter this<span class="variable">$0</span>;
   descriptor: Lcom/jvm/showByteCode/FinalParameter;
   flags: ACC_FINAL, ACC_SYNTHETIC
-</code></pre><p>可以看到编译器为我们添加了3个字段，分别是：<br><strong>val$a，val$bytes，this$0；</strong><br>其中this$0是指向外围类对象实例的引用，而前两个正是从外围类方法局部变量bytes和a生成而来的，并且它们是final的。<br>再来看看FinalParameter$1类的<init>()方法：<br>描述符：</init></p>
+</code></pre><p>可以看到编译器为我们添加了3个字段，分别是：<br><strong>val\$a，val\$bytes，this\$0；</strong><br>其中this\$0是指向外围类对象实例的引用，而前两个正是从外围类方法局部变量bytes和a生成而来的，并且它们是final的。<br>再来看看FinalParameter\$1类的<init>()方法：<br>描述符：</init></p>
 <pre><code><span class="label">descriptor:</span> (Lcom/jvm/showByteCode/FinalParameter<span class="comment">;I[B)V</span>
 </code></pre><p><strong>Code属性（方法实现）</strong>：</p>
 <pre><code>Code:
