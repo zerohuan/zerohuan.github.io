@@ -3,21 +3,21 @@
 <head>
   <meta charset="utf-8">
   
-  <title>对JVM的理解和JVM内存管理 | Zerohuan的博客</title>
+  <title>对JVM的理解和JVM体系结构 | Zerohuan的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="Java虚拟机是Java运行的平台和基础。通过字节码技术和JVM才有了Java平台无关性的实现。
 1. 对JVM的理解JVM，顾名思义，它是对计算机的抽象。现代计算机的计算功能有：指令集，计算单元，存储单元，寻址方式，寄存器定义组成。对应于JVM，也有自己的指令集，同样有自己的内存布局（存储单元），执行引擎（计算单元和寄存器），通过引用（符号引用和直接引用）来定位资源。
 JVM同样具有公有设计和私">
 <meta property="og:type" content="article">
-<meta property="og:title" content="对JVM的理解和JVM内存管理">
+<meta property="og:title" content="对JVM的理解和JVM体系结构">
 <meta property="og:url" content="http://blog.ssearch.cn/2015/11/29/2015-08-08-我学JVM——对JVM的理解和JVM内存管理/index.html">
 <meta property="og:site_name" content="Zerohuan的博客">
 <meta property="og:description" content="Java虚拟机是Java运行的平台和基础。通过字节码技术和JVM才有了Java平台无关性的实现。
 1. 对JVM的理解JVM，顾名思义，它是对计算机的抽象。现代计算机的计算功能有：指令集，计算单元，存储单元，寻址方式，寄存器定义组成。对应于JVM，也有自己的指令集，同样有自己的内存布局（存储单元），执行引擎（计算单元和寄存器），通过引用（符号引用和直接引用）来定位资源。
 JVM同样具有公有设计和私">
-<meta property="og:updated_time" content="2015-11-29T11:17:53.000Z">
+<meta property="og:updated_time" content="2015-11-29T12:30:51.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="对JVM的理解和JVM内存管理">
+<meta name="twitter:title" content="对JVM的理解和JVM体系结构">
 <meta name="twitter:description" content="Java虚拟机是Java运行的平台和基础。通过字节码技术和JVM才有了Java平台无关性的实现。
 1. 对JVM的理解JVM，顾名思义，它是对计算机的抽象。现代计算机的计算功能有：指令集，计算单元，存储单元，寻址方式，寄存器定义组成。对应于JVM，也有自己的指令集，同样有自己的内存布局（存储单元），执行引擎（计算单元和寄存器），通过引用（符号引用和直接引用）来定位资源。
 JVM同样具有公有设计和私">
@@ -121,7 +121,7 @@ JVM同样具有公有设计和私">
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java基础知识/" style="font-size: 10px;">Java基础知识</a>
+						<a href="/tags/JVM/" style="font-size: 20px;">JVM</a> <a href="/tags/Java基础知识/" style="font-size: 10px;">Java基础知识</a>
 					</div>
 				</section>
 				
@@ -218,7 +218,7 @@ JVM同样具有公有设计和私">
         
   
     <h1 class="article-title" itemprop="name">
-      对JVM的理解和JVM内存管理
+      对JVM的理解和JVM体系结构
     </h1>
   
 
@@ -248,7 +248,8 @@ JVM同样具有公有设计和私">
 <li>内存区域：运行时常量池；</li>
 <li>本地方法调用；</li>
 </ol>
-<h3 id="1-2-1_运行时常量池">1.2.1 运行时常量池</h3><p>JVM内存划分几个不同的部分，类加载和线程都是动态分配内存的；类加载器加载class文件（广义上的二进制字节码流）经过加载，连接（验证，准备，解析），类型信息及Class对象到了<strong>方法区</strong>，对象实例到了<strong>堆</strong>，常量到了<strong>运行时常量池（在方法区）</strong>，线程对应一个执行引擎的实例分配一个<strong>虚拟机栈</strong>，每个方法对一个<strong>栈帧</strong>，本地方法对应<strong>本地方法栈</strong>。</p>
+<h3 id="1-2-1_运行时常量池">1.2.1 运行时常量池</h3><p>JVM内存划分几个不同的部分，类加载和线程都是动态分配内存的；类加载器加载class文件（广义上的二进制字节码流）经过加载，连接（验证，准备，解析），类型信息及Class对象到了<strong>方法区</strong>，对象实例到了<strong>堆</strong>，常量到了<strong>运行时常量池（在方法区中）</strong>，线程对应一个执行引擎的实例分配一个<strong>虚拟机栈</strong>，每个方法对一个<strong>栈帧</strong>，每个栈都包含一个<strong>PC寄存器</strong>，本地方法对应<strong>本地方法栈</strong>，而对象实例则保存到了<strong>堆</strong>中。</p>
+<p><strong>（1）PC寄存器（程序计数器）</strong>：</p>
 
       
     </div>
@@ -293,7 +294,7 @@ JVM同样具有公有设计和私">
 
 <div class="duoshuo">
 	<!-- 多说评论框 start -->
-	<div class="ds-thread" data-thread-key="2015-08-08-我学JVM——对JVM的理解和JVM内存管理" data-title="对JVM的理解和JVM内存管理" data-url="http://blog.ssearch.cn/2015/11/29/2015-08-08-我学JVM——对JVM的理解和JVM内存管理/"></div>
+	<div class="ds-thread" data-thread-key="2015-08-08-我学JVM——对JVM的理解和JVM内存管理" data-title="对JVM的理解和JVM体系结构" data-url="http://blog.ssearch.cn/2015/11/29/2015-08-08-我学JVM——对JVM的理解和JVM内存管理/"></div>
 	<!-- 多说评论框 end -->
 	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
 	<script type="text/javascript">
