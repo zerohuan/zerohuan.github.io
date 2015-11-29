@@ -241,7 +241,7 @@
         };
     }
 }
-</code></pre><p>根据内部类命名规则我们知道这个匿名内部类的类名是FinalParameter$1；<br>使用javap -verbose FinalParameter$1，查看该类的字节码，Unix环境下注意不要忘了转义”$”。<br>我截取了字段表部分：</p>
+</code></pre><p>根据内部类命名规则我们知道这个匿名内部类的类名是FinalParameter$1；<br>使用javap -verbose FinalParameter\$1，查看该类的字节码，Unix环境下注意不要忘了转义”\$”。<br>我截取了字段表部分：</p>
 <pre><code>final int val<span class="variable">$a</span>;
   descriptor: I
   flags: ACC_FINAL, ACC_SYNTHETIC
