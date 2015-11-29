@@ -15,7 +15,7 @@
 <meta property="og:description" content="更新：2015/11/28更新：增加多态中向上转型，方法重载，动态绑定有关编译/类加载/分派相关知识整理；
 
 主要是从面向对象的几个特性：封装、继承（复用）、多态的顺序总结Java有关的基础知识，它们的核心目的就是解耦和复用。从接口和实现分离的角度：封装：定义了“什么可以做和什么不可做”；继承和组合：提供了复用的两种手段；多态：定义了“做什么和怎么做”；接口和内部类：使得接口和实现分离更加结构化，">
-<meta property="og:updated_time" content="2015-11-29T11:01:58.000Z">
+<meta property="og:updated_time" content="2015-11-29T11:11:38.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java基础知识总结（二）——类和接口">
 <meta name="twitter:description" content="更新：2015/11/28更新：增加多态中向上转型，方法重载，动态绑定有关编译/类加载/分派相关知识整理；
@@ -116,74 +116,102 @@
 <h1 id="3-_复用类（组合，has-a和继承，is-a）：">3. 复用类（组合，has-a和继承，is-a）：</h1><h2 id="3-1_复用与初始化：">3.1 复用与初始化：</h2><p>（1）组合：主要有4种初始化形式：<br>a.在定义处进行初始化，在构造器调用前就会进行初始化；<br>b.实例初始化；<br>c.惰性初始化；<br>d.构造器中进行初始化；</p>
 <p>（2）继承与初始化：<br>构造器调用链（栈）：先调用基类的构造器；<br>因此在子类的构造器中需要在其他所有语句前显调用父类的构造器，如果是默认构造器，编译器会自动补上；</p>
 <h2 id="3-2_复用与清理：">3.2 复用与清理：</h2><p>继承中的清理：<br>finalize方法会显调用子类的再调用父类的（如果覆盖了的话），但它不能保证资源被及时释放；<br>使用自定义dispose()方法时，要注意调用父类的super.close/dispose方法，调用顺序保证和finalize相同；</p>
-<h2 id="3-3_继承中的方法覆盖和重载：">3.3 继承中的方法覆盖和重载：</h2><p>（1）子类中可以覆盖和重载父类的非私有方法（C++并不是这样）；<br>（2）继承的类和接口之间，接口和接口之间有相同的方法，签名一致，返回类型一致，可以“共用”一个方法；<br>``<br>public class ReuseClass {<br>    private interface I {<br>        void i();<br>    }</p>
-<pre><code><span class="keyword">private</span> <span class="class"><span class="keyword">interface</span> <span class="title">R</span> </span>{
-    <span class="function"><span class="keyword">void</span> <span class="title">i</span><span class="params">()</span></span>;
-}
-
-<span class="keyword">private</span> <span class="keyword">abstract</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>{
-    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">i</span><span class="params">()</span></span>;
-}
-
-<span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">B</span> <span class="keyword">extends</span> <span class="title">A</span> <span class="keyword">implements</span> <span class="title">I</span>, <span class="title">R</span> </span>{
-    <span class="comment">//可以用内部类来模拟多重继承解决意外的“重名”</span>
-    <span class="annotation">@Override</span>
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">i</span><span class="params">()</span> </span>{
-
+<h2 id="3-3_继承中的方法覆盖和重载：">3.3 继承中的方法覆盖和重载：</h2><p>（1）子类中可以覆盖和重载父类的非私有方法（C++并不是这样）；<br>（2）继承的类和接口之间，接口和接口之间有相同的方法，签名一致，返回类型一致，可以“共用”一个方法；</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ReuseClass</span> </span>{
+    <span class="keyword">private</span> <span class="class"><span class="keyword">interface</span> <span class="title">I</span> </span>{
+        <span class="function"><span class="keyword">void</span> <span class="title">i</span><span class="params">()</span></span>;
     }
-}
-</code></pre><p>}<br><code>（3）继承的类和接口之间，接口和接口之间有相同的方法，签名一致，返回类型不一致，会产生冲突，可以通过组合和内部类解决；</code><br>public static class RI {<br>        private interface I {<br>            void i();<br>        }</p>
-<pre><code>    <span class="keyword">private</span> <span class="class"><span class="keyword">interface</span> <span class="title">R</span> </span>{
-        <span class="function"><span class="keyword">int</span> <span class="title">i</span><span class="params">()</span></span>;
+
+    <span class="keyword">private</span> <span class="class"><span class="keyword">interface</span> <span class="title">R</span> </span>{
+        <span class="function"><span class="keyword">void</span> <span class="title">i</span><span class="params">()</span></span>;
     }
 
     <span class="keyword">private</span> <span class="keyword">abstract</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>{
         <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">i</span><span class="params">()</span></span>;
     }
 
-    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">B</span> <span class="keyword">extends</span> <span class="title">RI</span>.<span class="title">A</span> <span class="keyword">implements</span> <span class="title">RI</span>.<span class="title">I</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">B</span> <span class="keyword">extends</span> <span class="title">A</span> <span class="keyword">implements</span> <span class="title">I</span>, <span class="title">R</span> </span>{
         <span class="comment">//可以用内部类来模拟多重继承解决意外的“重名”</span>
         <span class="annotation">@Override</span>
         <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">i</span><span class="params">()</span> </span>{
-        }
 
-        <span class="keyword">public</span> RI.<span class="function">R <span class="title">makeR</span><span class="params">()</span> </span>{
-            <span class="keyword">return</span> <span class="keyword">new</span> RI.R() {
-                <span class="annotation">@Override</span>
-                <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">i</span><span class="params">()</span> </span>{
-                    <span class="keyword">return</span> <span class="number">0</span>;
-                }
-            };
         }
     }
 }
-</code></pre><p>``</p>
-<h2 id="3-4_向上转型：">3.4 向上转型：</h2><p>向上转型一般是安全，导出类是基类的超集；</p>
+</code></pre><p>（3）继承的类和接口之间，接口和接口之间有相同的方法，签名一致，返回类型不一致，会产生冲突，可以通过组合和内部类解决；</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">RI</span> </span>{
+        <span class="keyword">private</span> <span class="class"><span class="keyword">interface</span> <span class="title">I</span> </span>{
+            <span class="function"><span class="keyword">void</span> <span class="title">i</span><span class="params">()</span></span>;
+        }
+
+        <span class="keyword">private</span> <span class="class"><span class="keyword">interface</span> <span class="title">R</span> </span>{
+            <span class="function"><span class="keyword">int</span> <span class="title">i</span><span class="params">()</span></span>;
+        }
+
+        <span class="keyword">private</span> <span class="keyword">abstract</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>{
+            <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">i</span><span class="params">()</span></span>;
+        }
+
+        <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">B</span> <span class="keyword">extends</span> <span class="title">RI</span>.<span class="title">A</span> <span class="keyword">implements</span> <span class="title">RI</span>.<span class="title">I</span> </span>{
+            <span class="comment">//可以用内部类来模拟多重继承解决意外的“重名”</span>
+            <span class="annotation">@Override</span>
+            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">i</span><span class="params">()</span> </span>{
+            }
+
+            <span class="keyword">public</span> RI.<span class="function">R <span class="title">makeR</span><span class="params">()</span> </span>{
+                <span class="keyword">return</span> <span class="keyword">new</span> RI.R() {
+                    <span class="annotation">@Override</span>
+                    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">i</span><span class="params">()</span> </span>{
+                        <span class="keyword">return</span> <span class="number">0</span>;
+                    }
+                };
+            }
+        }
+    }
+</code></pre><h2 id="3-4_向上转型：">3.4 向上转型：</h2><p>向上转型一般是安全，导出类是基类的超集；</p>
 <h2 id="3-5_final关键字：使可变性最小化（典型的：String类）">3.5 final关键字：使可变性最小化（典型的：String类）</h2><h3 id="3-5-1_final使用情况：">3.5.1 final使用情况：</h3><p>（1）final域：注意必须要在使用前进行初始化（实例初始化器或构造器）；<br>（2）final参数；<br>（3）final方法：<br>方法锁定，防止继承修改；<br>不要用它来优化效率；<br>所有的private方法隐式地是final的（子类的同名方法不是Override是一个新方法）；<br>（4）final类：防止继承，所有的方法都是隐式final的；</p>
 <h3 id="3-5-2_不可变创建的准则：">3.5.2 不可变创建的准则：</h3><p>（1）不要提供任何会修改状态的方法；<br>（2）保证类不被扩展（private和final声明）；<br>（3）所有域是final的；<br>（4）所有域是私有的（private和包级私有）；<br>（5）保证对任何可变组件的互斥访问，如果存在非final引用，确保客户端程序不能获取它（保护性拷贝）；</p>
-<h3 id="3-5-3_不可变对象的创建：">3.5.3 不可变对象的创建：</h3><p>（1）通过构造器注入可变对象来初始化，一定要进行保护性拷贝；<br>（2）如果域之间存在约束条件，在创建前进行检查，创建之后状态不变，保证约束条件不变；<br>（3）通过静态工厂valueOf+享元模式，可以减少新对象的创建（比如，Integer等的valueOf，Integer的享元通过数组保存对象引用，字符串常量池等）；<br>``<br>public final class FinalTest {<br>    private final String a;<br>    private Inner inner;<br>    //通过实例初始化赋值final域<br>    {<br>        a = “final”;<br>    }<br>    //这是不安全的做法，客户端可以在外部修改inner<br>//    public FinalTest(Inner inner) {<br>//        this.inner = inner;<br>//    }<br>    public FinalTest(Inner inner) {<br>        //Inner是非final类，调用它的clone方法并不安全，因为可被子类覆盖<br>//        this.inner = inner.clone();<br>        //这是一个安全的做法，因为我们使用了明确的构造器<br>        this.inner = new Inner(inner.a);<br>    }</p>
-<pre><code><span class="comment">//对于没有实现cloneable接口的类，调用clone方法会抛出异常（Object中的clone是protected和native的）</span>
-<span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Inner</span> <span class="keyword">implements</span> <span class="title">Cloneable</span> </span>{
-    <span class="keyword">private</span> <span class="keyword">int</span> a;
-
-    <span class="function"><span class="keyword">public</span> <span class="title">Inner</span><span class="params">(<span class="keyword">int</span> a)</span> </span>{
-        <span class="keyword">this</span>.a = a;
+<h3 id="3-5-3_不可变对象的创建：">3.5.3 不可变对象的创建：</h3><p>（1）通过构造器注入可变对象来初始化，一定要进行保护性拷贝；<br>（2）如果域之间存在约束条件，在创建前进行检查，创建之后状态不变，保证约束条件不变；<br>（3）通过静态工厂valueOf+享元模式，可以减少新对象的创建（比如，Integer等的valueOf，Integer的享元通过数组保存对象引用，字符串常量池等）；</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">FinalTest</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">final</span> String a;
+    <span class="keyword">private</span> Inner inner;
+    <span class="comment">//通过实例初始化赋值final域</span>
+    {
+        a = <span class="string">"final"</span>;
+    }
+    <span class="comment">//这是不安全的做法，客户端可以在外部修改inner</span>
+<span class="comment">//    public FinalTest(Inner inner) {</span>
+<span class="comment">//        this.inner = inner;</span>
+<span class="comment">//    }</span>
+    <span class="function"><span class="keyword">public</span> <span class="title">FinalTest</span><span class="params">(Inner inner)</span> </span>{
+        <span class="comment">//Inner是非final类，调用它的clone方法并不安全，因为可被子类覆盖</span>
+<span class="comment">//        this.inner = inner.clone();</span>
+        <span class="comment">//这是一个安全的做法，因为我们使用了明确的构造器</span>
+        <span class="keyword">this</span>.inner = <span class="keyword">new</span> Inner(inner.a);
     }
 
-    <span class="annotation">@Override</span>
-    <span class="function"><span class="keyword">public</span> Inner <span class="title">clone</span><span class="params">()</span> </span>{
-        Inner inner = <span class="keyword">null</span>;
-        <span class="keyword">try</span> {
-            inner = (Inner)<span class="keyword">super</span>.clone();
-            inner.a = a;
-        } <span class="keyword">catch</span> (CloneNotSupportedException e) {
-            e.printStackTrace();
+    <span class="comment">//对于没有实现cloneable接口的类，调用clone方法会抛出异常（Object中的clone是protected和native的）</span>
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Inner</span> <span class="keyword">implements</span> <span class="title">Cloneable</span> </span>{
+        <span class="keyword">private</span> <span class="keyword">int</span> a;
+
+        <span class="function"><span class="keyword">public</span> <span class="title">Inner</span><span class="params">(<span class="keyword">int</span> a)</span> </span>{
+            <span class="keyword">this</span>.a = a;
         }
-        <span class="keyword">return</span> inner;
+
+        <span class="annotation">@Override</span>
+        <span class="function"><span class="keyword">public</span> Inner <span class="title">clone</span><span class="params">()</span> </span>{
+            Inner inner = <span class="keyword">null</span>;
+            <span class="keyword">try</span> {
+                inner = (Inner)<span class="keyword">super</span>.clone();
+                inner.a = a;
+            } <span class="keyword">catch</span> (CloneNotSupportedException e) {
+                e.printStackTrace();
+            }
+            <span class="keyword">return</span> inner;
+        }
     }
 }
-</code></pre><p>}<br>``</p>
-<h3 id="3-5-4_不可变对象的优点：">3.5.4 不可变对象的优点：</h3><p>（1）线程安全的，可以安全的共享；<br>（2）不用实现clone方法，可以直接使用；<br>（3）内部信息可以共享，比如String的substring方法返回的是指向同一final数组的新String对象引用；<br>（4）hashCode值可以计算一次缓存起来；</p>
+</code></pre><h3 id="3-5-4_不可变对象的优点：">3.5.4 不可变对象的优点：</h3><p>（1）线程安全的，可以安全的共享；<br>（2）不用实现clone方法，可以直接使用；<br>（3）内部信息可以共享，比如String的substring方法返回的是指向同一final数组的新String对象引用；<br>（4）hashCode值可以计算一次缓存起来；</p>
 <h3 id="3-5-5_不可变对象的缺点：">3.5.5 不可变对象的缺点：</h3><p><strong>问题1</strong>：[真正意义的缺点]由于不能修改，在一些变值的操作中可能产生大量的对象；<br><strong>解决</strong>：提供配套类进行操作，使用享元模式缓存（字符串常量池等），比如StringBuilder于String；<br><strong>问题2</strong>：不可变类如果包含一个或多个可变对象的域在序列化时并不安全（伪字节流攻击，内部域盗用）；<br><strong>解决</strong>：<br>（1）提供保护性拷贝的readObject方法：<br>必须提供一个readObject方法；<br>在readObject中进行保护性拷贝，并检查约束条件，不满足则抛出InvalidObjectException；<br>注意使用readObject中的保护性拷贝，域的final的关键字要去掉；<br>（2）readResolve方法和枚举类型：<br>因为单例模式中我们也经常使用private static final；<br>无论使用默认的序列化形式，还是自定义序列化形式，是否提供readObject无关，都会创建新的实例，违反了“单例”的要求；<br>a.使用readResolve方法，直接返回单例引用，新建的引用丢弃：</p>
 <pre><code><span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">ReadResolveWrapper</span> <span class="keyword">implements</span> <span class="title">Serializable</span> </span>{
     <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> ReadResolveWrapper SINGLETON = <span class="keyword">new</span> ReadResolveWrapper();
@@ -239,22 +267,37 @@
 <h3 id="6-3-4_局部内部类：">6.3.4 局部内部类：</h3><p>主要是为了复用和局部使用需要一个重载的构造器，否则一般不会用；<br>只要能定义局部变量的地方就可一定义；<br>它的“作用域”和局部变量一样；<br>不能有访问修饰符；<br>可以访问外围的成员和代码块的常量；</p>
 <h2 id="6-4_内部类的作用：">6.4 内部类的作用：</h2><p>（1）多重继承：<br>内部类和接口是解决Java多重继承的方案；<br>接口可以在设计的时候，将一些通用的功能设计成接口，但是对于系统中已经有的类，想要多重继承多个类，只能使用内部类的方式实现；<br>使用内部类可以解决接口/类继承时的名称冲突；</p>
 <p>（2）闭包和回调：<br>由于内部类可以访问外围的所用状态（包括private的），因此实际上它是一个“闭包”；<br>Java中没有函数指针，因此回调，通过“函数对象”实现，闭包可以作为回调对象传递给调用者；<br>类似的用法：Thread+runnable（命令模式），事件监听（观察者模式）等等；</p>
-<h2 id="6-5_内部类的继承：">6.5 内部类的继承：</h2><p>构造器的实现：<br>继承一个非静态内部类时，外围类.super()并不是在调用外围类的基类构造器，而是要继承的内部类的构造器，这是一种特殊的语法，相同的还有“外围类.new”想到这.new应该就不会对”.super”过于纠结了吧。<br>外围类实现：<br>``<br>class A {<br>    A() {<br>        System.out.println(“A”);<br>    }<br>}</p>
-<p>public class InnerClassTest extends A {<br>    class Inner {<br>        public Inner(int x) {</p>
-<pre><code>    }
+<h2 id="6-5_内部类的继承：">6.5 内部类的继承：</h2><p>构造器的实现：<br>继承一个非静态内部类时，外围类.super()并不是在调用外围类的基类构造器，而是要继承的内部类的构造器，这是一种特殊的语法，相同的还有“外围类.new”想到这.new应该就不会对”.super”过于纠结了吧。<br>外围类实现：</p>
+<pre><code><span class="class"><span class="keyword">class</span> <span class="title">A</span> {</span>
+    <span class="type">A</span>() {
+        <span class="type">System</span>.out.println(<span class="string">"A"</span>);
+    }
 }
-</code></pre><p>}<br><code>继承内部类：</code><br>public class InnerExtend extends InnerClassTest.Inner {<br>    public InnerExtend(InnerClassTest test, int x) {<br>        test.super(x);<br>    }</p>
-<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
-    <span class="keyword">new</span> InnerExtend(<span class="keyword">new</span> InnerClassTest(), <span class="number">1</span>);
+
+public <span class="class"><span class="keyword">class</span> <span class="title">InnerClassTest</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">A</span> {</span>
+    <span class="class"><span class="keyword">class</span> <span class="title">Inner</span> {</span>
+        public <span class="type">Inner</span>(int x) {
+
+        }
+    }
 }
-</code></pre><p>}<br>``</p>
-<p>PS 内部类不可以被“覆盖”<br>内部类不可以被覆盖，继承一个外围类时，即使提供一个同名的内部类也不是覆盖，查看编译之后的class文件可以发现实际上，这个内部类类名是“外围类$内部类”，外围类只是内部类的“命名空间”；</p>
+</code></pre><p>继承内部类：</p>
+<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">InnerExtend</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">InnerClassTest</span>.<span class="title">Inner</span> {</span>
+    public <span class="type">InnerExtend</span>(<span class="type">InnerClassTest</span> test, int x) {
+        test.<span class="keyword">super</span>(x);
+    }
+
+    public static void main(<span class="type">String</span>[] args) {
+        <span class="keyword">new</span> <span class="type">InnerExtend</span>(<span class="keyword">new</span> <span class="type">InnerClassTest</span>(), <span class="number">1</span>);
+    }
+}
+</code></pre><p>PS 内部类不可以被“覆盖”<br>内部类不可以被覆盖，继承一个外围类时，即使提供一个同名的内部类也不是覆盖，查看编译之后的class文件可以发现实际上，这个内部类类名是“外围类$内部类”，外围类只是内部类的“命名空间”；</p>
 <p><strong>20</strong>：<br>[1] Java编程思想 第4版；<br>[2] Effective Java；<br>[3] 深入Java Web技术内幕；<br>[4] 深入理解Java虚拟机；</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://blog.ssearch.cn/2015/11/29/2015-11-28-Java基础知识总结（二）——类和接口/" data-id="cihkf3b4000039kaaabga0690" class="article-share-link">Share</a>
+      <a data-url="http://blog.ssearch.cn/2015/11/29/2015-11-28-Java基础知识总结（二）——类和接口/" data-id="cihkffngx0003fcaawhw5ncft" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
