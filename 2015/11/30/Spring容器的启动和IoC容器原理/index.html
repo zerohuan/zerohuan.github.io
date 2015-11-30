@@ -5,23 +5,20 @@
   
   <title>Spring容器的启动和IoC容器原理 | Zerohuan的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="#1. Spring配置的几种方式：
-目前最新的Spring一般有3种配置方式：基于XML配置；混合配置（XML配置+注解+XML配置扫描路径）；基于代码配置（Spring3.1后，可以完全使用注解+WebApplicationInitializer）；通过XML配置Spring的基本做法：
+  <meta name="description" content="1. Spring配置的几种方式：目前最新的Spring一般有3种配置方式：基于XML配置；混合配置（XML配置+注解+XML配置扫描路径）；基于代码配置（Spring3.1后，可以完全使用注解+WebApplicationInitializer）；通过XML配置Spring的基本做法：
 &amp;lt;!---①从类路径下加载spring配置文件-&amp;gt;
 &amp;lt;context-param&amp;gt;">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spring容器的启动和IoC容器原理">
 <meta property="og:url" content="http://blog.ssearch.cn/2015/11/30/Spring容器的启动和IoC容器原理/index.html">
 <meta property="og:site_name" content="Zerohuan的博客">
-<meta property="og:description" content="#1. Spring配置的几种方式：
-目前最新的Spring一般有3种配置方式：基于XML配置；混合配置（XML配置+注解+XML配置扫描路径）；基于代码配置（Spring3.1后，可以完全使用注解+WebApplicationInitializer）；通过XML配置Spring的基本做法：
+<meta property="og:description" content="1. Spring配置的几种方式：目前最新的Spring一般有3种配置方式：基于XML配置；混合配置（XML配置+注解+XML配置扫描路径）；基于代码配置（Spring3.1后，可以完全使用注解+WebApplicationInitializer）；通过XML配置Spring的基本做法：
 &amp;lt;!---①从类路径下加载spring配置文件-&amp;gt;
 &amp;lt;context-param&amp;gt;">
-<meta property="og:updated_time" content="2015-11-29T16:50:32.000Z">
+<meta property="og:updated_time" content="2015-11-30T07:05:00.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spring容器的启动和IoC容器原理">
-<meta name="twitter:description" content="#1. Spring配置的几种方式：
-目前最新的Spring一般有3种配置方式：基于XML配置；混合配置（XML配置+注解+XML配置扫描路径）；基于代码配置（Spring3.1后，可以完全使用注解+WebApplicationInitializer）；通过XML配置Spring的基本做法：
+<meta name="twitter:description" content="1. Spring配置的几种方式：目前最新的Spring一般有3种配置方式：基于XML配置；混合配置（XML配置+注解+XML配置扫描路径）；基于代码配置（Spring3.1后，可以完全使用注解+WebApplicationInitializer）；通过XML配置Spring的基本做法：
 &amp;lt;!---①从类路径下加载spring配置文件-&amp;gt;
 &amp;lt;context-param&amp;gt;">
   
@@ -241,8 +238,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>#1. Spring配置的几种方式：</p>
-<p>目前最新的Spring一般有3种配置方式：<br>基于XML配置；<br>混合配置（XML配置+注解+XML配置扫描路径）；<br>基于代码配置（Spring3.1后，可以完全使用注解+WebApplicationInitializer）；<br>通过XML配置Spring的基本做法：</p>
+        <h1 id="1-_Spring配置的几种方式：">1. Spring配置的几种方式：</h1><p>目前最新的Spring一般有3种配置方式：<br>基于XML配置；<br>混合配置（XML配置+注解+XML配置扫描路径）；<br>基于代码配置（Spring3.1后，可以完全使用注解+WebApplicationInitializer）；<br>通过XML配置Spring的基本做法：</p>
 <pre><code><span class="variable">&lt;!---①从类路径下加载spring配置文件-&gt;</span>
 <span class="variable">&lt;context-param&gt;</span>
     <span class="variable">&lt;param-name&gt;</span>contextConfigLocation<span class="variable">&lt;/param-name&gt;</span>
@@ -480,6 +476,15 @@ prepareBeanFactory(beanFactory);</span>
   
     
 <nav id="article-nav">
+  
+    <a href="/2015/11/30/学习JVM的一点感想/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption"><</strong>
+      <div class="article-nav-title">
+        
+          学习JVM的一点感想
+        
+      </div>
+    </a>
   
   
     <a href="/2015/11/29/Java中的final参数-变量-匿名内部类/" id="article-nav-older" class="article-nav-link-wrap">

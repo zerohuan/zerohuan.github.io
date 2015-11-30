@@ -196,6 +196,69 @@
 </nav>
       <div class="body-wrap">
   
+    <article id="post-学习JVM的一点感想" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/11/30/学习JVM的一点感想/" class="article-date">
+  	<time datetime="2015-11-30T06:05:27.000Z" itemprop="datePublished">2015-11-30</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/11/30/学习JVM的一点感想/">学习JVM的一点感想</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="契子">契子</h1><p>最近一段时间，系统的学习整理了JVM的知识，很多在学习Java时在语言层面的困惑突然显得并没有复杂，在理解了JVM相关原理后这些困惑背后的原因显得很清晰，很简单。因此，我不由得想那些向JVM一样的基础知识，向操作系统，网络，甚至编码等等。在实际工作和学习中到底起着什么重要的作用呢，毕竟大多数人在学习这些知识的时候并没有那么的实际经验去结合起来考虑它们的实际作用。</p>
+<h1 id="思考">思考</h1><p>由计算机组成的这个庞大系统性结构一个重要性质就是分层的，我们大多数人的大多数时间都是在一个抽象的层次上工作（比如用Java，Js，C++这样的高级语言），虽然层与层之间很多设计都做到是“透明”的，屏蔽了底层的细节，但是难免有一些耦合，由于“透明”的特性，我们难免会有一些困惑。很多前辈都强调建立“系统的知识体系”的重要，我想我在学习中也渐渐明白了这一点。</p>
+<h2 id="说说我在实际中的一些困惑或者思考：">说说我在实际中的一些困惑或者思考：</h2><ol>
+<li><p>在没有很好的掌握设计模式的时候，我觉得Java里的东西太多了，就拿字符串操作来说，光有String还不行，必须有StringBuffer和StringBuilder，在循环里使用+操作String会产生很多StringBuilder对象，为什么要这么麻烦。后来在看了一些东西后我明白字符串为了避免重复创建，它们是不可变的，故而可以共享，因此操作的时候会产生大量的字符串组合，所有需要StirngBuilder这个可变辅助类保存中间状态，并且它使用了生成器模式来接受大量的参数。正是因为理解了设计模式，我在去看Java和像Spirng这样复杂系统就可以发现其中的规律和设计思想，学会理解组件/类之间的关联和意义。</p>
+</li>
+<li><p>学习编码的时候，我知道了字顺，高位和低位，并且也知道了Java的字节码是以8字节为最小单位的Big-endian的字顺保存。因此，写一个将字节码int类型转换成byte数组的函数时我想到了这一点，我当时在想，如果我不知道Big-endian和Java字节码的字顺我是不是又得产生困惑了，然后搜一通了。</p>
+</li>
+<li><p>还有一个Java语言层面的例子，内部类中使用外围类方法的局部变量要加final，当时我觉得这个理解起来很抽象，去网上搜了一搜，很多人从作用域、生命周期等等角度分析，当时觉得很有道理，但是随着学习的深入，我觉得好像不是这么回事，看了JVM相关知识后，我动手查看了下外围类和内部类的字节码，清楚的看到了内部类实际上时间局部变量的值通过&lt;init&gt;方法传给了由Java编译器生成的final成员变量（它是局部变量的副本），在局部变量前加final是Java设计团队为了保证一致性的设计方案。</p>
+</li>
+</ol>
+<p>例子很多。回头来说说自己的情况，本科的时候虽然也上了C++，计算机网络，数据结构等课，但是因为处在“计算机相关专业”课业的要求本身不高，一直主要靠自己，大一时接触HTML/CSS一系列东西，觉得很有趣，不停的自己动手做一些东西，到后来学习Java，Java Web，随着接触的东西越多，想的东西越多，越觉得基础的重要性。很多做东西产生的困惑，其实都是对基础概念的理解不深，不熟。很多相对底层的东西很简单，反映到高层就显得不那么明显。</p>
+<p>所以我现在觉得，以前学数据结构，计算机网络等基础知识，一方面是知识本身，一方面是对整个由计算机构建起来的系统的理解，培养和训练自己学习和思考的方式。就像分析数据库性能瓶颈，应当使用“漏斗原则”，从IO效率最低磁盘处入手，这显然建立在对硬件系统的理解上。还有理解了编译的流程和动态类型语言和静态类型语言的差别，在学习一门语言时在宏观上就有了正确思路。</p>
+<h2 id="小结">小结</h2><p>不知不觉写了很多，留在学校的日子算一算也没有多少了，剩下的时间很宝贵，我想工作后也难有这么多时间去做自己想做的事了。结合以前做的东西，写一写有些深度的代码，结合实际系统地好好巩固那些相对底层的知识是我紧迫要做的事情了。</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
     <article id="post-Spring容器的启动和IoC容器原理" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
@@ -222,8 +285,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>#1. Spring配置的几种方式：</p>
-<p>目前最新的Spring一般有3种配置方式：<br>基于XML配置；<br>混合配置（XML配置+注解+XML配置扫描路径）；<br>基于代码配置（Spring3.1后，可以完全使用注解+WebApplicationInitializer）；<br>通过XML配置Spring的基本做法：</p>
+        <h1 id="1-_Spring配置的几种方式：">1. Spring配置的几种方式：</h1><p>目前最新的Spring一般有3种配置方式：<br>基于XML配置；<br>混合配置（XML配置+注解+XML配置扫描路径）；<br>基于代码配置（Spring3.1后，可以完全使用注解+WebApplicationInitializer）；<br>通过XML配置Spring的基本做法：</p>
 <pre><code><span class="variable">&lt;!---①从类路径下加载spring配置文件-&gt;</span>
 <span class="variable">&lt;context-param&gt;</span>
     <span class="variable">&lt;param-name&gt;</span>contextConfigLocation<span class="variable">&lt;/param-name&gt;</span>
