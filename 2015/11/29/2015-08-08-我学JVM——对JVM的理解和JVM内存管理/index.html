@@ -15,8 +15,8 @@ JVM同样具有公有设计和私">
 <meta property="og:description" content="Java虚拟机是Java运行的平台和基础。通过字节码技术和JVM才有了Java平台无关性的实现。
 1. 对JVM的理解JVM，顾名思义，它是对计算机的抽象。现代计算机的计算功能有：指令集，计算单元，存储单元，寻址方式，寄存器定义组成。对应于JVM，也有自己的指令集，同样有自己的内存布局（存储单元），执行引擎（计算单元和寄存器），通过引用（符号引用和直接引用）来定位资源。
 JVM同样具有公有设计和私">
-<meta property="og:image" content="http://blog.ssearch.cn/images/jvm-memory-structure.png">
-<meta property="og:updated_time" content="2015-11-29T17:22:14.000Z">
+<meta property="og:image" content="https://zerohuan.github.io/images/jvm-memory-structure.png">
+<meta property="og:updated_time" content="2015-11-29T17:23:45.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="对JVM的理解和JVM体系结构详解">
 <meta name="twitter:description" content="Java虚拟机是Java运行的平台和基础。通过字节码技术和JVM才有了Java平台无关性的实现。
@@ -251,7 +251,7 @@ JVM同样具有公有设计和私">
 </ol>
 <h3 id="1-2-1_运行时常量池">1.2.1 运行时常量池</h3><p>JVM内存划分几个不同的部分，类加载和线程都是动态分配内存的；类加载器加载class文件（广义上的二进制字节码流）经过加载，连接（验证，准备，解析），类型信息及Class对象到了<strong>方法区</strong>，对象实例到了<strong>堆</strong>，常量到了<strong>运行时常量池（在方法区中）</strong>，线程对应一个执行引擎的实例分配一个<strong>虚拟机栈</strong>，每个方法对一个<strong>栈帧</strong>，每个栈都包含一个<strong>PC寄存器</strong>，本地方法对应<strong>本地方法栈</strong>，而对象实例则保存到了<strong>堆</strong>中。</p>
 <p><strong>（1）PC寄存器（PC Register）</strong>：<br>每个线程有自己的PC寄存器。<br>PC寄存器指向下一行字节码指令的地址（这个地址是基于方法Code属性的行号，一个方法的Code_length是u4，实际不能超过65535；还是内存的虚拟地址）。<br>方法调用/返回的关系：<br>（1）方法正常返回时，调用者方法的寄存器值可以作为被调用者的方法返回地址，被调用者正常返回时，栈帧回收，返回值压入被调用者栈帧的操作数栈，PC寄存器可以用这个返回地址恢复到指向调用者方法的下一个字节码指令地址；<br>（2）方法异常返回时，返回地址通过异常表确定。<br>（3）如果是调用natvie方法，PC寄存器中保存值为空（undefined）；</p>
-<p><img src="/images/jvm-memory-structure.png" alt="JVM"></p>
+<p><img src="https://zerohuan.github.io/images/jvm-memory-structure.png" alt="JVM"></p>
 
       
     </div>
