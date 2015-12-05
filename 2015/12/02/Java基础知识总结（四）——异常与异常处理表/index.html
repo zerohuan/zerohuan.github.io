@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Java基础知识总结（四）——异常与异常处理表 | Zerohuan的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="要想弄清楚异常的一些知识点，比如try/finally的return，异常的丢失等等，光记住“形式”是不够的，不从字节码异常表的层面分析是很难真正的将一些问题弄明白。
+先吃两个栗子（1）判断程序的返回值：
+private int hasException() {
+        int x;
+        try {
+            x = 1;
+            return x">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java基础知识总结（四）——异常与异常处理表">
+<meta property="og:url" content="http://blog.ssearch.cn/2015/12/02/Java基础知识总结（四）——异常与异常处理表/index.html">
+<meta property="og:site_name" content="Zerohuan的博客">
+<meta property="og:description" content="要想弄清楚异常的一些知识点，比如try/finally的return，异常的丢失等等，光记住“形式”是不够的，不从字节码异常表的层面分析是很难真正的将一些问题弄明白。
+先吃两个栗子（1）判断程序的返回值：
+private int hasException() {
+        int x;
+        try {
+            x = 1;
+            return x">
+<meta property="og:updated_time" content="2015-12-05T09:24:36.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java基础知识总结（四）——异常与异常处理表">
+<meta name="twitter:description" content="要想弄清楚异常的一些知识点，比如try/finally的return，异常的丢失等等，光记住“形式”是不够的，不从字节码异常表的层面分析是很难真正的将一些问题弄明白。
+先吃两个栗子（1）判断程序的返回值：
+private int hasException() {
+        int x;
+        try {
+            x = 1;
+            return x">
+  
+    <link rel="alternative" href="/atom.xml" title="Zerohuan的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+	<header id="header" class="inner">
+		<a href="/" class="profilepic">
+			
+			<img lazy-src="/avatar.jpg" class="js-avatar">
+			
+		</a>
+
+		<hgroup>
+		  <h1 class="header-author"><a href="/">Zerohuan</a></h1>
+		</hgroup>
+
+		
+		<p class="header-subtitle">我在路上</p>
+		
+
+		
+			<div class="switch-btn">
+				<div class="icon">
+					<div class="icon-ctn">
+						<div class="icon-wrap icon-house" data-idx="0">
+							<div class="birdhouse"></div>
+							<div class="birdhouse_holes"></div>
+						</div>
+						<div class="icon-wrap icon-ribbon hide" data-idx="1">
+							<div class="ribbon"></div>
+						</div>
+						
+						<div class="icon-wrap icon-link hide" data-idx="2">
+							<div class="loopback_l"></div>
+							<div class="loopback_r"></div>
+						</div>
+						
+						
+						<div class="icon-wrap icon-me hide" data-idx="3">
+							<div class="user"></div>
+							<div class="shoulder"></div>
+						</div>
+						
+					</div>
+					
+				</div>
+				<div class="tips-box hide">
+					<div class="tips-arrow"></div>
+					<ul class="tips-inner">
+						<li>菜单</li>
+						<li>标签</li>
+						
+						<li>友情链接</li>
+						
+						
+						<li>关于我</li>
+						
+					</ul>
+				</div>
+			</div>
+		
+
+		<div class="switch-area">
+			<div class="switch-wrap">
+				<section class="switch-part switch-part1">
+					<nav class="header-menu">
+						<ul>
+						
+							<li><a href="/">主页</a></li>
+				        
+							<li><a href="/archives">所有文章</a></li>
+				        
+						</ul>
+					</nav>
+					<nav class="header-nav">
+						<div class="social">
+							
+								<a class="github" target="_blank" href="https://github.com/zerohuan" title="github">github</a>
+					        
+								<a class="weibo" target="_blank" href="/#" title="weibo">weibo</a>
+					        
+								<a class="zhihu" target="_blank" href="http://www.zhihu.com/people/yan-jin-heng" title="zhihu">zhihu</a>
+					        
+								<a class="mail" target="_blank" href="mailto:yanjinheng@qq.com" title="mail">mail</a>
+					        
+						</div>
+					</nav>
+				</section>
+				
+				
+				<section class="switch-part switch-part2">
+					<div class="widget tagcloud" id="js-tagcloud">
+						<a href="/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a>
+					</div>
+				</section>
+				
+				
+				
+				<section class="switch-part switch-part3">
+					<div id="js-friends">
+					
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">奥巴马的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">卡卡的美丽传说</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">本泽马的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">吉格斯的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">习大大大不同</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">托蒂的博客</a>
+			        
+			        </div>
+				</section>
+				
+
+				
+				
+				<section class="switch-part switch-part4">
+				
+					<div id="js-aboutme">现南京大学研究生一枚，目前专注于Java Web方向。</div>
+				</section>
+				
+			</div>
+		</div>
+	</header>				
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+  	<div class="overlay">
+  		<div class="slider-trigger"></div>
+  		<h1 class="header-author js-mobile-header hide">Zerohuan</h1>
+  	</div>
+	<div class="intrude-less">
+		<header id="header" class="inner">
+			<div class="profilepic">
+				<img lazy-src="/avatar.jpg" class="js-avatar">
+			</div>
+			<hgroup>
+			  <h1 class="header-author">Zerohuan</h1>
+			</hgroup>
+			
+			<p class="header-subtitle">我在路上</p>
+			
+			<nav class="header-menu">
+				<ul>
+				
+					<li><a href="/">主页</a></li>
+		        
+					<li><a href="/archives">所有文章</a></li>
+		        
+		        <div class="clearfix"></div>
+				</ul>
+			</nav>
+			<nav class="header-nav">
+				<div class="social">
+					
+						<a class="github" target="_blank" href="https://github.com/zerohuan" title="github">github</a>
+			        
+						<a class="weibo" target="_blank" href="/#" title="weibo">weibo</a>
+			        
+						<a class="zhihu" target="_blank" href="http://www.zhihu.com/people/yan-jin-heng" title="zhihu">zhihu</a>
+			        
+						<a class="mail" target="_blank" href="mailto:yanjinheng@qq.com" title="mail">mail</a>
+			        
+				</div>
+			</nav>
+		</header>				
+	</div>
+</nav>
+      <div class="body-wrap"><article id="post-Java基础知识总结（四）——异常与异常处理表" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/02/Java基础知识总结（四）——异常与异常处理表/" class="article-date">
+  	<time datetime="2015-12-02T05:19:32.000Z" itemprop="datePublished">2015-12-02</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Java基础知识总结（四）——异常与异常处理表
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
+	</div>
+
+        
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>要想弄清楚异常的一些知识点，比如try/finally的return，异常的丢失等等，光记住“形式”是不够的，不从字节码异常表的层面分析是很难真正的将一些问题弄明白。</p>
+<h2 id="先吃两个栗子">先吃两个栗子</h2><p>（1）判断程序的返回值：</p>
+<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">hasException</span><span class="params">()</span> </span>{
+        <span class="keyword">int</span> x;
+        <span class="keyword">try</span> {
+            x = <span class="number">1</span>;
+            <span class="keyword">return</span> x;
+        } <span class="keyword">catch</span> (Exception e) {
+            x = <span class="number">2</span>;
+            <span class="keyword">return</span> x;
+        } finally {
+            x = <span class="number">3</span>;
+        }
+    }
+</code></pre><p>结果：<br>（1）未发生异常，返回1；<br>（2）发生Exception异常返回2；<br>（3）发生其他异常，没有返回值；</p>
+<p>以正常返回为例分析：<br>Java中返回值实际上是由一个returnValue变量保存的，编译器会将finally中的逻辑查到return之前，通过查看字节码可以知道，变量x等于1时，赋值给了returnValue变量，之后才赋值为3的，因此最后返回3。</p>
+<pre><code><span class="number">0</span>: iconst_1 <span class="comment">//常量1压入操作数栈</span>
+<span class="number">1</span>: istore_1 <span class="comment">//x=1,保存到局部变量表slot 1</span>
+<span class="number">2</span>: iload_1 <span class="comment">//局部变量表slot 1也就是x压入操作数栈</span>
+<span class="number">3</span>: istore_2 <span class="comment">//栈顶值“1”保存到slot 2，returnValue = 1</span>
+<span class="number">4</span>: iconst_3 <span class="comment">//常量3压入操作数栈</span>
+<span class="number">5</span>: istore_1 <span class="comment">//栈顶值“3”保存到局部变量表slot 1, x=3</span>
+<span class="number">6</span>: iload_2 <span class="comment">//returnValue压入操作数栈</span>
+<span class="number">7</span>: ireturn <span class="comment">//返回栈顶元素，returnValue的值</span>
+</code></pre><p>（2） finally中的return：</p>
+<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">finallyReturn</span><span class="params">()</span> </span>{
+    <span class="keyword">int</span> x;
+    <span class="keyword">try</span> {
+        x = <span class="number">1</span>;
+        <span class="keyword">return</span> x;
+    } <span class="keyword">catch</span>(Exception e) {
+        x = <span class="number">2</span>;
+        <span class="keyword">return</span> x;
+    } finally {
+        x = <span class="number">3</span>;
+        <span class="keyword">return</span> <span class="number">3</span>;
+    }
+}
+</code></pre><p>结果：<br>正常返回或者Exception异常或者其他异常都返回3；</p>
+<p>分析：<br>正如前叙，编译器会将finally中的逻辑插入各个分支之中。因此try和catch中的return都不会执行到（被编译器忽略了）。查看字节码：</p>
+<pre><code><span class="number">6</span>: iconst_3 <span class="comment">//常量3压入操作数栈</span>
+<span class="number">7</span>: ireturn <span class="comment">//返回栈顶元素3</span>
+</code></pre><p>PS：<br>能看懂字节码，很多问题轻松弄明白。<br>上述字节码使用javap -verbose -private xxxx输出查看。<br>后面finally子句小节中有更系统的解释。</p>
+<h2 id="1-_异常体系">1. 异常体系</h2><p><strong>基类</strong>：Throwable；<br><strong>子类划分</strong>：Error（内部错误/资源耗尽错误），Exception（又又子类RuntimeException）；</p>
+<p><strong>是否为受检查异常：</strong><br><strong>checked异常</strong>：Exception，因为为一些不可预测的情况导致的异常，checked的目的是为了让我们能够给出相应的恢复手段；<br><strong>unchecked异常</strong>：Error和RunntimeException，后者一般是“程序员自己的问题导致的”；</p>
+<h3 id="声明checked异常：">声明checked异常：</h3><p>throws关键字；<br>class文件中可以通过方法表的Exceptions属性查看（这是javap输出的，实际上Exceptions中保存的是异常类全限定名在常量池中的索引）：</p>
+<pre><code>Exceptions:
+throws java<span class="class">.io</span><span class="class">.IOException</span>, java<span class="class">.sql</span><span class="class">.SQLException</span>
+</code></pre><h3 id="声明异常与继承：">声明异常与继承：</h3><p> 子类重写父类方法，如果父类方法声明了异常，子类方法可以：<br> （1）不声明异常；<br> （2）声明父类方法中异常或其子类异常；</p>
+<pre><code><span class="keyword">private</span> static <span class="class"><span class="keyword">class</span> <span class="title">SuperClass</span> {</span>
+    <span class="keyword">protected</span> void f() <span class="keyword">throws</span> <span class="type">IOException</span> {}
+}
+
+<span class="keyword">private</span> static <span class="class"><span class="keyword">class</span> <span class="title">SubClass1</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">SuperClass</span> {</span>
+    <span class="annotation">@Override</span>
+    <span class="keyword">protected</span> void f() <span class="keyword">throws</span> <span class="type">ZipException</span> {}
+}
+
+<span class="keyword">private</span> static <span class="class"><span class="keyword">class</span> <span class="title">SubClass2</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">SuperClass</span> {</span>
+    <span class="annotation">@Override</span>
+    <span class="keyword">protected</span> void f() {}
+}
+</code></pre><h2 id="2-_捕获异常">2. 捕获异常</h2><p>在catch语句中重新包装异常，通过设置initCause的方式保证不丢失原始异常：</p>
+<pre><code><span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">catchAndThrowNew</span><span class="params">()</span> <span class="keyword">throws</span> Throwable </span>{
+    <span class="keyword">try</span> {
+        <span class="keyword">throw</span> <span class="keyword">new</span> SQLException();
+    } <span class="keyword">catch</span> (SQLException e) {
+        Throwable se = <span class="keyword">new</span> ServletException();
+        se.initCause(e);
+        <span class="keyword">throw</span> se;
+    }
+}
+</code></pre><h3 id="finally子句：">finally子句：</h3><h4 id="（1）与return的关系：">（1）与return的关系：</h4><p>正如开头的例子：<br>当try子句中有return语句，编译器将产生一个中间变量“returnValue”，保存try中return语句中变量在try语句中的最后赋值；<br>当finally子句中有return语句，将“覆盖”try中的return；<br>当finally子句中没有return语句，try中的return因为有returnValue值，不会受finally的影响；</p>
+<h4 id="（2）嵌套的finally子句：">（2）嵌套的finally子句：</h4><p>（1）如果不同层次的finally子句中包含return，内层的return语句将被忽略，最外层的return才有效；<br>（2）如果一个内层的finally子句中包含return，外层还有finally子句（没有return），编译器同样会生成一个“returnValue”中间变量，保证内层的return逻辑，可见Java设计的思想在于保证“可见”逻辑的正确性；<br>（3）执行顺序是先内后外；</p>
+<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">nestedTryCatch</span><span class="params">()</span> </span>{
+    <span class="keyword">int</span> x;
+    <span class="keyword">try</span> {
+        <span class="keyword">try</span> {
+            x = <span class="number">2</span>;
+        } finally {
+            x = <span class="number">3</span>;
+            <span class="keyword">return</span> x;
+        }
+    } finally {
+        x = <span class="number">4</span>;
+        <span class="keyword">return</span> x;
+    }
+}
+</code></pre><h4 id="（3）finally子句与AutoClosable接口：">（3）finally子句与AutoClosable接口：</h4><p>JSE 7中提供了“try-with-resources”的简化形式：</p>
+<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">tryWithResources</span>(<span class="params"></span>) throws IOException </span>{
+    <span class="keyword">try</span>(InputStream <span class="keyword">in</span> = <span class="keyword">new</span> ByteArrayInputStream(<span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">10</span>])) {
+        <span class="keyword">try</span> (Reader reader = <span class="keyword">new</span> BufferedReader(<span class="keyword">new</span> InputStreamReader(<span class="keyword">in</span>))) {
+
+        }
+    }
+}
+</code></pre><p><strong>注意：带资源的try语句也可以有自己的catch和finally，但是要在资源关闭之后执行。</strong></p>
+<h4 id="（4）finally与丢失异常：">（4）finally与丢失异常：</h4><p>情形1：finally中的新异常：</p>
+<pre><code><span class="keyword">try</span> {
+    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();
+} <span class="keyword">finally</span> {
+    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException();
+}
+</code></pre><p>情形2：finally中的return：</p>
+<pre><code><span class="keyword">try</span> {
+    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();
+} <span class="keyword">finally</span> {
+    <span class="keyword">return</span>;
+} 
+</code></pre><p>情形3：finally中没有新异常和return：</p>
+<pre><code><span class="keyword">try</span> {
+    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();
+} <span class="keyword">finally</span> {
+    <span class="keyword">int</span> x = <span class="number">3</span>;
+}
+</code></pre><h4 id="字节码分析：">字节码分析：</h4><p>首先，athrow指令是将栈顶异常引用抛出：<br>（1）情况1的字节码：</p>
+<pre><code>Code:
+  <span class="built_in">stack</span>=<span class="number">2</span>, locals=<span class="number">2</span>, args_size=<span class="number">1</span>
+     <span class="number">0</span>: <span class="keyword">new</span>           <span class="preprocessor">#<span class="number">21</span>                 <span class="comment">// class java/lang/IllegalArgumentException</span></span>
+     <span class="number">3</span>: dup
+     <span class="number">4</span>: invokespecial <span class="preprocessor">#<span class="number">22</span>                 <span class="comment">// Method java/lang/IllegalArgumentException."&lt;init&gt;":()V</span></span>
+     <span class="number">7</span>: athrow
+     <span class="number">8</span>: astore_1
+     <span class="number">9</span>: <span class="keyword">new</span>           <span class="preprocessor">#<span class="number">23</span>                 <span class="comment">// class java/lang/IllegalStateException</span></span>
+    <span class="number">12</span>: dup
+    <span class="number">13</span>: invokespecial <span class="preprocessor">#<span class="number">24</span>                 <span class="comment">// Method java/lang/IllegalStateException."&lt;init&gt;":()V</span></span>
+    <span class="number">16</span>: athrow
+  Exception table:
+     from    to  target type
+         <span class="number">0</span>     <span class="number">9</span>     <span class="number">8</span>   any
+</code></pre><p>分析：<br>从异常表中可以看到，0到9行中如果有任何的异常出现，转到8行进行处理，第8行之后就是finally之后的逻辑重新抛出了新的异常；</p>
+<p>（2）情形3字节码分析：</p>
+<pre><code>Code:
+  <span class="built_in">stack</span>=<span class="number">2</span>, locals=<span class="number">3</span>, args_size=<span class="number">1</span>
+     <span class="number">0</span>: <span class="keyword">new</span>           <span class="preprocessor">#<span class="number">21</span>                 <span class="comment">// class java/lang/IllegalArgumentException</span></span>
+     <span class="number">3</span>: dup
+     <span class="number">4</span>: invokespecial <span class="preprocessor">#<span class="number">22</span>                 <span class="comment">// Method java/lang/IllegalArgumentException."&lt;init&gt;":()V</span></span>
+     <span class="number">7</span>: athrow
+     <span class="number">8</span>: astore_1
+     <span class="number">9</span>: iconst_3
+    <span class="number">10</span>: istore_2
+    <span class="number">11</span>: aload_1
+    <span class="number">12</span>: athrow
+  Exception table:
+     from    to  target type
+         <span class="number">0</span>     <span class="number">9</span>     <span class="number">8</span>   any
+</code></pre><p>分析：异常表的逻辑和情形1是相同的，但是finally的逻辑对应的字节码将局部变量表中的异常引用取出执行了athrow；</p>
+<h3 id="因此，可以说finally的return和异常覆盖内层或者try中的return和异常">因此，可以说finally的return和异常覆盖内层或者try中的return和异常</h3><h2 id="3-_堆栈跟踪">3. 堆栈跟踪</h2><p>（1） Throwable的方法：printStackTrace和getStackTrace；<br>（2）Thread.getAllStackTraces()；</p>
+<h2 id="4-_异常使用技巧">4. 异常使用技巧</h2><p>（1）不能用异常处理代替逻辑判断，因为异常处理的性能开销较大；<br>（2）不要过分细化异常及处理；<br>（3）不要压制异常，异常要么声明，要么正确在该方法内处理；<br>（4）设计具有意义的自定义异常体系；</p>
+<p>PS：其他一些好的做法向《Efftive Java》中说的很详细。</p>
+<h2 id="5-_关于Java中的断言和日志">5. 关于Java中的断言和日志</h2><p>就我的经验来看，还是使用开源的框架中的断言（比如Spring Framework中的断言）和日志（比如Log4j）比较合适。</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2015/12/02/Java基础知识总结（二）——NIO/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption"><</strong>
+      <div class="article-nav-title">
+        
+          Java基础知识总结（二）——NIO
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/12/02/Java基础知识总结（五）——安全/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Java基础知识总结（五）——安全</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<div class="share">
+	<!-- JiaThis Button BEGIN -->
+	<div class="jiathis_style">
+		<span class="jiathis_txt">分享到：</span>
+		<a class="jiathis_button_tsina"></a>
+		<a class="jiathis_button_cqq"></a>
+		<a class="jiathis_button_douban"></a>
+		<a class="jiathis_button_weixin"></a>
+		<a class="jiathis_button_tumblr"></a>
+		<a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jtico jtico_jiathis" target="_blank"></a>
+	</div>
+	<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=1405949716054953" charset="utf-8"></script>
+	<!-- JiaThis Button END -->
+</div>
+
+
+
+<div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="Java基础知识总结（四）——异常与异常处理表" data-title="Java基础知识总结（四）——异常与异常处理表" data-url="http://blog.ssearch.cn/2015/12/02/Java基础知识总结（四）——异常与异常处理表/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"true"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+
+
+</div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info">
+    	<div class="footer-left">
+    		&copy; 2015 Zerohuan
+    	</div>
+      	<div class="footer-right">
+      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
+      	</div>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+
+<script>
+	var yiliaConfig = {
+		fancybox: true,
+		mathjax: true,
+		animate: true,
+		isHome: false,
+		isPost: true,
+		isArchive: false,
+		isTag: false,
+		isCategory: false,
+		open_in_new: true
+	}
+</script>
+<script src="http://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js" type="text/javascript"></script>
+<script src="/js/main.js" type="text/javascript"></script>
+
+
+
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  </div>
+</body>
+</html>
