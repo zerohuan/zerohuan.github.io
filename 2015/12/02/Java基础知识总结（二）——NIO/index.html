@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Java基础知识总结（二）——NIO | Zerohuan的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="关于NIO这部分，除了《Java编程思想》中的介绍还有两份资料我觉得很好：一是《深入Java Web技术内幕》第2章的部分，二是并发编程网上Jakob JenkovNIO系列教程翻译，读完之后受益匪浅。
+1. NIO是什么：java.nio是JDK1.4之后加入的，它新颖的特点在于：（1）面向缓存；（2）非阻塞；（3）直接内存；首先来看看它的整体结构：一个完整的NIO程序体系应该包括Selecto">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java基础知识总结（二）——NIO">
+<meta property="og:url" content="http://blog.ssearch.cn/2015/12/02/Java基础知识总结（二）——NIO/index.html">
+<meta property="og:site_name" content="Zerohuan的博客">
+<meta property="og:description" content="关于NIO这部分，除了《Java编程思想》中的介绍还有两份资料我觉得很好：一是《深入Java Web技术内幕》第2章的部分，二是并发编程网上Jakob JenkovNIO系列教程翻译，读完之后受益匪浅。
+1. NIO是什么：java.nio是JDK1.4之后加入的，它新颖的特点在于：（1）面向缓存；（2）非阻塞；（3）直接内存；首先来看看它的整体结构：一个完整的NIO程序体系应该包括Selecto">
+<meta property="og:updated_time" content="2015-12-02T07:29:32.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java基础知识总结（二）——NIO">
+<meta name="twitter:description" content="关于NIO这部分，除了《Java编程思想》中的介绍还有两份资料我觉得很好：一是《深入Java Web技术内幕》第2章的部分，二是并发编程网上Jakob JenkovNIO系列教程翻译，读完之后受益匪浅。
+1. NIO是什么：java.nio是JDK1.4之后加入的，它新颖的特点在于：（1）面向缓存；（2）非阻塞；（3）直接内存；首先来看看它的整体结构：一个完整的NIO程序体系应该包括Selecto">
+  
+    <link rel="alternative" href="/atom.xml" title="Zerohuan的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+	<header id="header" class="inner">
+		<a href="/" class="profilepic">
+			
+			<img lazy-src="/avatar.jpg" class="js-avatar">
+			
+		</a>
+
+		<hgroup>
+		  <h1 class="header-author"><a href="/">Zerohuan</a></h1>
+		</hgroup>
+
+		
+		<p class="header-subtitle">我在路上</p>
+		
+
+		
+			<div class="switch-btn">
+				<div class="icon">
+					<div class="icon-ctn">
+						<div class="icon-wrap icon-house" data-idx="0">
+							<div class="birdhouse"></div>
+							<div class="birdhouse_holes"></div>
+						</div>
+						<div class="icon-wrap icon-ribbon hide" data-idx="1">
+							<div class="ribbon"></div>
+						</div>
+						
+						<div class="icon-wrap icon-link hide" data-idx="2">
+							<div class="loopback_l"></div>
+							<div class="loopback_r"></div>
+						</div>
+						
+						
+						<div class="icon-wrap icon-me hide" data-idx="3">
+							<div class="user"></div>
+							<div class="shoulder"></div>
+						</div>
+						
+					</div>
+					
+				</div>
+				<div class="tips-box hide">
+					<div class="tips-arrow"></div>
+					<ul class="tips-inner">
+						<li>菜单</li>
+						<li>标签</li>
+						
+						<li>友情链接</li>
+						
+						
+						<li>关于我</li>
+						
+					</ul>
+				</div>
+			</div>
+		
+
+		<div class="switch-area">
+			<div class="switch-wrap">
+				<section class="switch-part switch-part1">
+					<nav class="header-menu">
+						<ul>
+						
+							<li><a href="/">主页</a></li>
+				        
+							<li><a href="/archives">所有文章</a></li>
+				        
+						</ul>
+					</nav>
+					<nav class="header-nav">
+						<div class="social">
+							
+								<a class="github" target="_blank" href="https://github.com/zerohuan" title="github">github</a>
+					        
+								<a class="weibo" target="_blank" href="/#" title="weibo">weibo</a>
+					        
+								<a class="zhihu" target="_blank" href="http://www.zhihu.com/people/yan-jin-heng" title="zhihu">zhihu</a>
+					        
+								<a class="mail" target="_blank" href="mailto:yanjinheng@qq.com" title="mail">mail</a>
+					        
+						</div>
+					</nav>
+				</section>
+				
+				
+				<section class="switch-part switch-part2">
+					<div class="widget tagcloud" id="js-tagcloud">
+						<a href="/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a>
+					</div>
+				</section>
+				
+				
+				
+				<section class="switch-part switch-part3">
+					<div id="js-friends">
+					
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">奥巴马的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">卡卡的美丽传说</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">本泽马的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">吉格斯的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">习大大大不同</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">托蒂的博客</a>
+			        
+			        </div>
+				</section>
+				
+
+				
+				
+				<section class="switch-part switch-part4">
+				
+					<div id="js-aboutme">现南京大学研究生一枚，目前专注于Java Web方向。</div>
+				</section>
+				
+			</div>
+		</div>
+	</header>				
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+  	<div class="overlay">
+  		<div class="slider-trigger"></div>
+  		<h1 class="header-author js-mobile-header hide">Zerohuan</h1>
+  	</div>
+	<div class="intrude-less">
+		<header id="header" class="inner">
+			<div class="profilepic">
+				<img lazy-src="/avatar.jpg" class="js-avatar">
+			</div>
+			<hgroup>
+			  <h1 class="header-author">Zerohuan</h1>
+			</hgroup>
+			
+			<p class="header-subtitle">我在路上</p>
+			
+			<nav class="header-menu">
+				<ul>
+				
+					<li><a href="/">主页</a></li>
+		        
+					<li><a href="/archives">所有文章</a></li>
+		        
+		        <div class="clearfix"></div>
+				</ul>
+			</nav>
+			<nav class="header-nav">
+				<div class="social">
+					
+						<a class="github" target="_blank" href="https://github.com/zerohuan" title="github">github</a>
+			        
+						<a class="weibo" target="_blank" href="/#" title="weibo">weibo</a>
+			        
+						<a class="zhihu" target="_blank" href="http://www.zhihu.com/people/yan-jin-heng" title="zhihu">zhihu</a>
+			        
+						<a class="mail" target="_blank" href="mailto:yanjinheng@qq.com" title="mail">mail</a>
+			        
+				</div>
+			</nav>
+		</header>				
+	</div>
+</nav>
+      <div class="body-wrap"><article id="post-Java基础知识总结（二）——NIO" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/02/Java基础知识总结（二）——NIO/" class="article-date">
+  	<time datetime="2015-12-02T07:10:05.000Z" itemprop="datePublished">2015-12-02</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Java基础知识总结（二）——NIO
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+        
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>关于NIO这部分，除了《Java编程思想》中的介绍还有两份资料我觉得很好：一是《深入Java Web技术内幕》第2章的部分，二是并发编程网上Jakob JenkovNIO系列教程翻译，读完之后受益匪浅。</p>
+<h1 id="1-_NIO是什么：">1. NIO是什么：</h1><p>java.nio是JDK1.4之后加入的，它新颖的特点在于：（1）面向缓存；（2）非阻塞；（3）直接内存；<br>首先来看看它的整体结构：一个完整的NIO程序体系应该包括Selector，Channel，Buffer，它们是NIO最核心的3个关键部分；</p>
+<p>非阻塞IO是NIO的一大特点，那它是怎么实现的呢，Selector和它的名字所反映的一样起到选择和调度的作用，它所调度的就是Channel（通道），Channel包括：<br>FileChannel，<br>SocketChannel，ServerSocketChannel，<br>DatagramChannel，<br>管道；<br>它们负责对指定的资源进行访问读写，其中除了FileChannel都具有非阻塞的功能，ServerSocketChannel相当于一个服务器程序，它有accept方法监听和接受客户端的请求，而SocketChannel则对应于一个具体的Socket连接，它可以通过ServerSocketChannel的accept方法来得到，我们可以通过read和write对该连接信道进行读写，DatagramChannel是UDP数据报通信方式。在传统的IO中，accept，read，write方法都是阻塞的方式进行的，也就是说accept方法负责接受一个客户端请求，在未接受到一个请求之前线程就会阻塞在此处不能进行，因此要同时打开多个ServerSocketChannel必须要有多个线程支持，在非阻塞模式下，accept，read，write可以在直接返回，让其他任务可以执行，这样我们可以在一个线程中同时处理多个Channel，那你可能会问，accept直接返回了，请求来的时候如何在去调用accept接受呢，这就需要Selector来调度了，Selector的select()方法是阻塞的，它可以同时监听对Channel的操作请求，将请求转发到对应的channel中，从总体上看，把每个Channel中阻塞等待的行为统一移到了Selector，从而我们可以在单线程中同时处理多个信道的读写任务。Buffer缓存则是我们对Channel进行读写的工具，它还提供了Char，Int等多种不同的视图让我们可以以不同的方式读写数据，也提供了Heap和Direct直接内存两种缓存存储方式。<br>下面我们对这3个关键的“部件”进行详细的分析，当然我们应当明白不同的技术有不同的使用场景，这里为了突出NIO的特点我们集中于单线程（或少量线程）非阻塞的方式，它使用与高并发数据量处理少而简单的场景。</p>
+<p>#2. Selector：<br>结合上面的论述，可以看到Selector起到了代替多个Channel监听感兴趣事件发生的作用，这让我很容易想起一个设计模式——观察者模式，在这里Selector是Obserable，Channel是Observer，Channel要向Selector注册自己对哪些事情感兴趣，当事件发生时，Selector通知对应的Channel。<br>这里注册有个两个部分：哪个channel和指定的事件，SelectionKey包含了注册的要素：</p>
+<h2 id="2-1_SelectionKey（注册感兴趣的事，监听返回准备好的事，它关联一个Selector和Channel，我为什么忍不住想到迪米特法则，中毒太深…）：">2.1 SelectionKey（注册感兴趣的事，监听返回准备好的事，它关联一个Selector和Channel，我为什么忍不住想到迪米特法则，中毒太深…）：</h2><p>操作事件：<br>SelectionKey.OP_CONNECT<br>SelectionKey.OP_ACCEPT<br>SelectionKey.OP_READ<br>SelectionKey.OP_WRITE<br>因为SelectionKey包含5个部分：<br>（1）interest集合和ready集合一样包含有一些方便判断的方法，可以看api或源码；<br>（2）ready集合；<br>（3）channel引用；<br>（4）Selector引用；<br>（5）attach附加对象（可选）；</p>
+<h2 id="2-2_Selector的重要方法：">2.2 Selector的重要方法：</h2><p>（1）select方法：包括select()，selectNow(非阻塞)，select(long timeout)返回int，有多个个ready的Channel；<br>（2）selectedKeys方法：返回ready的Channel的selectionKey集合，遍历它们，根据readyOps集合处理对应事件；<br>（3）wakeUp方法：从select阻塞中唤醒；<br>（4）close方法：是所用selectionKey无效，也就释放了对Channel们的引用不影响垃圾回收啦；</p>
+<h2 id="2-3_Selector使用示例：">2.3 Selector使用示例：</h2><pre><code>public class <span class="type">SelectorSample</span> {
+    private <span class="type">List</span>&lt;<span class="type">SelectableChannel</span>&gt; channels;
+    private boolean isListening = <span class="literal">true</span>;
+
+    public <span class="type">SelectorSample</span>(<span class="type">List</span>&lt;<span class="type">SelectableChannel</span>&gt; channels) {
+        this.channels = channels;
+    }
+
+    public <span class="type">void</span> doHandle() {
+        <span class="keyword">try</span>(<span class="type">Selector</span> selector = <span class="type">Selector</span>.open()) {
+            <span class="keyword">for</span>(<span class="type">SelectableChannel</span> channel : channels) {
+                channel.configureBlocking(<span class="literal">false</span>); //非阻塞
+                channel.register(selector, <span class="type">SelectionKey</span>.<span class="type">OP_ACCEPT</span> | <span class="type">SelectionKey</span>.<span class="type">OP_CONNECT</span>
+                        | <span class="type">SelectionKey</span>.<span class="type">OP_READ</span> | <span class="type">SelectionKey</span>.<span class="type">OP_WRITE</span>);
+            }
+            <span class="keyword">while</span>(isListening) {
+                <span class="type">int</span> ready = selector.select();
+                <span class="keyword">if</span>(ready == <span class="number">0</span>) <span class="keyword">continue</span>;
+                <span class="type">Set</span>&lt;<span class="type">SelectionKey</span>&gt; selectionKeys = selector.selectedKeys();
+                <span class="keyword">for</span>(<span class="type">Iterator</span>&lt;<span class="type">SelectionKey</span>&gt; <span class="keyword">iterator</span> = selectionKeys.<span class="keyword">iterator</span>(); <span class="keyword">iterator</span>.hasNext();) {
+                    <span class="type">SelectionKey</span> key = <span class="keyword">iterator</span>.next();
+                    <span class="keyword">if</span>(key.isAcceptable()) {
+                        <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"doSomething when be acceptable"</span>);
+                    } <span class="keyword">else</span> <span class="keyword">if</span>(key.isConnectable()) {
+                        <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"doSomething when be able to connect"</span>);
+                    } <span class="keyword">else</span> <span class="keyword">if</span>(key.isReadable()) {
+                        <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"doSomething when be readable"</span>);
+                    } <span class="keyword">else</span> <span class="keyword">if</span>(key.isWritable()) {
+                        <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"doSomething when be writable"</span>);
+                    }
+                    <span class="keyword">iterator</span>.remove(); //注意要从就绪集合中删除，下次就绪有selector添加
+                }
+            }
+        } catch (<span class="type">IOException</span> e) {
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre><h1 id="2-_Channel_：">2. Channel ：</h1><p>Channel的体系中有：SelectableChannel和InterruptiableChannel，前者继承自后者，之前说过FileChannel是不可以非阻塞的它属于InterruptiableChannel，而其他3种进一步属于SelectableChannel。</p>
+<h2 id="2-1_如何打开通道：">2.1 如何打开通道：</h2><p>ServerSocketChannel，SocketChannel，DatagramChannel都有open方法，可以用来打开通道，它们都属于网络编程，底层是要依赖操作系统层对应网络模块的实现，在Java中这3个通道和管道都是通过SelectorProvider来创建的，该Provider在不同平台上有不同的实现，JVM有一个“system-wide”的默认实现，它是单例的。<br>而FileChannel是对应于文件系统的，基于Java I/O，我们可以从FileInputStream，FileOutputStream，RandomAccessFile来获取一个对应于特定文件的通道。</p>
+<p>我们进一步看看这四个具体的Channel实现那些接口，来分析它们各自有什么功能：</p>
+<h2 id="2-2_ServerSocketChannel：">2.2 ServerSocketChannel：</h2><p>线程安全；</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">ServerSocketChannel</span>
+    <span class="keyword">extends</span> <span class="title">AbstractSelectableChannel</span>
+    <span class="keyword">implements</span> <span class="title">NetworkChannel</span>
+ 它的主要功能就是监听的某个地址和端口上的套接字请求，并打开<span class="title">SocketChannel</span>；</span>
+</code></pre><h2 id="2-3_SocketChannel：">2.3 SocketChannel：</h2><p>线程安全，read/write都进行了同步控制；</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">SocketChannel</span>
+    <span class="keyword">extends</span> <span class="title">AbstractSelectableChannel</span>
+    <span class="keyword">implements</span> <span class="title">ByteChannel</span>, <span class="title">ScatteringByteChannel</span>, <span class="title">GatheringByteChannel</span>, <span class="title">NetworkChannel</span></span>
+</code></pre><p> ByteChannel实现了WritableChannel和ReadableChannel，因此它是可读写的；<br>Scatter/Gatther分别实现了将一个channel的内容读到多个buffer（一个Buffer满了才能读到下一个）和多个Buffer写到一个Channel的功能；<br>NetworkChannel：绑定到地址/端口的能力；<br>我们可以通过它来进行一个端到端的，有连接的套接字通信；</p>
+<h2 id="2-4_DatagramChannel：">2.4 DatagramChannel：</h2><p>线程安全的；</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">DatagramChannel</span>
+    <span class="keyword">extends</span> <span class="title">AbstractSelectableChannel</span>
+    <span class="keyword">implements</span> <span class="title">ByteChannel</span>, <span class="title">ScatteringByteChannel</span>, <span class="title">GatheringByteChannel</span>, <span class="title">MulticastChannel</span></span>
+</code></pre><p> 与SocketChannel接口上的不同在与MulticastChannel，它是NetworkChannel子类；增加了多播的功能，使得我们可以使用基于UDP套接字的多播功能；</p>
+<h2 id="2-5_Pipe：">2.5 Pipe：</h2><p>管道一般可以在两个线程中进行单向的数据传输，它有两个嵌套类：SinkChannel和SourceChannel，分别负责在一个线程（发送者）写入和在另一个线程中读取：<br>    public static abstract class SinkChannel<br>            extends AbstractSelectableChannel<br>            implements WritableByteChannel, GatheringByteChannel</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">SourceChannel</span>
+        <span class="keyword">extends</span> <span class="title">AbstractSelectableChannel</span>
+        <span class="keyword">implements</span> <span class="title">ReadableByteChannel</span>, <span class="title">ScatteringByteChannel</span></span>
+</code></pre><p> 基于上面的论述，相信已经可以很清除的明白它们各自有什么功能了：都可以非阻塞，一个负责写，并且可以将多个Buffer一起写入，一个负责读，可以从Channel中将数据读入多个Buffer；</p>
+<h2 id="2-6_FileChannel：">2.6 FileChannel：</h2><p>这个Channel是阻塞的，是操作磁盘文件一种方式，它和之前几个Channel大不相同，所以我要将它和下面要介绍的DirectByteBuffer（MappedByteBuffer）一起讨论。</p>
+<h1 id="3-_Buffer：">3. Buffer：</h1><p>总的来说，具体工作中使用Buffer的次数要远远多与Selector和Channel，我们通过它对Channel进行具体的读写操作。<br>之前说过NIO的特点之一就是面向缓存，我们在使用Buffer时都是基于一块分配指定的大小的固定内存进行操作的，只有两种分配方式：Heap和Direct，它们的区别下面会详细说明。无论我们进行视图转换（CharBuffer/IntBuffer等等），还是compact压缩，还是duplicate复制、slice切片，都是最初的allocate分配那一块内存。</p>
+<h2 id="3-1_Buffer的基本属性和重要方法：">3.1 Buffer的基本属性和重要方法：</h2><p>capacity：容量；<br>limit：可操作的限制位置；<br>position：下一个操作位置；<br>mark：标记；<br>address：使用direct内存时的内存地址；<br>capacity，limit，position这3个属性是我们进行操作最关键和常用的，结合操作方法我们来看看它们的使用细节：<br>flip：limit=position，position=0；这个方法通常在从通道中读取数据后使用，这样我们可以再从Buffer中读取数据；或者在Buffer写入数据后调用，让通道写入；<br>rewind：position=0,mark=-1；<br>clear：position=0，limit=capacity，mark=-1；通常在重新从<br>remaining：limit-position；用于检查是否还有数据；<br>mark和reset：mark标记，mark=position；reset复位，position=mark（mark&gt;0时），注意它并不会修改mark值；<br>compact：将原来（limit-position）未处理完的数据复制到开头，再将position移到数据的下一个位置，limit=capacity，这个方法是进行压缩，去掉已处理过的数据，主要   为了接下来将数据写入Buffer，注意，它只是在原数组上进行复制的，没有新分配空间；<br>另一个你可能需要注意的是equals方法和compareTo方法，它们比较的是limit-position之间的大小；</p>
+<h2 id="3-2_Buffer的体系结构：">3.2 Buffer的体系结构：</h2><p>首先，重要的事先说说：Buffer并不是线程安全的。<br>来看看Buffer的体系：</p>
+<p>Channel都是基于字节的，我们一般也从ByteBuffer开始；</p>
+<h3 id="ByteBuffer具体实现（分配）：">ByteBuffer具体实现（分配）：</h3><p>ByteBuffer有两个分配方法（它们返回<strong>HeapByteBuffer</strong>和<strong>DirectByteBuffer</strong>都是default包权限，我们无法直接使用它们）：<br><strong>allocate</strong>：<strong>HeapByteBuffer</strong>，从JVM堆中分配，收到JVM垃圾回收处理机制管理，实际上就是为了一个固定的byte[]；<br><strong>allocateDirect</strong>：<strong>DirectByteBuffer</strong>，使用JNI在native内存中分配，那怎么回收直接内存呢，DirectBuffer（DirectByteBuffer的接口），可以返回<strong>Cleaner</strong>，通过它我们可以释放直接内存，否则你就只能等待Full GC的发生来释放它了，依赖JNI响应的回收方法和堆中DirectByteBuffer对象的回收；<br>Buffer的视图：</p>
+<p>在类图中我们可以看到有CharBuffer，IntBuffer，另外还有FloatBuffer，DoubleBuffer，ShortBuffer，LongBuffer以及MappedBuffer（特别的，内存映射）；<br>它们实际上都是由ByteBuffer而产生，操作同一块内存，只是读取的方式不一样，以HeapByteBuffer和CharBuffer为例我们来看看它们是怎么完成“视图”的使命的。<br>转换方法：<br>ByteBuffer.asCharBuffer();<br>HeapByteBuffer中是这样实现的：</p>
+<pre><code><span class="function"><span class="keyword">public</span> CharBuffer <span class="title">asCharBuffer</span><span class="params">()</span> </span>{
+        <span class="keyword">int</span> size = <span class="keyword">this</span>.remaining() &gt;&gt; <span class="number">1</span>;
+        <span class="keyword">int</span> off = offset + position();
+        <span class="keyword">return</span> (bigEndian
+                ? (CharBuffer)(<span class="keyword">new</span> ByteBufferAsCharBufferB(<span class="keyword">this</span>,
+                                                               -<span class="number">1</span>,
+                                                               <span class="number">0</span>,
+                                                               size,
+                                                               size,
+                                                               off))
+                : (CharBuffer)(<span class="keyword">new</span> ByteBufferAsCharBufferL(<span class="keyword">this</span>,
+                                                               -<span class="number">1</span>,
+                                                               <span class="number">0</span>,
+                                                               size,
+                                                               size,
+                                                               off)));
+    }
+</code></pre><p> 考虑到字顺这里有两个实现，新建一个ByteBufferAsCharBufferB还是操作那一块内存，只是我们换了一组capacity，limit，mark，position来操作；<br>而在具体的get/put方法中：</p>
+<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">char</span> <span class="title">get</span><span class="params">()</span> </span>{
+        <span class="keyword">return</span> Bits.getCharB(bb, ix(nextGetIndex()));
+    }
+</code></pre><p> 是通过Bits这个工具类来进行不同基本类型的读取和操作。整个事情就是这样，基于字节ByteBuffer，考虑字顺用不同的方式去读写同一块内存；<br>PS：对于CharBuffer和ByteBuffer之间的转换，涉及到编解码，Charset有ByteBuffer = encode(CharBuffer)和CharBuffer = decode(ByteBuffer)；</p>
+<h1 id="4-_FileChannel">4. FileChannel</h1><p>同样它也是线程安全的。</p>
+<h1 id="4-1_打开FileChannel：">4.1 打开FileChannel：</h1><p>之前我们已经提到了它可通过FileInputStream、FileOutputStream和RandomAccessFile获得，但是它们具有不同的读写权限：<br>RandomAccessFile：rw</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="function">FileChannel <span class="title">getChannel</span><span class="params">()</span> </span>{
+        <span class="keyword">synchronized</span> (<span class="keyword">this</span>) {
+            <span class="keyword">if</span> (channel == <span class="keyword">null</span>) {
+                channel = FileChannelImpl.open(fd, path, <span class="keyword">true</span>, rw, <span class="keyword">this</span>);
+            }
+            <span class="keyword">return</span> channel;
+        }
+    }
+</code></pre><p>FileOutputStream：</p>
+<pre><code><span class="keyword">public</span> FileChannel getChannel() {
+        <span class="keyword">synchronized</span> (<span class="keyword">this</span>) {
+            <span class="keyword">if</span> (channel == <span class="keyword">null</span>) {
+                channel = FileChannelImpl.<span class="built_in">open</span>(fd, path, <span class="keyword">false</span>, <span class="keyword">true</span>, <span class="built_in">append</span>, <span class="keyword">this</span>);
+            }
+            <span class="keyword">return</span> channel;
+        }
+    }
+</code></pre><p>FileInputStream：</p>
+<pre><code><span class="keyword">public</span> <span class="function">FileChannel <span class="title">getChannel</span><span class="params">()</span> </span>{
+        <span class="keyword">synchronized</span> (<span class="keyword">this</span>) {
+            <span class="keyword">if</span> (channel == <span class="keyword">null</span>) {
+                channel = FileChannelImpl.open(fd, path, <span class="keyword">true</span>, <span class="keyword">false</span>, <span class="keyword">this</span>);
+            }
+            <span class="keyword">return</span> channel;
+        }
+    }
+</code></pre><p> 正如RandomAccessFile（可以seek方式前后读写文件），FileInputStream和FileOutputStream本身的差异一样，它们也具有不同的特点；</p>
+<h2 id="4-2_FileChannel的独特的方法：">4.2 FileChannel的独特的方法：</h2><p>写，读，关闭和其他Channel使用方式是一样的，我们来看看它对文件还有什么其他操作：<br>FileChannel.position(long)：移到文件的特定位置，接下来你可以从这个位置写/读，你可以在文件结束符之后写入，这和我们在Unix中一样，它也可能会造成<strong>文件空洞</strong>。<br>FileChannel.truncate(long)：截取前多少字节的数据；<br>FileChannel.size()：返回关联文件大小；<br>FileChannel.force()：将缓存内（操作系统为了提高性能）的数据强制写入磁盘；</p>
+<h2 id="4-3_transfer：">4.3 transfer：</h2><p>如果你需要在WritableChannel之间传递数据，使用transferTo和transferFrom是一个非常好的选择；<br>因为这种方式不需要将磁盘数据从内核空间复制到应用用户空间在传到另一个内核空间，而是直接在内核空间中通过“通道传输”；</p>
+<h2 id="4-4_FileChannel中的内存映射：">4.4 FileChannel中的内存映射：</h2><p>为了显示内存映射到底是怎么存储，可以看看创建MapByteBuffer的源码：</p>
+<pre><code><span class="keyword">static</span> <span class="function">MappedByteBuffer <span class="title">newMappedByteBuffer</span><span class="params">(<span class="keyword">int</span> var0, <span class="keyword">long</span> var1, FileDescriptor var3, Runnable var4)</span> </span>{
+        <span class="keyword">if</span>(directByteBufferConstructor == <span class="keyword">null</span>) {
+            initDBBConstructor();
+        }
+
+        <span class="keyword">try</span> {
+            MappedByteBuffer var5 = (MappedByteBuffer)directByteBufferConstructor.newInstance(<span class="keyword">new</span> Object[]{<span class="keyword">new</span> Integer(var0), <span class="keyword">new</span> Long(var1), var3, var4});
+            <span class="keyword">return</span> var5;
+        } <span class="keyword">catch</span> (IllegalAccessException | InvocationTargetException | InstantiationException var7) {
+            <span class="keyword">throw</span> <span class="keyword">new</span> InternalError(var7);
+        }
+    }
+</code></pre><p> 这里可以看到显然是通过直接内存的方式，但是这段代码是在FileChannel的map方法中调用的，它和allocateDirect是有区别的；要理解直接内存和内存映射中的原理需要一些重要的基础知识，才能真正弄清楚HeapByteBuffer，DirectByteBuffer，和map之间的区别。<br><strong>（1）为什么FileInputStream和HeapByteBuffer相对要慢很多呢？</strong><br>Java中读取文件要依赖于内核的系统调用，将文件数据从磁盘读取到内核IO缓存区（内存中），再转到JVM堆中（上面已经看到了HeapByteBuffer中new byte[]）。首先要明白为什么要建立内核IO缓冲区，就是为了减少磁盘的访问次数，因为磁盘IO效率很低，读到内核IO缓存区转到JVM堆又需要调用native方法，依赖系统调用，系统调用的开销有比较大，因为我们可以BufferedInputStream和HeapByteBuffer来建立缓冲区减少系统调用。尽管我们通过内核IO缓冲区和Java应用缓冲区两层缓存分别减少了耗时的磁盘IO和系统调用，但是仍然不能避免内核态切换到用户态，内核空间复制到用户空间这样的耗时操作。</p>
+<p><strong>（2）为什么allocateDirect要比传统方式快？</strong><br>如果你看了DirectByteBuffer的源码你就会发现其中并没有new byte[]这样在JVM Heap中分配的行为，用的是address（Buffer中定义，long，64位）。实际上DirectMemory使用的是native堆，因此避免了向JVM堆复制的开销，但是需要注意的一点是，allocateDirect方法本身的开销比allocate方法大，因为它依赖系统调用，因此我们使用时应该避免频繁调用它分配小块内存。<br>设置：JVM参数中，-XX:MaxDirectMemorySize可以控制它的大小，默认值为-Xmx的大小；<br>回收：FULL CG（JNI的回收方法和DirectByteBuffer对象的回收）和我们手动通过Cleaner去释放；</p>
+<p>PS：2015/10/24 补充<br>allocateDirect存在于内核空间，如果所有的操作都存在与内核空间中，可以减少内核空间向用户空间复制，因此很快，但是如果频繁的分配小的直接内存，系统调用的开销会抵消减少复制的好处；另外如果我们用很小的直接内存读取磁盘数据到内存（也就是从ByteBuffer中get出来使用）还是会产生复制，性能并不会有太大改善。</p>
+<p><strong>（3）为什么内存映射更快呢？</strong><br>简单的说，内存映射并没有上面的分配行为，既不需要native堆也不需要JVM堆，它是以Java进程直接将需要读写的文件映射为虚拟内存，以内存的方式进行读写，这样读写自然要比它们要快的多。同时它也是线程间进行通信的一种方式，两个进程映射同一块虚拟内存，共享内存的方式进行通信。<br>通过FileChannel.map可以对指定文件或其部分进行内存映射，有三种模式：READ_ONLY, READ_WRITE, PRIVATE。</p>
+<h2 id="4-5_不同读取方式的对比：">4.5 不同读取方式的对比：</h2><pre><code><span class="keyword">public</span> class DirectMemoryTest {
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">String</span> TEST_FILE = <span class="string">"/home/yjh/test.file"</span>;
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> testNormal(<span class="keyword">String</span> TEST_FILE) {
+        System.out.<span class="built_in">print</span>(<span class="string">"Normal "</span>);
+        <span class="keyword">try</span>(FileInputStream inputStream = <span class="keyword">new</span> FileInputStream(TEST_FILE);
+            FileChannel fileChannel = inputStream.getChannel()) {
+            ByteBuffer buffer = ByteBuffer.allocate(<span class="number">1024</span>);
+            <span class="keyword">while</span>(fileChannel.read(buffer) != -<span class="number">1</span>) {
+                buffer.flip();
+                buffer.<span class="built_in">clear</span>();
+            }
+        } <span class="keyword">catch</span> (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> testDirect(<span class="keyword">String</span> TEST_FILE) {
+        System.out.<span class="built_in">print</span>(<span class="string">"Direct "</span>);
+        <span class="keyword">try</span>(FileInputStream inputStream = <span class="keyword">new</span> FileInputStream(TEST_FILE);
+            FileChannel fileChannel = inputStream.getChannel()) {
+            ByteBuffer buffer = ByteBuffer.allocateDirect(<span class="number">1024</span>);
+            <span class="keyword">while</span>(fileChannel.read(buffer) != -<span class="number">1</span>) {
+                buffer.flip();
+                buffer.<span class="built_in">clear</span>();
+            }
+        } <span class="keyword">catch</span> (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> testMapped(<span class="keyword">String</span> TEST_FILE) {
+        System.out.<span class="built_in">print</span>(<span class="string">"Mapped "</span>);
+        <span class="keyword">try</span>(FileInputStream inputStream = <span class="keyword">new</span> FileInputStream(TEST_FILE);
+            FileChannel fileChannel = inputStream.getChannel()) {
+            MappedByteBuffer buffer = fileChannel.<span class="built_in">map</span>(FileChannel.MapMode.READ_ONLY, <span class="number">0</span>, fileChannel.<span class="built_in">size</span>());
+            <span class="built_in">byte</span>[] b = <span class="keyword">new</span> <span class="built_in">byte</span>[<span class="number">1024</span>];
+            <span class="keyword">while</span>(buffer.<span class="built_in">get</span>(b).position() &lt; buffer.limit()) {
+
+            }
+        } <span class="keyword">catch</span> (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> test(Consumer&lt;<span class="keyword">String</span>&gt; consumer) {
+        <span class="keyword">long</span> startTime = System.currentTimeMillis();
+
+        consumer.accept(TEST_FILE);
+
+        <span class="keyword">long</span> endTime = System.currentTimeMillis();
+
+        System.out.<span class="built_in">println</span>(<span class="string">"Time consume: "</span> + (endTime - startTime));
+    }
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> main(<span class="keyword">String</span>[] args) {
+        test(DirectMemoryTest::testNormal);
+        test(DirectMemoryTest::testDirect);
+        test(DirectMemoryTest::testMapped);
+    }
+}
+</code></pre><p>我对三种方式分别读取整个test文件的内容，该文件大小为500M，运行结果（单位：ms）：<br>Normal Time consume: 930<br>Direct Time consume: 800<br>Mapped Time consume: 222</p>
+<p>在这个例子中，allocateDirect的直接内存同样读取了很多次（500MB / 1024B）磁盘数据，调用了很多次系统调用，因此和传统方式的效率并不有太大提升。</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2015/12/03/Java中的中介者模式/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption"><</strong>
+      <div class="article-nav-title">
+        
+          Java中的中介者模式
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/12/02/Java基础知识总结（五）——安全/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Java基础知识总结（五）——安全</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<div class="share">
+	<!-- JiaThis Button BEGIN -->
+	<div class="jiathis_style">
+		<span class="jiathis_txt">分享到：</span>
+		<a class="jiathis_button_tsina"></a>
+		<a class="jiathis_button_cqq"></a>
+		<a class="jiathis_button_douban"></a>
+		<a class="jiathis_button_weixin"></a>
+		<a class="jiathis_button_tumblr"></a>
+		<a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jtico jtico_jiathis" target="_blank"></a>
+	</div>
+	<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=1405949716054953" charset="utf-8"></script>
+	<!-- JiaThis Button END -->
+</div>
+
+
+
+<div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="Java基础知识总结（二）——NIO" data-title="Java基础知识总结（二）——NIO" data-url="http://blog.ssearch.cn/2015/12/02/Java基础知识总结（二）——NIO/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"true"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+
+
+</div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info">
+    	<div class="footer-left">
+    		&copy; 2015 Zerohuan
+    	</div>
+      	<div class="footer-right">
+      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
+      	</div>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+
+<script>
+	var yiliaConfig = {
+		fancybox: true,
+		mathjax: true,
+		animate: true,
+		isHome: false,
+		isPost: true,
+		isArchive: false,
+		isTag: false,
+		isCategory: false,
+		open_in_new: true
+	}
+</script>
+<script src="http://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js" type="text/javascript"></script>
+<script src="/js/main.js" type="text/javascript"></script>
+
+
+
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  </div>
+</body>
+</html>
