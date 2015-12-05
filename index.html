@@ -196,6 +196,271 @@
 </nav>
       <div class="body-wrap">
   
+    <article id="post-Java基础知识总结（一）——创建和销毁" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/05/Java基础知识总结（一）——创建和销毁/" class="article-date">
+  	<time datetime="2015-12-05T10:26:28.000Z" itemprop="datePublished">2015-12-05</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/05/Java基础知识总结（一）——创建和销毁/">Java基础知识总结（一）——创建和销毁</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="契子">契子</h2><p>明年就要离开学校找工作了，时间过的真快，想一想这几年，做了一些事，也有一些事并没有做好，有很多收获，也有不少遗憾。感性的话在此不宜多说，既然选择了程序员这条道路，也要有把它到做事业的态度。在正式找工作前还有几个月的时间，做东西，尝试新的技术固然很爽，但是基础也很重要，在这短短的几个月的时间里，我将把以前学过的一些知识，Java，数据结构，算法，网络，OS&amp;Linux，J2EE等等知识查缺补漏，好好梳理一遍，不光是为了找工作，也是一种必须要坚持的态度。<br>对于Java知识的整理，基于《Effetive Java》2nd和《Java编程思想》4th辅以JVM和设计模式的相关知识，结合书本上的知识和我的理解进行整理。好了，开始我的一篇——创建和销毁对象。</p>
+<h2 id="1-_Java中的构造器：">1. Java中的构造器：</h2><p>构造器是一种特殊类型的方法，它和类同名，没有返回类型，和new关键字结合可以返回对象实例的引用。TIJ中说它是一种静态方法，但是通过字节码我们可以看到其实并没有static关键字，它的行为也和其他静态方法有异（可以访问非静态成员变量），因此这种说法并不完全准确，这里不再深究。</p>
+<h3 id="1-1_定义构造器：">1.1 定义构造器：</h3><p>一个类可以有多个构造器，如果你没有定义构造器，Java编译器会在语义分析的阶段，首先添加一个默认构造器。<br>多个构造器可以通过方法重载（overload）实现，注意只有同方法名和不同参数列表可以区别不同的重载版本，返回类型并不能区分。<br>尤其是使用基本类型参数重载时，要注意类型的自动转换如（char—&gt;int，小转大）和窄化转换（强制类型转换，大转小），当然会使用最匹配的类型。</p>
+<p>###1.2 this关键字：<br>通过this指针我们可以访问类的实例变量和方法，但最好是在必要的时候（需要返回或使用该实例，内部类访问外部类同名实例变量方法，构造器设置属性等）使用它，否则你不必添加它，编译同样会帮你添加。<br>在存在多个重载版本的构造器时我们可以在构造器内使用this调用其他构造器，可以避免一些重复的代码：</p>
+<pre><code><span class="function"><span class="keyword">public</span> <span class="title">ConstructorTest</span><span class="params">(<span class="keyword">int</span> a)</span> </span>{
+    <span class="keyword">this</span>.a = a;
+}
+
+<span class="function"><span class="keyword">public</span> <span class="title">ConstructorTest</span><span class="params">(<span class="keyword">int</span> a, String s)</span> </span>{
+    <span class="keyword">this</span>(a);
+    <span class="keyword">this</span>.s = s;
+}
+</code></pre><p>PS：在构造器存在很多参数情况下，重叠构造器是一种选择，但是更好的做法是使用Builder模式，后面会讲到。</p>
+<h3 id="1-3_static关键字：">1.3 static关键字：</h3><p>static（静态），static方法和static变量是类方法和类变量，它们不能使用this引用，都放在方法区中，供各个线程共享。static变量初始化和static初始化其，会在类加载（隐式加载或显示加载）后执行一次。</p>
+<h2 id="2-_清理，终结对象（finalize）/垃圾回收（CG）：">2. 清理，终结对象（finalize）/垃圾回收（CG）：</h2><p>这涉及到很多内容。Java提供了垃圾回收器，但内存泄漏可能以很隐秘的方式发生（使用引用数组时），同时对于对象中可能使用的一些资源必须在对象不再使用时进行释放（Connection，FileInputStream等）。</p>
+<p>首先对象实例作为类的副本存放在Java堆中，在JVM中，一般使用可达性分析进行垃圾回收，也就是说，如果顺着引用追溯的话，“活”的对象应该可以到达CG Root（包括，静态变量，常量引用，栈中的本地变量表以及本地方法栈JNI native方法中的引用）。垃圾回收器会对不可达对象进行标记，在堆的不同区域使用不同的方法进行回收。</p>
+<p><strong>标记-清除</strong>：如果只有很少的垃圾的话，它很快，而且简单，但是如果垃圾很多的话，会产生大量的碎片；</p>
+<p><strong>复制</strong>：我们可以将需要进行垃圾回收的内存区域分为2个部分，比如A和B，需要CG时，将A的存活的对象直接复制到B（之前为空）中，清空A就可以了，不需要考虑碎片的问题，实际上在JVM（Hotspot）中分成了3个部分，一般比例可以为8：1：1,它们分别命名为eden，surivor1,surivor2，因为据统计Java程序中95%以上的对象很快就不再使用，因此eden很大，surivor可以较小（存活的对象少）。这实际上多用与新生代的垃圾回收。</p>
+<p><strong>标记-整理</strong>：有新生代当然也有老年代了，与新生代不同，老年代的对象相对稳定的多，垃圾回收很少，毕竟是经过了minor CG洗礼的不会那么容易挂掉，开个玩笑。标记-整理与清除的不同的地方在，它并不是直接在原位置清除掉，而是将存活的对象移向一端，之后直接就可以一起清除掉挂了的对象。因为我们也说了老年代的对象回收的少，因此移动的也相对较少。这样就不会有大多的碎片了。</p>
+<p>因此我们可以看到，JVM多采用分代回收的方式，对于不同的情况分而治之。</p>
+<h3 id="释放资源，终结（finalize方法）和垃圾回收有什么关系：">释放资源，终结（finalize方法）和垃圾回收有什么关系：</h3><p>首先，垃圾回收只和内存的使用状况有关，当内存不足（或满足我们设置的条件）时，才会进行CG。<br>finalize()是什么时候执行的呢，对于那些不可达的对象，到它们真正被回收至少需要经过两次标记阶段：<br>（1）首先筛选那些不需要执行finalize方法的对象，没有override finalize方法的和已经执行过finalize方法的对象，那它们就可以“等死”了，对于finalize尚未执行的对象，它们进入F-Queue队列，相当于是“死缓”，还有一线生机；<br>（2）F-Queue队列中的，有一个终结线程专门去调用这些对象的finalize方法（所以finalize方法是一个回调方法），如果在finalize方法有和CG Roots有了关联，OK，它活了，否则“等死”去。</p>
+<p>因此，我们看到finalize方法依赖直接于垃圾回收和终结线程，终结线程的优先级很低，这代表它可能很长时间都得不到执行，而垃圾回收也是你无法直接控制的（System.gc和System.runFinalize也是要看JVM脸的），所以finalize和C++中的析构函数并不是一回事；</p>
+<p>而对于数据库连接、文件访问句柄等等占用数据库资源和系统资源的对象，我们必须及时的释放/关闭它们。你可以定义一个close方法，在try-finally中保证必要的关闭得到执行，Java中甚至有Closable接口，FileInputStream，Connection等都实现了它们。</p>
+<h3 id="Finalize方法到底有什么用：">Finalize方法到底有什么用：</h3><p>（1）你可以在finalize方法检查close方法是否已经执行，这时一种安全敏感的做法，FileInputStream，Connection，Timer都是这样做的。<br>（2）使用JNI时，如果本地对象中要释放敏感资源，需要显示override finalize方法，进行释放。<br>（3）可以在finalize方法中拯救自己。</p>
+<p>如果你要使用它，注意在继承体系中，要我们手动维持“终止方法链”，这和构造器方法是一样的道理。<br>总的来说除此以外尽量不要使用finalize方法。</p>
+<h2 id="3-_初始化：">3. 初始化：</h2><p>如果想真正弄清楚对象初始化，而不是仅仅记住一些像成员变量的初始值这样的规则，我觉得应该了解一个类在第一个创建对象时是如何从字节码编程的可用的对象的。<br>在第一次使用一个类的时候，无论是显示加载一个类（Class.forName等）还是隐式加载一个类（A.staticVariable，new A()）时，首先要有ClassLoader进行加载：<br>（1）ClassLoader首先通过类名定位到类文件的位置（通过classpath等），将字节码加载到内存，通过准备、字节码验证和resolve等环节将等到一个个Class对象，放到方法区中；<br>（2）在此之后就是类初始化，这是类中的静态变量和静态初始化器将按照位置顺序进行初始化工作，静态变量同样放在方法区中；<br>（3）如果你进行是实例创建的化，接下来的工作首先是在堆上分配内存了，具体的方法可能有指针碰撞和空闲列表；<br>（4）获得了内存空间后，首先全部置零，这也就是为什么类的成员变量会还有初始值的原因，之后如果指定了初始化值，同样这里也是按顺序进行的；<br>（5）最后将执行<init>也就是我们定义使用的构造器来进行我们自定义的初始化过程了，这里就可以获得我们想要的对象实例的引用了。<br>所以在类中，各个部分的初始化顺序是：静态变量，静态初始化器（按位置顺序）——&gt;非静态成员变量（按位置顺序）——&gt;构造器；<br>说完了基本过程，我们来看看在Java中一些具体的类型是怎样进行初始化的。</init></p>
+<h3 id="3-1_数组初始化：">3.1 数组初始化：</h3><p>在Java中数组同样也是一种对象，但它并不是由某个类实例化而来，而是有JVM直接创建的，它的父类是Object，因此你可以在数组上使用Object的方法。<br>首先来复习下基本的语法：<br>通过数组初始化器：int[] a = {12,3};<br>通过new动态创建：int[] a = new int[5]; </p>
+<p>对于垃圾回收来说，数组同时也是一种特殊的类型，看下面的例子：</p>
+<pre><code><span class="keyword">public</span> class MStack {
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="built_in">int</span> DEFAULT_SIZE = <span class="number">20</span>;
+    <span class="keyword">private</span> <span class="keyword">Object</span>[] elements = <span class="keyword">new</span> <span class="keyword">Object</span>[DEFAULT_SIZE];
+    <span class="keyword">private</span> <span class="built_in">int</span> <span class="built_in">size</span> = <span class="number">0</span>;
+
+<span class="keyword">public</span> MStack() {
+    elements = <span class="keyword">new</span> <span class="keyword">Object</span>[DEFAULT_SIZE];
+}
+
+<span class="keyword">public</span> <span class="keyword">void</span> push(<span class="keyword">Object</span> element) {
+    ensureCapacity();
+    elements[<span class="built_in">size</span>++] = element;
+}
+
+<span class="keyword">public</span> <span class="keyword">Object</span> pop() {
+    <span class="keyword">if</span>(<span class="built_in">size</span> == <span class="number">0</span>) {
+        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"empty stack cannot pop"</span>);
+    }
+    <span class="keyword">return</span> elements[--<span class="built_in">size</span>];
+}
+
+<span class="keyword">public</span> <span class="keyword">void</span> ensureCapacity() {
+    <span class="keyword">if</span>(<span class="built_in">size</span> == elements.length) {
+        elements = Arrays.copyOf(elements, <span class="number">2</span> * <span class="built_in">size</span> + <span class="number">1</span>);
+    }
+}
+</code></pre><p>}</p>
+<p>这是《Effective Java》的一个例子，该例中的Stack在pop是并没有将已经出栈的引用置为null；这些引用是“过期引用”，这些引用虽然没有被使用，但是它将随着Arrays.copy一起被复制到更大的数组中，对于JVM来说它们同样是存活的对象，但是对我们的应用程序来说这些是无用的。在一个需要长期运行的服务中如果出现这样的问题很容易导致OOM。</p>
+<h3 id="3-2_可变参数列表：">3.2 可变参数列表：</h3><p>JDK1.5的特性，它和数组息息相关。实际上，可变参数列表实际还是通过数组来传递一组参数的，我觉得可以看作是一种语法糖。<br>可变参数列表与方法重载有关（静态分派，在编译和解析阶段确定），优先级最低；<br>使用可变参数列表时，如果有多个重载版本，会根据所传递的参数类型执行最匹配的版本，但是需要注意一些会产生“冲突”的情况：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">VarArgsInit</span> {
+    <span class="comment">//overload with var argument</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">f</span>(<span class="params">Long...longs</span>) </span>{
+        System.<span class="keyword">out</span>.println(<span class="string">"f_long_varArgs"</span>);
+    }
+
+<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">f</span>(<span class="params">Character...characters</span>) </span>{
+    System.<span class="keyword">out</span>.println(<span class="string">"f_character_varArgs"</span>);
+}
+
+<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">f</span>(<span class="params"><span class="keyword">float</span> f, Character...characters</span>) </span>{
+    System.<span class="keyword">out</span>.println(<span class="string">"f_float_character_varArgs"</span>);
+}
+
+<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">g</span>(<span class="params"><span class="keyword">float</span> f, Character...characters</span>) </span>{
+    System.<span class="keyword">out</span>.println(<span class="string">"g_float_character_varArgs"</span>);
+}
+
+<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">g</span>(<span class="params"><span class="keyword">char</span> c, Character...characters</span>) </span>{
+    System.<span class="keyword">out</span>.println(<span class="string">"g_char_character_varArgs"</span>);
+}
+
+<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
+<span class="comment">//        f(); //Error:(19, 9) java: reference to f is ambiguous</span>
+<span class="comment">//        f();</span>
+        f(<span class="number">1</span>, <span class="string">'a'</span>); <span class="comment">//OK</span>
+<span class="comment">//        f('a', 'b'); //Error:(19, 9) java: reference to f is ambiguous</span>
+        g(<span class="string">'a'</span>, <span class="string">'b'</span>); <span class="comment">//OK</span>
+    }
+</code></pre><p>这个例子中，f(‘a’,’b’)会引起编译错误，因为它会同时匹配第3个和第2个f()版本（因为’a’可以转换成float），解决方法，很简单g方法的两个版本就不会有这种冲突。</p>
+<h3 id="3-3_枚举：">3.3 枚举：</h3><p>JDK1.5的添加特性。enum也是类，它派生自Enum抽象类，但是与普通的类不同的时，编译器会给它添加一些特性，我觉得可以认为enum是一种具有特殊功能的class：<br>我们来看看一个枚举类型的字节码：</p>
+<pre><code>final <span class="keyword">enum</span> hr.test.Color {
+
+ <span class="comment">// 所有的枚举值都是类静态常量</span>
+ <span class="keyword">public</span> <span class="keyword">static</span> final <span class="keyword">enum</span> hr.test.Color RED;
+ <span class="keyword">public</span> <span class="keyword">static</span> final <span class="keyword">enum</span> hr.test.Color BLUE;
+ <span class="keyword">public</span> <span class="keyword">static</span> final <span class="keyword">enum</span> hr.test.Color BLACK;
+ <span class="keyword">public</span> <span class="keyword">static</span> final <span class="keyword">enum</span> hr.test.Color YELLOW;
+ <span class="keyword">public</span> <span class="keyword">static</span> final <span class="keyword">enum</span> hr.test.Color GREEN;
+
+<span class="keyword">private</span> <span class="keyword">static</span> final synthetic hr.test.Color[] ENUM$VALUES;
+
+  <span class="comment">// 初始化过程，对枚举类的所有枚举值对象进行第一次初始化</span>
+ <span class="keyword">static</span> {
+       <span class="number">0</span>  <span class="keyword">new</span> hr.test.Color [<span class="number">1</span>] 
+      <span class="number">3</span>  dup
+      <span class="number">4</span>  ldc &lt;String <span class="string">"RED"</span>&gt; [<span class="number">16</span>] <span class="comment">//把枚举值字符串"RED"压入操作数栈</span>
+      <span class="number">6</span>  iconst_0  <span class="comment">// 把整型值0压入操作数栈</span>
+      <span class="number">7</span>  invokespecial hr.test.Color(java.lang.String, <span class="keyword">int</span>) [<span class="number">17</span>] <span class="comment">//调用Color类的私有构造器创建Color对象RED</span>
+     <span class="number">10</span>  putstatic hr.test.Color.RED : hr.test.Color [<span class="number">21</span>]  <span class="comment">//将枚举对象赋给Color的静态常量RED。</span>
+      .........  枚举对象BLUE等与上同
+    <span class="number">102</span>  <span class="keyword">return</span>
+};
+
+  <span class="comment">// 私有构造器，外部不可能动态创建一个枚举类对象(也就是不可能动态创建一个枚举值)。</span>
+ <span class="function"><span class="keyword">private</span> <span class="title">Color</span><span class="params">(java.lang.String arg0, <span class="keyword">int</span> arg1)</span></span>{
+     <span class="comment">// 调用父类Enum的受保护构造器创建一个枚举对象</span>
+     <span class="number">3</span>  invokespecial java.lang.Enum(java.lang.String, <span class="keyword">int</span>) [<span class="number">38</span>]
+};
+
+ <span class="keyword">public</span> <span class="keyword">static</span> hr.test.Color[] values();
+
+  <span class="keyword">public</span> <span class="keyword">static</span> hr.test.<span class="function">Color <span class="title">valueOf</span><span class="params">(java.lang.String arg0)</span></span>;
+}
+</code></pre><p>从字节码解析中，首先可以看到：<br>（1）它是final的，因此我们无法继承它；<br>（2）所有枚举值，都是Color的实例，它们都是public static final的；</p>
+<h4 id="编译器生成的方法：">编译器生成的方法：</h4><p>我们还有看到，编译器为enum添加了3个方法：<br>（1）私有构造器，保证无法从动态创建一个该类型的枚举对象；同时我们也无法使用反射创建一个enum类型实例：</p>
+<pre><code>public <span class="class"><span class="keyword">enum</span>  <span class="title">MEnum</span> {</span>
+    <span class="constant">E1</span>;
+
+    static <span class="class"><span class="keyword">class</span> <span class="title">A</span> {</span>
+        <span class="keyword">private</span> <span class="constant">A</span>(){
+        }
+    }
+
+    public static void main(<span class="constant">String</span>[] args) throws <span class="constant">Exception</span> {
+        <span class="constant">Class</span>&lt;<span class="constant">A</span>&gt; a = <span class="constant">A</span>.<span class="keyword">class</span>;
+        <span class="constant">Constructor</span> constructor = a.getDeclaredConstructor();
+        constructor.setAccessible(<span class="literal">true</span>);
+        constructor.newInstance();
+        <span class="constant">Class</span>&lt;?&gt; ec = <span class="constant">MEnum</span>.<span class="keyword">class</span>;
+        <span class="constant">Constructor</span> constructor1 = ec.getDeclaredConstructor(<span class="constant">String</span>.<span class="keyword">class</span>, int.<span class="keyword">class</span>);
+        constructor1.setAccessible(<span class="literal">true</span>);
+        constructor1.newInstance(<span class="string">"YJH"</span>, <span class="number">2</span>);
+    }
+
+}
+</code></pre><p>结果：A类可以正常创建，而enum类型，java.lang.IllegalArgumentException: Cannot reflectively create enum objects，因为在class.newInstance中有这样的检查：<br> if ((clazz.getModifiers() &amp; Modifier.ENUM) != 0)<br>            throw new IllegalArgumentException(“Cannot reflectively create enum objects”);<br>（2）values静态方法；<br>（3）valueOf(String)静态方法：它们都是编译器为具体的enum类型添加的，你在Enum抽象类中看不到它们；</p>
+<p>enum可以说是严格全局不可修改的安全类型，它同样可以进行安全的序列化而不用担心不唯一的情况，正因为如此，使用单元素枚举创建单例对象是一种极佳的方法，同时可以不用担心反射攻击。</p>
+<p>PS：enum可以和switch结合使用，十分方便；</p>
+<h2 id="4-_创建和销毁对象的实践：">4. 创建和销毁对象的实践：</h2><p>《Effetive Java》中对于这一块给出了一些优秀的建议，以后在每一篇终结之后我都附上关于这篇的好的实践模式和要注意的反模式。学习这些思想和设计模式我觉得对我使用和理解Java中不同模块以及Spring等框架有很大的好处，因为它们都是基于这些的思想和模式建立的，能够帮助我更好的理解它们的结构和功能。</p>
+<h3 id="4-1_使用静态工厂方法代替构造器：">4.1 使用静态工厂方法代替构造器：</h3><p><strong>优点</strong>：<br>（1）在具有比较复杂参数的构造器的时候，使用这很难通过重载版本来区别它们之间的功能差别，而使用静态工厂方法可以根据功能命名，像Executors中创建不同功能的线程池实例一样，静态工厂方法掩盖了构造器的复杂性；<br>（2）不必在每次调用它们的时候都创建一个新对象，静态工厂方法可以用于单例，享元模式，不可变类（final class，final field），不可实例化类（private 构造器）这些不同的场景；<br>（3）返回原返回类型的任何子类型：这一点影响觉得深远，广大，首先，在collection包中有Collection，List，Set，Map，Iterator等接口，Collections工具类，提供了很多具有附加功能的集合类实现，而它们都是定义在Collections中的嵌套类，通过静态工厂方法返回，还有Iterator，也是基于内部类实现的，通过它来返回，静态工厂方法可以隐藏具体的实现，支持面向接口的编程。<br>在开发J2EE项目时，经常用到Java Persistence API，websocket API，servlet API等等，它们是J2EE规范的一部分，我们仅仅引用了API，接口，而具体的实现我们可以会用到hibernate，spring的子项目，像servlet和websokcet API，它们的具体实现则多由J2EE 应用服务器实现它们，另外tomcat8.0也提供了websocket的实现。<br>这就是“服务提供者框架（service provider framework）”，提供者提供Service接口的具体实现，提供者可以使用提供者注册接口注册自己，提供者也可以实现provider接口或者通过类名直接注册，客户端使用者通过服务访问接口（其实就是静态工厂方法）；<br>（4）本来是用来简化有泛型参数时对象创建的，不过有了diomand表达式，java已经可以自己推导类型了；</p>
+<h3 id="4-2_多个构造器参数时使用Builder模式：">4.2 多个构造器参数时使用Builder模式：</h3><p>重叠构造器和Bean+setter创建的方式真的不好维护，写过都知道，builder模式不仅仅可以灵活的组配参数；还可以创建不可变的对象。</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">HasBuilder</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> i1;
+    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> i2;
+    <span class="keyword">private</span> <span class="keyword">final</span> String s1;
+
+<span class="function"><span class="keyword">public</span> <span class="title">HasBuilder</span><span class="params">(Builder builder)</span> </span>{
+    <span class="keyword">this</span>.i1 = builder.i1;
+    <span class="keyword">this</span>.i2 = builder.i2;
+    <span class="keyword">this</span>.s1 = builder.s1;
+}
+
+<span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Builder</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">int</span> i1;
+    <span class="keyword">private</span> <span class="keyword">int</span> i2;
+    <span class="keyword">private</span> String s1;
+
+    <span class="function"><span class="keyword">public</span> Builder <span class="title">i1</span><span class="params">(<span class="keyword">int</span> i1)</span> </span>{
+        <span class="keyword">this</span>.i1 = i1;
+        <span class="keyword">return</span> <span class="keyword">this</span>;
+    }
+    <span class="function"><span class="keyword">public</span> Builder <span class="title">i2</span><span class="params">(<span class="keyword">int</span> i2)</span> </span>{
+        <span class="keyword">this</span>.i2 = i2;
+        <span class="keyword">return</span> <span class="keyword">this</span>;
+    }
+    <span class="function"><span class="keyword">public</span> Builder <span class="title">s1</span><span class="params">(String s1)</span> </span>{
+        <span class="keyword">this</span>.s1 = s1;
+        <span class="keyword">return</span> <span class="keyword">this</span>;
+    }
+
+    <span class="function"><span class="keyword">public</span> HasBuilder <span class="title">build</span><span class="params">()</span> </span>{
+        <span class="keyword">return</span> <span class="keyword">new</span> HasBuilder(<span class="keyword">this</span>);
+    }
+}
+</code></pre><p>}<br>你可以通过在build构建在具体的设值方法里进行约束检查。</p>
+<h3 id="4-3_建立合适的单例：">4.3 建立合适的单例：</h3><p>大致总结一下，有5种不同的单例模式：<br>（1）饿汉模式；<br>（2）懒汉模式：延迟加载，这就涉及到了线程安全的问题，用synchronized方法关键字效率太低；<br>（3）基于双检锁的单例：JDK1.5是安全的，需要通过volitale来保证可见性，一定要有手写它的能力！；<br>（4）基于静态内部类的方式：让静态内部类持有一个static final的实例，因为是内部类，所以自然也就可以延迟加载；</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">SingletonWithInnerClass</span> {
+    <span class="function"><span class="keyword">private</span> <span class="title">SingletonWithInnerClass</span>(<span class="params"></span>) </span>{
+        System.<span class="keyword">out</span>.println(<span class="string">"initialized"</span>);
+    }
+
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title">SingletonHolder</span> {
+        <span class="keyword">private</span> <span class="keyword">static</span> final SingletonWithInnerClass s = <span class="keyword">new</span> SingletonWithInnerClass();
+    }
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> SingletonWithInnerClass <span class="title">getInstance</span>(<span class="params"></span>) </span>{
+        <span class="keyword">return</span> SingletonHolder.s;
+    }
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
+        Class c = SingletonWithInnerClass.class; <span class="comment">//这里并没有进行初始化</span>
+        System.<span class="keyword">out</span>.println(<span class="string">"start initialization:"</span>);
+        SingletonWithInnerClass singletonWithInnerClass = SingletonWithInnerClass.getInstance();
+
+    }
+}
+</code></pre><p>这段代码的输出结果：</p>
+<pre><code><span class="operator"><span class="keyword">start</span> initialization:
+<span class="keyword">initialized</span></span>
+</code></pre><p>可见是延迟加载的；<br>（5）单元素枚举的方法，前面已经讨论过了，最佳，无偿序列化，防止反射攻击；</p>
+<h3 id="4-4_私有构造器防止实例化：">4.4 私有构造器防止实例化：</h3><p>对于一些工具类或者存放全局变量来说，使用private构造器可以防止继承/实例化，如果使用接口和抽象类来实现，是一种反模式；</p>
+<h3 id="4-5_避免创建不必要的对象：">4.5 避免创建不必要的对象：</h3><p>（1）注意String是有常量池的，它实际上是通过private final char[]来存放的，所以它是不可变的，只有第一次使用这个字符串组合的时候才进入常量池：<br>new String(“abc”);实际上是有两个字符串对象，”abc”是编译期存在，它已经进入常量池了；<br>（2）对于Calendar这样的实例化代价较大的对象考虑尽量复用；<br>（3）使用自动装箱类型一定要特别小心，以免在循环中因为自动装箱而创建大量对象，能用基本类型就不要用装箱类型；<br>（4）小对象的创建和销毁代价是很小的，因此，使用对象池的时候一定要考虑是不是值得，使用对象池管理不当也可能造成内存泄漏。</p>
+<h3 id="4-6_消除过期引用：">4.6 消除过期引用：</h3><p>（1）自己管理内存的时候：之前提到的MyStack（自己管理内存之外），还有两个情形容易导致内存泄漏：<br>（2）缓存：不要让缓存的引用成为阻止垃圾回收的唯一原因，尽量使用weakHashMap，它不会影响引用，当然使用它需要注意，只有缓存项的生命周期依赖与它的外部引用时才可以使用它；常见的情况，使用一个后台线程Timer或者ScheduledTreadPoolExecutor或者添加新条目的时候检查（LinkedHashMap提供了这样的机制）；<br>（3）回调：这种基于观察者模式的方式都需要监听器或回调来注册，因此如果不再合适的时候释放也会造成泄漏，用弱引用是一种好的做法；<br>其实看看内存泄漏原因直接起来就是管理不当的引用池，这时由JVM可达性分析机制决定的；</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
     <article id="post-Java中的中介者模式" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
@@ -1703,261 +1968,6 @@ final com.jvm.showByteCode.FinalParameter this<span class="variable">$0</span>;
       
 	<div class="article-tag tagcloud">
 		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
-    <article id="post-2015-11-28-Java基础知识总结（三）——类和接口" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/11/29/2015-11-28-Java基础知识总结（三）——类和接口/" class="article-date">
-  	<time datetime="2015-11-29T08:42:04.000Z" itemprop="datePublished">2015-11-29</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/11/29/2015-11-28-Java基础知识总结（三）——类和接口/">Java基础知识总结（三）——类和接口</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><strong>更新</strong>：<br>2015/11/28更新：增加多态中向上转型，方法重载，动态绑定有关编译/类加载/分派相关知识整理；</p>
-<hr>
-<p>主要是从面向对象的几个特性：封装、继承（复用）、多态的顺序总结Java有关的基础知识，它们的核心目的就是解耦和复用。<br><strong>从接口和实现分离的角度</strong>：<br><strong>封装</strong>：定义了“什么可以做和什么不可做”；<br><strong>继承和组合</strong>：提供了复用的两种手段；<br><strong>多态</strong>：定义了“做什么和怎么做”；<br><strong>接口和内部类</strong>：使得接口和实现分离更加结构化，都是是Java实现多重继承的变种手段；</p>
-<h1 id="1-_访问控制权限：">1. 访问控制权限：</h1><h2 id="1-1_访问控制权限的种类：">1.1 访问控制权限的种类：</h2><p>私有：private，default-private（包访问权限）；<br>保护：protected，protected也给予了包访问权限；<br>公有：public；</p>
-<h2 id="1-2_为什么要访问控制权限：">1.2 为什么要访问控制权限：</h2><p>信息隐藏：私有权限可以增强内聚性，便于之后的版本更新；公有权限说明对外界的承诺，必须兼容。</p>
-<h2 id="1-3_重要概念：">1.3 重要概念：</h2><p>编译单元：一个Java源代码文件，最多顶层可以有一个public类，该类的名称必须与文件名相同；<br>封装：具体实现的隐藏。把数据和方法包装进类中，以及具体的实现隐藏，共同称为封装；<br>接口和实现：将访问控制的界限放在类的内部是为了（1）控制客户端程序员的访问；（2）接口和实现的分离；</p>
-<h2 id="1-2_最小化访问权限的要点：">1.2 最小化访问权限的要点：</h2><p>（1）只用一个类使用的顶层类，可以变成嵌套类；<br>（2）Serializable可以导致意外的“信息泄漏”；<br>（3）公有类的protected声明也是一种对外的承诺，必须保证兼容；<br>（4）子类不能降低父类成员和方法的权限，父类的方法/域如果是protected的子类可以提升为public，如果是父类中是private的，子类中同签名方法是一个新方法而不是重写；<br>（5）接口的方法是public的，域是public static final的；</p>
-<h2 id="1-3_不应该公开的域：公开会导致多线程环境下的不安全和漏洞：">1.3 不应该公开的域：公开会导致多线程环境下的不安全和漏洞：</h2><p>（1）实例域；<br>（2）静态域（除了一些全局final变量）；<br>（3）final域中不应该包含非final的引用；<br>（4）引用数组域不应该公开，即使数组是final的，数组元素也不是（使用保护性拷贝，Collections.unmodifiableList等，返回clone数组等）；</p>
-<p>PS：在公有类中使用访问方法而不是公有域；</p>
-<hr>
-<h1 id="2-_每个类都有的方法：">2. 每个类都有的方法：</h1><p>共有9个方法：equals，hashCode，clone，getclass，toString，wait（3个重载版本），notify，notifyAll，finalize；</p>
-<h2 id="2-1_覆盖equals的通用约定：">2.1 覆盖equals的通用约定：</h2><h3 id="2-1-1_不需要覆盖得到有意义的equals的情况：">2.1.1 不需要覆盖得到有意义的equals的情况：</h3><p>（1）类的每个实例本质上是唯一的（包括全局唯一单例，枚举等）；<br>（2）不关心类是否提供了“逻辑相等”的测试功能；<br>（3）超类已经覆盖了equals，从超类继承equals方法也是合适的；<br>（4）类是私有或包级私有的，可以 确定它的equals永远不会被调用，可以覆盖它抛出异常；</p>
-<h3 id="2-1-2_等价关系：">2.1.2 等价关系：</h3><p>（1）自反性；<br>（2）对称性：在子类覆盖equals时，如果增加的了新的属性比较，父类调用equals为true时，子类调用可能就会为false；<br>（3）传递性：如果在上面的情况保证对称性，传递性可能就无法保证；<br>（4）一致性：只要不修改，多次调用结果一致；<br>（5）非空性：对于任何非null引用x，x.equals(null)必须返回false；</p>
-<h3 id="2-1-3_覆盖equals的注意：">2.1.3 覆盖equals的注意：</h3><p>（1）无法在扩展可实例化的类的同时，既增加新的值组件，同时又保留equals约定；<br>（2）使用getClass来代替instanceof的方法，也限制了在扩展新子类的情况下，保证一些父类的功能；<br>（3）使用复合代替继承，或者使用抽象父类；<br>（4）java.sql.TimeStamp违反了对称性，不要在Set中混合使用TimeStamp和Date（jdk1.7及以上没有这个问题因为在TimeStamp中getTime计算了nanos的值）；<br>（5）java.net.URL的equals依赖对URL中主机IP的比较，而主机名和IP需要DNS，可能造成不确定的结果；</p>
-<h3 id="2-1-4_覆盖equals的好做法：">2.1.4 覆盖equals的好做法：</h3><p>（1）覆盖equals时总要覆盖hasCode，以免equals相等而hashCode不相等，导致HashMap/Set等不能正常工作；<br>（2）对float和double进行特殊处理，因为存在Float.NaN，-0.0f等情况；</p>
-<h2 id="2-2_覆盖hashCode方法：">2.2 覆盖hashCode方法：</h2><h3 id="2-2-1_Object规范中hashCode的约定：">2.2.1 Object规范中hashCode的约定：</h3><p>（1）如果两个对象equals为true，hashCode返回的结果必须相等；<br>（2）如果两个对象equals为false，hashCode返回的结果不一定要不同，但是不同可以提高散列性能；<br>（3）一致性：如果涉及的值没有修改，返回值必须一致；</p>
-<h3 id="2-2-2_好的散列函数：为不相等的对象产生不相等的散列值">2.2.2 好的散列函数：为不相等的对象产生不相等的散列值</h3><p>（1）引用域递归调用hashCode方法；<br>（2）使用31作为系数，一是奇素数防止偶数乘法溢出信息丢失，二是编译器会优化成(i&lt;&lt;5) - i；<br>（3）不可变类的hashCode计算一次可以缓存；</p>
-<h2 id="2-3覆盖clone方法：">2.3覆盖clone方法：</h2><p>Object虽然提供了clone方法，但是没有实现Cloneable接口，它让需要的子类去实现，如果一个类没有实现Cloneable接口就调用clone方法，会抛出CloneNotSupportedException异常；<br>覆盖clone方法注意：<br>（1）super.clone()是原始对象的复制，复制的是基本类型和引用值，也就是浅拷贝；<br>（2）通过JDK1.5提供的协变返回类型，可以将clone的返回修改为具体的类型；<br>（3）数组需要调用它的clone方法进行递归的复制，并且编译器会将array.clone()方法类型转换成我们需要的；<br>（4）对于链表结构的对象，需要自己实现深拷贝方法，使用迭代优于递归；<br>（5）不要在clone方法中调用任何可被覆盖的方法；<br>（6）专门为了继承而设计的类，不要实现Cloneable接口，由子类决定；</p>
-<p>PS：拷贝工厂和拷贝构造器提供另一种选择；</p>
-<h2 id="2-4_实现Comparable接口：">2.4 实现Comparable接口：</h2><p>comparable的行为和特定和equals等价关系很像。<br>注意：<br>（1）comparable结果为0,equals结果为true是约定，但是不一定实现，BigDecimal类，就违反了这个约定，new BigDecimal(“1.0”)和new BigDecimal(“1.00”)的equals结果为false，但是使用TreeSet而不是HashSet就会发现，它们是相等；<br>（2）CompareTo方法依赖与参数化，而不是类型检查；<br>（3）对于整型可以用&gt;,&lt;，浮点型应该用Double.compare和Float.compare方法；<br>（4）注意在使用差值计算比较大小时可能出现的溢出问题（正数减负数）；</p>
-<hr>
-<h1 id="3-_复用类（组合，has-a和继承，is-a）：">3. 复用类（组合，has-a和继承，is-a）：</h1><h2 id="3-1_复用与初始化：">3.1 复用与初始化：</h2><p>（1）组合：主要有4种初始化形式：<br>a.在定义处进行初始化，在构造器调用前就会进行初始化；<br>b.实例初始化；<br>c.惰性初始化；<br>d.构造器中进行初始化；</p>
-<p>（2）继承与初始化：<br>构造器调用链（栈）：先调用基类的构造器；<br>因此在子类的构造器中需要在其他所有语句前显调用父类的构造器，如果是默认构造器，编译器会自动补上；</p>
-<h2 id="3-2_复用与清理：">3.2 复用与清理：</h2><p>继承中的清理：<br>finalize方法会显调用子类的再调用父类的（如果覆盖了的话），但它不能保证资源被及时释放；<br>使用自定义dispose()方法时，要注意调用父类的super.close/dispose方法，调用顺序保证和finalize相同；</p>
-<h2 id="3-3_继承中的方法覆盖和重载：">3.3 继承中的方法覆盖和重载：</h2><p>（1）子类中可以覆盖和重载父类的非私有方法（C++并不是这样）；<br>（2）继承的类和接口之间，接口和接口之间有相同的方法，签名一致，返回类型一致，可以“共用”一个方法；</p>
-<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ReuseClass</span> </span>{
-    <span class="keyword">private</span> <span class="class"><span class="keyword">interface</span> <span class="title">I</span> </span>{
-        <span class="function"><span class="keyword">void</span> <span class="title">i</span><span class="params">()</span></span>;
-    }
-
-    <span class="keyword">private</span> <span class="class"><span class="keyword">interface</span> <span class="title">R</span> </span>{
-        <span class="function"><span class="keyword">void</span> <span class="title">i</span><span class="params">()</span></span>;
-    }
-
-    <span class="keyword">private</span> <span class="keyword">abstract</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>{
-        <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">i</span><span class="params">()</span></span>;
-    }
-
-    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">B</span> <span class="keyword">extends</span> <span class="title">A</span> <span class="keyword">implements</span> <span class="title">I</span>, <span class="title">R</span> </span>{
-        <span class="comment">//可以用内部类来模拟多重继承解决意外的“重名”</span>
-        <span class="annotation">@Override</span>
-        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">i</span><span class="params">()</span> </span>{
-
-        }
-    }
-}
-</code></pre><p>（3）继承的类和接口之间，接口和接口之间有相同的方法，签名一致，返回类型不一致，会产生冲突，可以通过组合和内部类解决；</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">RI</span> </span>{
-        <span class="keyword">private</span> <span class="class"><span class="keyword">interface</span> <span class="title">I</span> </span>{
-            <span class="function"><span class="keyword">void</span> <span class="title">i</span><span class="params">()</span></span>;
-        }
-
-        <span class="keyword">private</span> <span class="class"><span class="keyword">interface</span> <span class="title">R</span> </span>{
-            <span class="function"><span class="keyword">int</span> <span class="title">i</span><span class="params">()</span></span>;
-        }
-
-        <span class="keyword">private</span> <span class="keyword">abstract</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>{
-            <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">i</span><span class="params">()</span></span>;
-        }
-
-        <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">B</span> <span class="keyword">extends</span> <span class="title">RI</span>.<span class="title">A</span> <span class="keyword">implements</span> <span class="title">RI</span>.<span class="title">I</span> </span>{
-            <span class="comment">//可以用内部类来模拟多重继承解决意外的“重名”</span>
-            <span class="annotation">@Override</span>
-            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">i</span><span class="params">()</span> </span>{
-            }
-
-            <span class="keyword">public</span> RI.<span class="function">R <span class="title">makeR</span><span class="params">()</span> </span>{
-                <span class="keyword">return</span> <span class="keyword">new</span> RI.R() {
-                    <span class="annotation">@Override</span>
-                    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">i</span><span class="params">()</span> </span>{
-                        <span class="keyword">return</span> <span class="number">0</span>;
-                    }
-                };
-            }
-        }
-    }
-</code></pre><h2 id="3-4_向上转型：">3.4 向上转型：</h2><p>向上转型一般是安全，导出类是基类的超集；</p>
-<h2 id="3-5_final关键字：使可变性最小化（典型的：String类）">3.5 final关键字：使可变性最小化（典型的：String类）</h2><h3 id="3-5-1_final使用情况：">3.5.1 final使用情况：</h3><p>（1）final域：注意必须要在使用前进行初始化（实例初始化器或构造器）；<br>（2）final参数；<br>（3）final方法：<br>方法锁定，防止继承修改；<br>不要用它来优化效率；<br>所有的private方法隐式地是final的（子类的同名方法不是Override是一个新方法）；<br>（4）final类：防止继承，所有的方法都是隐式final的；</p>
-<h3 id="3-5-2_不可变创建的准则：">3.5.2 不可变创建的准则：</h3><p>（1）不要提供任何会修改状态的方法；<br>（2）保证类不被扩展（private和final声明）；<br>（3）所有域是final的；<br>（4）所有域是私有的（private和包级私有）；<br>（5）保证对任何可变组件的互斥访问，如果存在非final引用，确保客户端程序不能获取它（保护性拷贝）；</p>
-<h3 id="3-5-3_不可变对象的创建：">3.5.3 不可变对象的创建：</h3><p>（1）通过构造器注入可变对象来初始化，一定要进行保护性拷贝；<br>（2）如果域之间存在约束条件，在创建前进行检查，创建之后状态不变，保证约束条件不变；<br>（3）通过静态工厂valueOf+享元模式，可以减少新对象的创建（比如，Integer等的valueOf，Integer的享元通过数组保存对象引用，字符串常量池等）；</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">FinalTest</span> </span>{
-    <span class="keyword">private</span> <span class="keyword">final</span> String a;
-    <span class="keyword">private</span> Inner inner;
-    <span class="comment">//通过实例初始化赋值final域</span>
-    {
-        a = <span class="string">"final"</span>;
-    }
-    <span class="comment">//这是不安全的做法，客户端可以在外部修改inner</span>
-<span class="comment">//    public FinalTest(Inner inner) {</span>
-<span class="comment">//        this.inner = inner;</span>
-<span class="comment">//    }</span>
-    <span class="function"><span class="keyword">public</span> <span class="title">FinalTest</span><span class="params">(Inner inner)</span> </span>{
-        <span class="comment">//Inner是非final类，调用它的clone方法并不安全，因为可被子类覆盖</span>
-<span class="comment">//        this.inner = inner.clone();</span>
-        <span class="comment">//这是一个安全的做法，因为我们使用了明确的构造器</span>
-        <span class="keyword">this</span>.inner = <span class="keyword">new</span> Inner(inner.a);
-    }
-
-    <span class="comment">//对于没有实现cloneable接口的类，调用clone方法会抛出异常（Object中的clone是protected和native的）</span>
-    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Inner</span> <span class="keyword">implements</span> <span class="title">Cloneable</span> </span>{
-        <span class="keyword">private</span> <span class="keyword">int</span> a;
-
-        <span class="function"><span class="keyword">public</span> <span class="title">Inner</span><span class="params">(<span class="keyword">int</span> a)</span> </span>{
-            <span class="keyword">this</span>.a = a;
-        }
-
-        <span class="annotation">@Override</span>
-        <span class="function"><span class="keyword">public</span> Inner <span class="title">clone</span><span class="params">()</span> </span>{
-            Inner inner = <span class="keyword">null</span>;
-            <span class="keyword">try</span> {
-                inner = (Inner)<span class="keyword">super</span>.clone();
-                inner.a = a;
-            } <span class="keyword">catch</span> (CloneNotSupportedException e) {
-                e.printStackTrace();
-            }
-            <span class="keyword">return</span> inner;
-        }
-    }
-}
-</code></pre><h3 id="3-5-4_不可变对象的优点：">3.5.4 不可变对象的优点：</h3><p>（1）线程安全的，可以安全的共享；<br>（2）不用实现clone方法，可以直接使用；<br>（3）内部信息可以共享，比如String的substring方法返回的是指向同一final数组的新String对象引用；<br>（4）hashCode值可以计算一次缓存起来；</p>
-<h3 id="3-5-5_不可变对象的缺点：">3.5.5 不可变对象的缺点：</h3><p><strong>问题1</strong>：[真正意义的缺点]由于不能修改，在一些变值的操作中可能产生大量的对象；<br><strong>解决</strong>：提供配套类进行操作，使用享元模式缓存（字符串常量池等），比如StringBuilder于String；<br><strong>问题2</strong>：不可变类如果包含一个或多个可变对象的域在序列化时并不安全（伪字节流攻击，内部域盗用）；<br><strong>解决</strong>：<br>（1）提供保护性拷贝的readObject方法：<br>必须提供一个readObject方法；<br>在readObject中进行保护性拷贝，并检查约束条件，不满足则抛出InvalidObjectException；<br>注意使用readObject中的保护性拷贝，域的final的关键字要去掉；<br>（2）readResolve方法和枚举类型：<br>因为单例模式中我们也经常使用private static final；<br>无论使用默认的序列化形式，还是自定义序列化形式，是否提供readObject无关，都会创建新的实例，违反了“单例”的要求；<br>a.使用readResolve方法，直接返回单例引用，新建的引用丢弃：</p>
-<pre><code><span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">ReadResolveWrapper</span> <span class="keyword">implements</span> <span class="title">Serializable</span> </span>{
-    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> ReadResolveWrapper SINGLETON = <span class="keyword">new</span> ReadResolveWrapper();
-    <span class="comment">//所有的域都应该是transient的</span>
-    <span class="keyword">private</span> <span class="keyword">transient</span> A a = <span class="keyword">new</span> A();
-
-    <span class="function"><span class="keyword">private</span> <span class="title">ReadResolveWrapper</span><span class="params">()</span> </span>{}
-
-    <span class="function"><span class="keyword">private</span> Object <span class="title">readResolve</span><span class="params">()</span> </span>{
-        <span class="keyword">return</span> SINGLETON;
-    }
-}
-</code></pre><p>b.使用枚举类型来实现单例；<br>（3）序列化代理代替序列化实例（静态内部类，性能比保护性readObject要高，但是可以使用final关键字，更加稳定）：<br>序列化代理的默认序列化形式是外围类最好的序列化形式：<br>局限：一是不能与可以被客户端扩展的类兼容；二是不能与对象图中包含循环的某些类相兼容；</p>
-<p>##3.6 继承与类加载和初始化：</p>
-<p>过程概述（下面说的子类是代码中的直接使用类，相对于它的父类）：<br>（1）[类加载]：先检查是否有基类，直到检查到一个尚未被加载的根基类。先加载根基类基类，再加载其子类，依次类推，类加载的过程是先父后子的；<br>（2）[类初始化]：如果访问一个子类，如果父类没有初始化，会先初始化父类；<br>（3）[实例初始化和构造器]：先进行父类的实例初始化并调用构造器，再进行子类的实例初始化并调用子类的构造器器；</p>
-<h1 id="4-_多态（向上转型，方法重载和动态绑定）：">4. 多态（向上转型，方法重载和动态绑定）：</h1><p>多态是什么：<br>多态表示不同的对象可以执行相同的动作，但要通过它们自己的实现代码来执行；<br>多态的作用：<br>接口和实现分离的另一角度的设计，之前已经提到通过访问控制权限来封装进行接口和实现的分离。<br>消除类型之间的耦合关系，使得程序代码获得了可扩展性。<br>多态建立在继承或者接口实现，重写等机制的基础上，接口和实现的分离，主要的方式之一就是向上转型和动态绑定；</p>
-<p>PS：下面会概括的解释向上转型，方法重载和动态绑定在编译，类加载或运行时的实现原理，其中编译时验证和类加载时的验证都是必要，类加载时的验证是为了避免伪造的字节码，因为Java是基于开放来源的二进制字节流的Class文件可能来自于网络等。</p>
-<hr>
-<h2 id="4-1_向上转型：">4.1 向上转型：</h2><p>把某个对象的引用作为对其基类的引用；<br>注意：<br>（1）子类以父类的身份出现；<br>（2）子类在工作时，有自己的代码实现；<br>（3）子类以父类的身份出现时，子类特有的方法和属性不能使用；</p>
-<p>实现和保证：<br>（1）编译时，在语义分析阶段，在Attr标注检查阶段，委托com.sun.tools.javac.comp.Check来检查方法返回类型与接受的引用类型之间是否匹配；<br>（2）类加载时，在字节码验证阶段，检查方法体中的类型转换是否有效，子类对象赋值给父类数据类型是安全的，父类对象赋值给子类数据类型是不合法的；<br>（3）数据流验证具有复杂性，JDK1.6后通过Code属性表的“stackMapTable”属性，它描述了方法体中基本块本地变量表和操作栈的应用状态，通过类型检查而不是类型推导效率更高。</p>
-<h2 id="4-2_方法重载（静态分派/解析）：">4.2 方法重载（静态分派/解析）：</h2><p>方法重载是编译/解析时确定的，因此有些人不认为它属于“多态”，不过这里还是一起联系讨论一下。<br>形如SuperClass subClass = new SubClass();<br>SuperClass是subClass的静态类型，SubClass是其动态类型；</p>
-<p>实现和保证：<br>编译时，编译器根据调用方法的简单名称和参数数量以及参数的静态类型，根据优先级决定使用哪一个版本，将方法的符号引用写到invoke～指令的参数中；</p>
-<p>重载的优先级：以静态类型为char的变量为例，优先级与转型相关<br>（1）char类型本身，如f(char)；<br>（2）宽化转型类型，顺序char,int,long,float,double，f(int)等；<br>（3）自动装箱类型：Character；<br>（4）父类/实现接口：如Serializable，同理在没有f(SubClass)是subClass（静态类型为SubClass）可以匹配f(SuperClass)；<br>类/接口实现体系中越往上层，优先级越低，存在同一优先级具有模糊性，编译会报错。<br>（5）可变参数列表：如f(char…c)优先级最低；</p>
-<p>PS：实际中不应该设计如此复杂的重载版本方法；</p>
-<h2 id="4-3_动态绑定（动态分派）：">4.3 动态绑定（动态分派）：</h2><p>实现多态的原理就是动态绑定（后期绑定，运行时绑定），区别与编译时进行的静态绑定，动态绑定通过对象中的类型信息在运行的时候决定具体的调用方法。</p>
-<p>Java中哪些是动态绑定的：<br>非final（包括private）方法的实例方法都属于动态绑定的，也就是通过invokevirtual和invokeinterface两个指令处理的调用；</p>
-<p>Java中哪些不是动态绑定的：<br>域（成员变量），static方法，private方法（private是隐式final的）都是前期绑定的，也就是编译的时候进行绑定，它们不存在多态行为；<br>因此前面提过的private方法在子类中定义同名的方法，并非是“覆盖”而是一个新的方法，JVM不会用invokevirtual指令来处理它，而是invokespeical指令；<br>对于final方法，final虽然通过invokevirtual指令调用，但是它是非虚方法，在类解析阶段就可以确定调用方法版本。</p>
-<p>实现和保证（invokevirtual指令的多态查找，基于Hotspot实现）：<br>（1）取得操作数栈栈顶元素（直接引用）所指向的对象的实际类型，记作C；Hotspot过程是通过直接引用找到堆中的实例数据，根据对象头中的类型指针找到方法区中Class对象；<br>（2）如果在类型C中找到与常量池中的描述符和简单名称都相符的方法，进行符号引用验证，检查访问权限，成功，返回方法的直接引用查找结束，失败，抛出java.lang.IllegalAccessError；<br>（3）如果没有在类型C中找到，按照继承关系从下往上对C的各个父类进行第2步的查找过程；<br>（4）如果最后没有找到合适的方法，抛出java.lang.AbstractMethodError；</p>
-<p>JVM动态分派实现：<br>优化的必要性：虚方法调用是最为频繁的，因此如果每次调用同一个方法都按照继承链查找效率太低；<br>解决方法：虚方法表/接口方法表<br>（1）子类如果没有实现某个方法，同样会包含父类方法的地址入口等信息；<br>（2）具有相同签名的方法，在父类、子类的虚方法表中具有一样的索引序号，在类型转换时按索引转换出所需的入口地址；<br>（3）初始化，在类加载的连接阶段（包括验证，准备，解析）进行初始化方法表，准备（准备阶段）类的变量初始值后，虚拟机将该类的方法表也初始化完毕；<br>PS：另外还有内联缓存，守护内联两种非稳定的优化手段。</p>
-<h2 id="4-4_实例初始化和多态：">4.4 实例初始化和多态：</h2><p>在构造器，clone方法，readObject方法中不要使用可覆盖的方法；原因在于可覆盖方法在构造时通过invokevirtual会使用对象在继承树中最低类型的方法实现，如果依赖于子类的成员变量，可能不能得到正确的初始化而产生错误。</p>
-<h2 id="4-5_协变返回类型：">4.5 协变返回类型：</h2><p>导出类的被覆盖方法可以返回基类方法返回类型的某个派生类型；</p>
-<h2 id="4-6_用继承进行设计：">4.6 用继承进行设计：</h2><h3 id="4-6-1_什么时候使用继承：">4.6.1 什么时候使用继承：</h3><p>存在明确“is-a”关系时才使用继承；<br>明确需要使用“向上转型”的情况需要使用继承；<br>用继承表达行为间的差异，用字段（组合）表达状态上的变化；<br>（1）为继承而设计的类要编写文档说明（包括方法间的依赖关系）；<br>（2）不要在构造器，clone，readObject中调用可被覆盖的方法，也就是说在这些方法中使用动态绑定并不安全；<br>（3）回调框架不适合使用组合；</p>
-<p>PS：禁止类实例化，（1）private构造器；（2）abstract声明类；</p>
-<p>“is-like-a”关系：<br>继承中除了向上转型，即使存在“is-a”关系软件开发的需求的变化使得需要依赖派生类型的特性成为可能。<br>Java中对象是带有类型信息的，通过运行时类型识别（反射），判断或者转换为具体的派生类。<br>Java所有的转型都是经过判断的，通过checkcast指令，错误抛出ClassCastException；</p>
-<h3 id="4-6-2_组合（复合）优于继承：">4.6.2 组合（复合）优于继承：</h3><p>如果同一个包中使用继承没有什么问题；<br>跨包继承可能出现的问题：<br>（1）破坏了封装性，子类随着超类的改变可能不安全；<br>比如，HashSet中addAll通过add方法实现的，这种关系可能带来子类的不正确的行为，而这种可覆盖方法间的关系并不是“承诺”而是具体实现；<br>（2）超类中添加了新的方法，可能会破坏子类的一些约束条件；<br>（3）子类中添加了新的方法，可能因为父类之后添加新的同名（返回类型不同）方法而出错；<br>（4）单继承限制了子类的扩展能力；</p>
-<hr>
-<h1 id="5-_接口：">5. 接口：</h1><h2 id="5-1_抽象类和抽象方法：">5.1 抽象类和抽象方法：</h2><p>防止类实例化，abstract方法必须包含abstract类；<br>抽象类和重构：<br>抽象类是很有用的重构工具，当发现存在公共方法时，可以将它上移放到抽象类中，这也是模板方法模式的体现；</p>
-<h2 id="5-2_接口：">5.2 接口：</h2><p>接口本身可以选择public，默认包权限，private，protected；<br>接口中的域是public static final的；<br>接口中的方法是public的，实现接口时只能将接口方法实现为public的，因为Java编译器不允许降低访问权限；</p>
-<h2 id="5-3_完全解耦，接口优于抽象类：">5.3 完全解耦，接口优于抽象类：</h2><p>（1）Java中类之间只允许单继承，如果在方法参数等地方使用类，那只能限制于这个类及其子类对象传入，使用接口可以避免耦合于类型；<br>（2）单继承的另一个问题是导致“类的组合爆炸”，如果方法要接受两种类体系的类，必须提供一个要增加一个公共的祖先，而通过接口，让需要传入的对象，实现这个接口就可以了；</p>
-<p>在客户端代码中使用依赖于接口，而不是类，进一步增强可扩展性和复用性；</p>
-<p>抽象类和接口的结合使用：<br>（1）结合接口和抽象类，在提供接口体系的同时，通过AbstractInterface提供骨架类，提供一些基本的实现；<br>（2）抽象类往往位于接口体系的“底层”，因为这样功能体系基本稳定，而且抽象类专为继承实现，而且只提供最核心和基础的共同的实现，典型的例子Java Collections Framework，Spring BeanFactory Framework；</p>
-<h2 id="5-4_接口与多重继承：">5.4 接口与多重继承：</h2><h3 id="5-4-1_通过继承扩展接口：">5.4.1 通过继承扩展接口：</h3><p>用接口层次代替类层次；</p>
-<h3 id="5-4-2_接口和类“多重继承中”名称冲突：">5.4.2 接口和类“多重继承中”名称冲突：</h3><p>（1）如果要实现的接口或者类中，用方法签名相同（名称和参数列表），但返回类型不同的，无法直接同时实现/继承；<br>（2）即使返回类型相同，也不能保证两个接口/类的同名方法应该用同一个实现而没有问题；<br>（3）对于包含同名方法的接口，使用组合而不是实现/继承，用内部类实现接口/类，通过返回一个内部类的实例（闭包）来避免名称冲突；</p>
-<h2 id="5-5_接口域与初始化：">5.5 接口域与初始化：</h2><p>（1）接口中的域是public static final的；<br>（2）接口只用来只用来定义类型，用接口存放常量是一种反模式；<br>（3）接口中域的初始化发生在该接口中某个域被一次访问时；<br>（4）接口的初始化与类不同，子接口的初始化不会导致先初始化父接口；</p>
-<h2 id="5-6_嵌套接口：">5.6 嵌套接口：</h2><p>（1）接口中不能嵌套包含private接口；<br>（2）接口中也可以嵌套包含class，是public static的；<br>（3）接口中的方法是public的，域是public static final的，接口和类是public static的；<br>（4）class中可以包含private接口，这样可以防止向外部返回它的任何实现；</p>
-<hr>
-<h1 id="6-_内部类：">6. 内部类：</h1><h2 id="6-1_内部类的种类：">6.1 内部类的种类：</h2><p>（1）静态成员类；<br>（2）非静态成员类；<br>（3）局部内部类：任何可以定义局部变量的地方都可以定义局部内部类，主要用于复用；<br>（4）匿名内部类；</p>
-<h2 id="6-2_内部类与闭包的实现：">6.2 内部类与闭包的实现：</h2><p>通过接口+私有内部类，可以创建“闭包”，客户端代码无法访问到具体的类型，同时私有内部类可以获取到外围类对象的状态；<br>Java中使用这种闭包的例子：<br>List等集合类中的Iterator的实现；</p>
-<h2 id="6-3_4种内部类的要点：">6.3 4种内部类的要点：</h2><h3 id="6-3-1_非静态成员类：">6.3.1 非静态成员类：</h3><p>（1）创建：.new，在外部创建一个外围类C的内部类用：c.new关键字；；<br>（2）构造器：经过编译器编译获取了外围类的this指针作为内部类的成员变量：this$0；</p>
-<p>编译器为非静态内部类生成一个带有外围类类型的参数，用来注入外围类的引用；</p>
-<h3 id="6-3-2_匿名内部类：">6.3.2 匿名内部类：</h3><p>（1）匿名内部类的创建：可以用类，抽象类，接口来定义匿名内部类，匿名内部类其实是它们的派生类；<br>（2）匿名内部类的构造器：不能手动定义构造器，Java编译器会根据使用的基类的构造器，为匿名内部类生成一个带有基类类型的参数的构造器，同时为匿名类添加一个基类类型的成员变量，通过构造器设置这个变量包含外围类的引用；<br>虽然不能创建构造器，但是可以使用实例化器；<br>（3）匿名内部类的名称：默认是基类名称$n，n是调用类中第n个匿名内部类，这是一种编译器的内部机制，尽管可以通过这个名称使用反射获取指定构造器来创建匿名内部类对象，但这不是匿名内部类应该有的用法；<br>（4）匿名内部类不能再进行扩展；</p>
-<h3 id="6-3-3_静态成员类：">6.3.3 静态成员类：</h3><p>（1）类初始化：与外围类没有直接关系，类初始化的触发条件仍然和普通类一样，5点；<br>（2）实例化：与外围类没有直接关系；<br>（3）不能从静态成员类内部访问外围类的非静态成员和方法；</p>
-<h3 id="6-3-4_局部内部类：">6.3.4 局部内部类：</h3><p>主要是为了复用和局部使用需要一个重载的构造器，否则一般不会用；<br>只要能定义局部变量的地方就可一定义；<br>它的“作用域”和局部变量一样；<br>不能有访问修饰符；<br>可以访问外围的成员和代码块的常量；</p>
-<h2 id="6-4_内部类的作用：">6.4 内部类的作用：</h2><p>（1）多重继承：<br>内部类和接口是解决Java多重继承的方案；<br>接口可以在设计的时候，将一些通用的功能设计成接口，但是对于系统中已经有的类，想要多重继承多个类，只能使用内部类的方式实现；<br>使用内部类可以解决接口/类继承时的名称冲突；</p>
-<p>（2）闭包和回调：<br>由于内部类可以访问外围的所用状态（包括private的），因此实际上它是一个“闭包”；<br>Java中没有函数指针，因此回调，通过“函数对象”实现，闭包可以作为回调对象传递给调用者；<br>类似的用法：Thread+runnable（命令模式），事件监听（观察者模式）等等；</p>
-<h2 id="6-5_内部类的继承：">6.5 内部类的继承：</h2><p>构造器的实现：<br>继承一个非静态内部类时，外围类.super()并不是在调用外围类的基类构造器，而是要继承的内部类的构造器，这是一种特殊的语法，相同的还有“外围类.new”想到这.new应该就不会对”.super”过于纠结了吧。<br>外围类实现：</p>
-<pre><code><span class="class"><span class="keyword">class</span> <span class="title">A</span> {</span>
-    <span class="type">A</span>() {
-        <span class="type">System</span>.out.println(<span class="string">"A"</span>);
-    }
-}
-
-public <span class="class"><span class="keyword">class</span> <span class="title">InnerClassTest</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">A</span> {</span>
-    <span class="class"><span class="keyword">class</span> <span class="title">Inner</span> {</span>
-        public <span class="type">Inner</span>(int x) {
-
-        }
-    }
-}
-</code></pre><p>继承内部类：</p>
-<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">InnerExtend</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">InnerClassTest</span>.<span class="title">Inner</span> {</span>
-    public <span class="type">InnerExtend</span>(<span class="type">InnerClassTest</span> test, int x) {
-        test.<span class="keyword">super</span>(x);
-    }
-
-    public static void main(<span class="type">String</span>[] args) {
-        <span class="keyword">new</span> <span class="type">InnerExtend</span>(<span class="keyword">new</span> <span class="type">InnerClassTest</span>(), <span class="number">1</span>);
-    }
-}
-</code></pre><p>PS 内部类不可以被“覆盖”<br>内部类不可以被覆盖，继承一个外围类时，即使提供一个同名的内部类也不是覆盖，查看编译之后的class文件可以发现实际上，这个内部类类名是“外围类$内部类”，外围类只是内部类的“命名空间”；</p>
-<p><strong>参考资料</strong>：<br>[1] Java编程思想 第4版；<br>[2] Effective Java；<br>[3] 深入Java Web技术内幕；<br>[4] 深入理解Java虚拟机；</p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
 	</div>
 
       
