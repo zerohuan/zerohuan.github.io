@@ -196,6 +196,409 @@
 </nav>
       <div class="body-wrap">
   
+    <article id="post-Spring容器的启动和IoC容器原理" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/11/30/Spring容器的启动和IoC容器原理/" class="article-date">
+  	<time datetime="2015-11-29T16:30:52.000Z" itemprop="datePublished">2015-11-30</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/11/30/Spring容器的启动和IoC容器原理/">Spring容器的启动和IoC容器原理</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="1-_Spring配置的几种方式：">1. Spring配置的几种方式：</h1><p>目前最新的Spring一般有3种配置方式：<br>基于XML配置；<br>混合配置（XML配置+注解+XML配置扫描路径）；<br>基于代码配置（Spring3.1后，可以完全使用注解+WebApplicationInitializer）；<br>通过XML配置Spring的基本做法：</p>
+<pre><code><span class="variable">&lt;!---①从类路径下加载spring配置文件-&gt;</span>
+<span class="variable">&lt;context-param&gt;</span>
+    <span class="variable">&lt;param-name&gt;</span>contextConfigLocation<span class="variable">&lt;/param-name&gt;</span>
+    <span class="variable">&lt;param-value&gt;</span>
+        classpath<span class="keyword">*</span>:config/spring/common/appcontext-<span class="keyword">*</span>.xml,
+        classpath<span class="keyword">*</span>:config/spring/local/appcontext-<span class="keyword">*</span>.xml,
+        classpath<span class="keyword">*</span>:/config/spring/abtest/appcontext-<span class="keyword">*</span>.xml,
+        classpath<span class="keyword">*</span>:/config/spring/pagelet/appcontext-pagelet-core.xml
+    <span class="variable">&lt;/param-value&gt;</span>
+<span class="variable">&lt;/context-param&gt;</span>
+
+<span class="variable">&lt;!--②负责启动spring容器的监听器，它将使用①处的上下文参数获得spring配置文件地址--&gt;</span>
+<span class="variable">&lt;listener&gt;</span>
+    <span class="variable">&lt;listener-class&gt;</span><span class="variable">&lt;span style="color:#ff0000;"&gt;</span>org.springframework.web.context.ContextLoaderListener<span class="variable">&lt;/span&gt;</span><span class="variable">&lt;/listener-class&gt;</span>
+<span class="variable">&lt;/listener&gt;</span>
+</code></pre><p>通过<strong>WebApplicationInitializer</strong>的基本做法：</p>
+<pre><code>@Override
+<span class="keyword">public</span> <span class="keyword">void</span> onStartup(ServletContext <span class="keyword">container</span>) throws ServletException {
+    logger.info(<span class="string">"Initializer startUp..."</span>);
+    <span class="keyword">container</span>.getServletRegistration(<span class="string">"default"</span>).addMapping(<span class="string">"/resource/*"</span>);
+
+    <span class="comment">//Use ContextLoaderListener to create a root context, it is father of contexts used in dispatcherServlet</span>
+    AnnotationConfigWebApplicationContext rootContext = <span class="keyword">new</span> AnnotationConfigWebApplicationContext();
+    rootContext.register(RootContextConfiguration.class);
+    &lt;span style=<span class="string">"color:#ff0000;"</span>&gt;<span class="keyword">container</span>.addListener(<span class="keyword">new</span> ContextLoaderListener(rootContext));&lt;/span&gt;
+}
+</code></pre><p>这里使用初始化器启动Spring，初始化器ServletContainerInitializer是Java EE6中一个新接口，它会在所有监听器启动之前调用它们的的onStartUp方法，并且它不需要通过web.xml部署描述符来定义，需要在/META-INF/services/javax.servlet.ServletContainerInitializer中列出具体的实现，Servlet容器在启动时会自动加载它们并调用onStartUp方法。</p>
+<p>但是文件不能放在WAR文件的/META-INF/services中，而是需要放在JAR文件的/META-INF/services中，这样就很不方便。Spring Framework提供了一个桥接口，在Spring中SpringServletContainerInitializer类实现了ServletContainerInitializer接口，Spring的JAR中列出了SpringServletContainerInitializer，如下。在SpringServletContainerInitializer中会扫描所有WebApplicationInitializer的实现，调用它们的onStartUp方法，因此我们不必在劳神费心了。</p>
+<p>通过XML和Java代码两种方式我们可以看到实际上Spring是通过ContextLoaderListener来启动的。基于Servlet容器启动的顺序应该有：Initializer—&gt;listener-&gt;filter-&gt;servlet。<br>因此我们来看看ContextLoaderListener作为ServletContextListener到底是如何启动Spring的。</p>
+<p>#2. Spring的初始化和启动：</p>
+<p>ContextLoaderListener的contextInitialized方法委托ContextLoader的initWebApplicationContext方法进行上文初始化，我们来看看一些关键步骤：<br>步骤一：创建上文对象实例：</p>
+<pre><code><span class="keyword">if</span> (<span class="keyword">this</span>.context == <span class="literal">null</span>) {
+    <span class="keyword">this</span>.context = createWebApplicationContext(servletContext);
+}
+</code></pre><p>在基于代码的配置中由于手动创建了AnnotationConfigWebApplication实例，因此此时context已经创建，如果通过XML配置，createWebApplicaitonContext方法会首先检查Servlet定义中有没有定义参数contextClass指明Context的类型，如果没有通过反射创建默认类型org.springframework.web.context.support.XmlWebApplicationContext的实例。</p>
+<p>步骤二：开始配置刷新Spring上下文：</p>
+<pre><code><span class="keyword">if</span> (<span class="keyword">this</span>.context <span class="keyword">instanceof</span> ConfigurableWebApplicationContext) {
+                ConfigurableWebApplicationContext cwac = (ConfigurableWebApplicationContext) <span class="keyword">this</span>.context;
+                <span class="keyword">if</span> (!cwac.isActive()) {
+                    <span class="comment">// The context has not yet been refreshed -&gt; provide services such as</span>
+                    <span class="comment">// setting the parent context, setting the application context id, etc</span>
+                    <span class="keyword">if</span> (cwac.getParent() == <span class="literal">null</span>) {
+                        <span class="comment">// The context instance was injected without an explicit parent -&gt;</span>
+                        <span class="comment">// determine parent for root web application context, if any.</span>
+                        ApplicationContext parent = loadParentContext(servletContext);
+                        cwac.setParent(parent);
+                    }
+                    configureAndRefreshWebApplicationContext(cwac, servletContext);
+                }
+            }
+</code></pre><p>因为AnnotationConfigWebApplication和XmlWebApplicationContext都是ConfigurableWebApplicationContext实现（实际的web项目中Context一般都是继承于AbstractRefreshableWebApplicationContext的），所以对上下文进行配置和刷新，关键在于configureAndRefreshWebApplicationContext方法，下面我们同样看看该方法的关键部分。</p>
+<p>步骤三：加载重要初始化参数：</p>
+<pre><code><span class="keyword">if</span> (ObjectUtils.identityToString(wac).equals(wac.getId())) {
+            <span class="comment">// The application context id is still set to its original default value</span>
+            <span class="comment">// -&gt; assign a more useful id based on available information</span>
+            <span class="built_in">String</span> idParam = sc.getInitParameter(CONTEXT_ID_PARAM);
+            <span class="keyword">if</span> (idParam != <span class="literal">null</span>) {
+                wac.setId(idParam);
+            }
+            <span class="keyword">else</span> {
+                <span class="comment">// Generate default id...</span>
+                wac.setId(ConfigurableWebApplicationContext.APPLICATION_CONTEXT_ID_PREFIX +
+                        ObjectUtils.getDisplayString(sc.getContextPath()));
+            }
+        }
+
+        wac.setServletContext(sc);
+        <span class="built_in">String</span> configLocationParam = sc.getInitParameter(CONFIG_LOCATION_PARAM);
+        <span class="keyword">if</span> (configLocationParam != <span class="literal">null</span>) {
+            wac.setConfigLocation(configLocationParam);
+        }
+
+        <span class="comment">// The wac environment's #initPropertySources will be called in any case when the context</span>
+        <span class="comment">// is refreshed; do it eagerly here to ensure servlet property sources are in place for</span>
+        <span class="comment">// use in any post-processing or initialization that occurs below prior to #refresh</span>
+        ConfigurableEnvironment env = wac.getEnvironment();
+        <span class="keyword">if</span> (env <span class="keyword">instanceof</span> ConfigurableWebEnvironment) {
+            ((ConfigurableWebEnvironment) env).initPropertySources(sc, <span class="literal">null</span>);
+        }
+</code></pre><p>（1）首先加载contextId，同样检查有无配置，否则使用默认的；<br>（2）绑定ServletContext；<br>（3）绑定config文件的位置，这一步将我们在部署描述符中设置上下文参数contextConfigLocation指定的配置文件位置载入；<br>（4）绑定环境和profile；</p>
+<p>步骤四：加载自定义上下文初始化器并按指定顺序执行初始化方法：</p>
+<pre><code>customizeContext<span class="list">(<span class="keyword">sc</span>, wac)</span><span class="comment">;</span>
+</code></pre><p>Spring提供了一个ApplicationContextInitializer接口，可以通过context-param和init-param指定类名，这里同样是通过反射创建实例，并根据Order注解大小排序，按序执行初始化方法；进行context一些值的设置比如说setAllowBeanDefinitionOverriding(false)；<br>步骤五：开始刷新Bean工厂构建Bean关系网：</p>
+<p>configureAndRefreshWebApplication方法的最后一行也是最核心的一行：<br>wac.refresh();<br>这个方法完成了：<br>（1）构建BeanFactory；<br>（2）注册可能感兴趣的事件；<br>（3）创建Bean实例对象；<br>（4）触发被监听的事件；<br>“这个方法就是构建整个IoC容器过程的完整代码，了解了里面的每一行代码，基本上就了解大部分Spring的原理和功能”（摘自《深入理解Java Web技术内幕》）。这个方法的实现在AbstractApplicationContext中，让我们来看看它是如何工作：</p>
+<pre><code><span class="annotation">@Override</span>
+<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">refresh</span><span class="params">()</span> <span class="keyword">throws</span> BeansException, IllegalStateException </span>{
+    <span class="keyword">synchronized</span> (<span class="keyword">this</span>.startupShutdownMonitor) {
+        <span class="comment">// Prepare this context for refreshing.</span>
+        prepareRefresh();
+
+        <span class="comment">// Tell the subclass to refresh the internal bean factory.</span>
+        ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
+
+        <span class="comment">// Prepare the bean factory for use in this context.</span>
+        prepareBeanFactory(beanFactory);
+
+        <span class="keyword">try</span> {
+            <span class="comment">// Allows post-processing of the bean factory in context subclasses.</span>
+            postProcessBeanFactory(beanFactory);
+
+            <span class="comment">// Invoke factory processors registered as beans in the context.</span>
+            invokeBeanFactoryPostProcessors(beanFactory);
+
+            <span class="comment">// Register bean processors that intercept bean creation.</span>
+            registerBeanPostProcessors(beanFactory);
+
+            <span class="comment">// Initialize message source for this context.</span>
+            initMessageSource();
+
+            <span class="comment">// Initialize event multicaster for this context.</span>
+            initApplicationEventMulticaster();
+
+            <span class="comment">// Initialize other special beans in specific context subclasses.</span>
+            onRefresh();
+
+            <span class="comment">// Check for listener beans and register them.</span>
+            registerListeners();
+
+            <span class="comment">// Instantiate all remaining (non-lazy-init) singletons.</span>
+            finishBeanFactoryInitialization(beanFactory);
+
+            <span class="comment">// Last step: publish corresponding event.</span>
+            finishRefresh();
+        }
+
+        <span class="keyword">catch</span> (BeansException ex) {
+            logger.warn(<span class="string">"Exception encountered during context initialization - cancelling refresh attempt"</span>, ex);
+
+            <span class="comment">// Destroy already created singletons to avoid dangling resources.</span>
+            destroyBeans();
+
+            <span class="comment">// Reset 'active' flag.</span>
+            cancelRefresh(ex);
+
+            <span class="comment">// Propagate exception to caller.</span>
+            <span class="keyword">throw</span> ex;
+        }
+
+        <span class="keyword">finally</span> {
+            <span class="comment">// Reset common introspection caches in Spring's core, since we</span>
+            <span class="comment">// might not ever need metadata for singleton beans anymore...</span>
+            resetCommonCaches();
+        }
+    }
+}
+</code></pre><p>接下来详细说明Spring是如何创建BeanFactory并构建包含事件监听的Bean关系网的：</p>
+<p>步骤五-1：创建并准备BeanFactory：</p>
+<p>核心的三行代码：</p>
+<pre><code>// <span class="operator"><span class="keyword">Prepare</span> this <span class="keyword">context</span> <span class="keyword">for</span> refreshing.包括设置开始时间，活跃标志，初始化并验证environment属性集，初始化earlyApplicationEvents；
+prepareRefresh();</span>
+
+// Tell the subclass to refresh the internal bean factory.关键在于refreshBeanFactory
+ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
+
+// <span class="operator"><span class="keyword">Prepare</span> the bean factory <span class="keyword">for</span> <span class="keyword">use</span> <span class="keyword">in</span> this <span class="keyword">context</span>.
+prepareBeanFactory(beanFactory);</span>
+</code></pre><p>刷新并创建BeanFactory的关键方法：</p>
+<pre><code><span class="annotation">@Override</span>
+<span class="keyword">protected</span> <span class="keyword">final</span> <span class="function"><span class="keyword">void</span> <span class="title">refreshBeanFactory</span><span class="params">()</span> <span class="keyword">throws</span> BeansException </span>{
+    <span class="keyword">if</span> (hasBeanFactory()) {
+        destroyBeans();
+        closeBeanFactory();
+    }
+    <span class="keyword">try</span> {
+        DefaultListableBeanFactory beanFactory = createBeanFactory();
+        beanFactory.setSerializationId(getId());
+        customizeBeanFactory(beanFactory);
+        loadBeanDefinitions(beanFactory);
+        <span class="keyword">synchronized</span> (<span class="keyword">this</span>.beanFactoryMonitor) {
+            <span class="keyword">this</span>.beanFactory = beanFactory;
+        }
+    }
+    <span class="keyword">catch</span> (IOException ex) {
+        <span class="keyword">throw</span> <span class="keyword">new</span> ApplicationContextException(<span class="string">"I/O error parsing bean definition source for "</span> + getDisplayName(), ex);
+    }
+}
+</code></pre><p>（1）首先，如果当前上下文中如果已经存在BeanFactory，先删除所有缓存的Bean（使用LinkedHashSet缓存的单例，prototype的bean是不会缓存的），并将this.beanFactory置为null；<br>（2）创建DefaultListableBeanFactory，它继承了ConfigurableListableBeanFactory和AbstractAutowireCapableBeanFactory；因此它具有完整的BeanFactory功能；<br>（3）customizeBeanFactory将Context的两个配置项：allowBeanDefinitionOverriding和allowCircularReference传入BeanFactory中；<br>（4）loadBeanDefinition：查看类图可以看到还包括Bean的registry相关的类，在loadBeanDefinitions中很清除的展示了Registry接口的作用：读取用户对Bean定义，将其加载为BeanDefinition也就是IoC容器特定的数据结构；loadBeanDefinitions方法因此和读取方式有关，AnnotationWebApplicationContext和XmlWebApplicationContext有具体的实现；</p>
+<p>执行完refreshBeanFactory之后，在refresh方法中的下一步是<strong>prepareBeanFactory</strong>，这一步对刚刚建立的BeanFactory设置了重要的属性：<br>（1）设置加载类的加载器，默认为当前线程上下文加载器；<br>（2）注册ApplicaitonContextAwareProcessor，并在BeanFactory中忽略ApplicationContextAwareProcessor已经处理的一些Aware接口：EnvironmentAware，MessageSourceAware，ApplicationContextAware，ApplicationEventPublisherAware，ResourceLoaderAware，这些接口通常由Bean实现，这些类型不应该使用自动装配注入，它们用于获取对应的实例，而实例对象我们已经看到是Bean的上下文，因此，ApplicationContextAwareProcessor会在postProcessorBeforeInitialization中调用这些接口的回调方法，将当前上下文对象注入；<br>（3）注册一些特殊的类型：BeanFactory，ApplicationContext，ApplicationEventPublisher，ResourceLoader，实例对象仍然是当前Context对象；<br>（4）织入处理器和特定的类加载器，Environment相关Bean注册；</p>
+<p>AbstractApplicationContext的refresh方法接下来三行代码对Spring的扩展性起到了至关重要的作用，前两行是对已经创建的BeanFactory的配置做修改，扩展方式仍然是通过回调接口，这里是BeanFactoryPostProcessor，值得注意的是回调接口中使用的是onfigurableLIstableBeanFactory，通过这一“视图”可以防止一些不当的修改；；</p>
+<pre><code><span class="comment">// Allows post-processing of the bean factory in context subclasses.</span>
+                <span class="function">postProcessBeanFactory</span>(beanFactory);
+
+                <span class="comment">// Invoke factory processors registered as beans in the context.</span>
+                <span class="function">invokeBeanFactoryPostProcessors</span>(beanFactory);
+
+                <span class="comment">// Register bean processors that intercept bean creation.</span>
+                <span class="function">registerBeanPostProcessors</span>(beanFactory);
+</code></pre><p>步骤五-2：初始化事件多播器，注册事件监听：</p>
+<pre><code><span class="comment">// Initialize message source for this context.</span>
+<span class="function">initMessageSource</span>();
+
+<span class="comment">// Initialize event multicaster for this context.</span>
+<span class="function">initApplicationEventMulticaster</span>();
+
+<span class="comment">// Initialize other special beans in specific context subclasses.</span>
+<span class="function">onRefresh</span>();
+
+<span class="comment">// Check for listener beans and register them.</span>
+<span class="function">registerListeners</span>();
+步骤五-3：创建Bean实例对象：
+
+<span class="comment">// Instantiate all remaining (non-lazy-init) singletons.</span>
+<span class="function">finishBeanFactoryInitialization</span>(beanFactory);
+</code></pre><p>在finishBeanFactoryInitialization方法将完成Bean的初始化工作：</p>
+<pre><code>protected <span class="keyword">void</span> finishBeanFactoryInitialization(ConfigurableListableBeanFactory beanFactory) {
+    <span class="comment">// Initialize conversion service for this context.</span>
+    <span class="keyword">if</span> (beanFactory.containsBean(CONVERSION_SERVICE_BEAN_NAME) &amp;&amp;
+            beanFactory.isTypeMatch(CONVERSION_SERVICE_BEAN_NAME, ConversionService.<span class="keyword">class</span>)) {
+        beanFactory.setConversionService(
+                beanFactory.getBean(CONVERSION_SERVICE_BEAN_NAME, ConversionService.<span class="keyword">class</span>));
+    }
+
+    <span class="comment">// Initialize LoadTimeWeaverAware beans early to allow for registering their transformers early.</span>
+    <span class="built_in">String</span>[] weaverAwareNames = beanFactory.getBeanNamesForType(LoadTimeWeaverAware.<span class="keyword">class</span>, <span class="keyword">false</span>, <span class="keyword">false</span>);
+    <span class="keyword">for</span> (<span class="built_in">String</span> weaverAwareName : weaverAwareNames) {
+        getBean(weaverAwareName);
+    }
+
+    <span class="comment">// Stop using the temporary ClassLoader for type matching.</span>
+    beanFactory.setTempClassLoader(<span class="keyword">null</span>);
+
+    <span class="comment">// Allow for caching all bean definition metadata, not expecting further changes.</span>
+    beanFactory.freezeConfiguration();
+
+    <span class="comment">// Instantiate all remaining (non-lazy-init) singletons.</span>
+    beanFactory.preInstantiateSingletons();
+}
+</code></pre><p>这里首先初始化了使用织入的Bean，之后就停止使用暂时的Classloader了，并锁定了BeanFactory不允许修改；在preInstantiateSingletons方法中，将开始创建Bean实例的工作。</p>
+<p><strong>Mark：</strong>未完待续</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Spring/">Spring</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-Java中的final参数-变量-匿名内部类" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/11/29/Java中的final参数-变量-匿名内部类/" class="article-date">
+  	<time datetime="2015-11-29T13:50:42.000Z" itemprop="datePublished">2015-11-29</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/11/29/Java中的final参数-变量-匿名内部类/">Java中的final参数/变量+匿名内部类的字节码分析，以及Java 8中的使用</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在Java 8之前一个常识就是如果要在方法中定义一个匿名内部类并使用该方法内的局部变量（包括参数），需要使用final关键字修饰。网上也有很多对这种机制的解释和说明，但是大部分都是一种抽象的认识。如果能够分析一下字节码，这个问题其实很清楚。</p>
+<p>显然的一个事实是局部变量（称为变量a）是保存在栈帧的局部变量表中的（引用或基本类型），这里把定义匿名内部类的方法称为方法A，匿名内部类的中使用这个局部变量的方法（称为方法B）经过编译后保存在class文件的方法表中，方法体保存在Code属性中。运行时经过类加载，验证存储到方法区中。在执行匿名内部类中，JVM创建的是方法B的栈帧。它显然和方法A的栈帧没有直接的关系，甚至方法B执行时，方法A的栈帧已经被回收了，那JVM如何保证方法B能够正确的使用变量a指向的值呢？</p>
+<p>下面就通过查看字节码来看看Java编译器和JVM是如何做到这一点的，基于Oracle JDK8编译；</p>
+<p>#1. 字节码分析：</p>
+<p>外围类：FinalParameter<br>定义一个派生自A的匿名内部类，其中使用方法testFinal的局部变量a和参数bytes；</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">FinalParameter</span> </span>{
+    <span class="class"><span class="keyword">interface</span> <span class="title">A</span> </span>{
+        <span class="function"><span class="keyword">void</span> <span class="title">test</span><span class="params">()</span></span>;
+    }
+    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">testFinal</span><span class="params">(<span class="keyword">final</span> <span class="keyword">byte</span>[] bytes)</span> </span>{
+        <span class="keyword">final</span> <span class="keyword">int</span> a = <span class="number">10</span>;
+        <span class="keyword">new</span> A() {
+            <span class="annotation">@Override</span>
+            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test</span><span class="params">()</span> </span>{
+                System.out.println(a + <span class="string">" "</span> + bytes.length);
+            }
+        };
+    }
+}
+</code></pre><p>根据内部类命名规则我们知道这个匿名内部类的类名是FinalParameter$1；<br>使用javap -verbose FinalParameter\$1，查看该类的字节码，Unix环境下注意不要忘了转义”\$”。<br>我截取了字段表部分：</p>
+<pre><code>final int val<span class="variable">$a</span>;
+  descriptor: I
+  flags: ACC_FINAL, ACC_SYNTHETIC
+
+final byte[] val<span class="variable">$bytes</span>;
+  descriptor: [B
+  flags: ACC_FINAL, ACC_SYNTHETIC
+
+final com.jvm.showByteCode.FinalParameter this<span class="variable">$0</span>;
+  descriptor: Lcom/jvm/showByteCode/FinalParameter;
+  flags: ACC_FINAL, ACC_SYNTHETIC
+</code></pre><p>可以看到编译器为我们添加了3个字段，分别是：<br><strong>val\$a，val\$bytes，this\$0；</strong><br>其中this\$0是指向外围类对象实例的引用，而前两个正是从外围类方法局部变量bytes和a生成而来的，并且它们是final的。<br>再来看看FinalParameter\$1类的<init>()方法：<br>描述符：</init></p>
+<pre><code><span class="label">descriptor:</span> (Lcom/jvm/showByteCode/FinalParameter<span class="comment">;I[B)V</span>
+</code></pre><p><strong>Code属性（方法实现）</strong>：</p>
+<pre><code>Code:
+      <span class="built_in">stack</span>=<span class="number">2</span>, locals=<span class="number">4</span>, args_size=<span class="number">4</span>
+         <span class="number">0</span>: aload_0
+         <span class="number">1</span>: aload_1
+         <span class="number">2</span>: putfield      <span class="preprocessor">#<span class="number">1</span>                  <span class="comment">// Field this$0:Lcom/jvm/showByteCode/FinalParameter;</span></span>
+         <span class="number">5</span>: aload_0
+         <span class="number">6</span>: iload_2
+         <span class="number">7</span>: putfield      <span class="preprocessor">#<span class="number">2</span>                  <span class="comment">// Field val$a:I</span></span>
+        <span class="number">10</span>: aload_0
+        <span class="number">11</span>: aload_3
+        <span class="number">12</span>: putfield      <span class="preprocessor">#<span class="number">3</span>                  <span class="comment">// Field val$bytes:[B</span></span>
+        <span class="number">15</span>: aload_0
+        <span class="number">16</span>: invokespecial <span class="preprocessor">#<span class="number">4</span>                  <span class="comment">// Method java/lang/Object."&lt;init&gt;":()V</span></span>
+        <span class="number">19</span>: <span class="keyword">return</span>
+</code></pre><p>外围类中testFinal方法中调用匿名内部类的部分：</p>
+<pre><code><span class="number">10</span>: invokespecial <span class="preprocessor">#<span class="number">3</span>                  <span class="comment">// Method com/jvm/showByteCode/FinalParameter$1."&lt;init&gt;":(Lcom/jvm/showByteCode/FinalParameter;I[B)V</span></span>
+</code></pre><p>这里我们就可以清楚看到以下事实：<br><strong>（1）<init>方法有4个参数，其中第一个是this，另外三个分别类型分别FinalParameter，int，byte数组；<br>（2）它们参数被赋值给了对应的final字段（this$0，val$a，val$bytes）；<br>（3）外围类将当前实例对象引用，a数值，bytes数组引用传递给了FinalParameter$1的<init>()方法；</init></init></strong></p>
+<p>因此，我们可以知道，在匿名内部类中使用外围类方法的局部变量，实际上是使用对应值（引用）的final成员变量。<br>内部类中使用的是该局部变量的<strong>副本</strong>，因此如果要在语义上保证<strong>局部变量和副本的一致性</strong>，就应当使<strong>用final来保证该局部变量不变</strong>。</p>
+<p>#2. Java 8中“改进”：</p>
+<p>下段代码通过了基于JDK8的编译，但是如果将注释去掉，仍然不能通过编译，看来只是在写法上“省力”了。<br>也就是说，Java中对于内部类使用局部变量的设计思想还要要保证这两个变量（一是局部变量，而是内部类的成员变量）一致性；<br>如果你不想保证这样的一致性，我觉得可以有以下方案：<br><strong>（1）可以创建一个抽象类，添加一个构造器，通过构造器传入局部变量的值；<br>（2）编写一个一个工厂方法（或工厂类），局部变量传入工厂方法（工厂方法的对应参数是final的）返回一个内部类实例；</strong><br>这样你就不用给局部变量设置为final；<br>因此，Java设计团队的设计思想是程序员在内部类中使用了局部变量，这种情况应该默认为需要保持两个变量的一致性。</p>
+<pre><code><span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">testFinal</span><span class="params">(<span class="keyword">byte</span>[] bytes)</span> </span>{
+        <span class="keyword">int</span> a = <span class="number">10</span>;
+        <span class="keyword">new</span> A() {
+            <span class="annotation">@Override</span>
+            <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">test</span><span class="params">()</span> </span>{
+                System.out.println(a + <span class="string">" "</span> + bytes.length);
+            }
+        };
+<span class="comment">//        a = 11;</span>
+<span class="comment">//        bytes = null;</span>
+    }
+</code></pre>
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
     <article id="post-2015-11-28-Java基础知识总结（三）——类和接口" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Java基础知识总结（七）——泛型和反射 | Zerohuan的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="心得：我觉得Java泛型的意义在于在我们使用父类引用操作子类时（擦除），让编译器和JVM来代替我们进行必要的类型检查和转换（checkcast指令，桥方法，signature这些都是编译器和JVM提供的额外帮助）。
+问题的关键在于签名实在调用者的方法表属性中的；而描述符是在自己类型信息中的。
+对象本身不知道自己的泛型参数具体是什么。
+1. 泛型方法泛型方法可以定义在泛型类或者普通类中。
+定义：
+p">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java基础知识总结（七）——泛型和反射">
+<meta property="og:url" content="http://blog.ssearch.cn/2015/12/06/Java基础知识总结（七）——泛型和反射/index.html">
+<meta property="og:site_name" content="Zerohuan的博客">
+<meta property="og:description" content="心得：我觉得Java泛型的意义在于在我们使用父类引用操作子类时（擦除），让编译器和JVM来代替我们进行必要的类型检查和转换（checkcast指令，桥方法，signature这些都是编译器和JVM提供的额外帮助）。
+问题的关键在于签名实在调用者的方法表属性中的；而描述符是在自己类型信息中的。
+对象本身不知道自己的泛型参数具体是什么。
+1. 泛型方法泛型方法可以定义在泛型类或者普通类中。
+定义：
+p">
+<meta property="og:updated_time" content="2015-12-06T17:29:37.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java基础知识总结（七）——泛型和反射">
+<meta name="twitter:description" content="心得：我觉得Java泛型的意义在于在我们使用父类引用操作子类时（擦除），让编译器和JVM来代替我们进行必要的类型检查和转换（checkcast指令，桥方法，signature这些都是编译器和JVM提供的额外帮助）。
+问题的关键在于签名实在调用者的方法表属性中的；而描述符是在自己类型信息中的。
+对象本身不知道自己的泛型参数具体是什么。
+1. 泛型方法泛型方法可以定义在泛型类或者普通类中。
+定义：
+p">
+  
+    <link rel="alternative" href="/atom.xml" title="Zerohuan的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+	<header id="header" class="inner">
+		<a href="/" class="profilepic">
+			
+			<img lazy-src="/avatar.jpg" class="js-avatar">
+			
+		</a>
+
+		<hgroup>
+		  <h1 class="header-author"><a href="/">Zerohuan</a></h1>
+		</hgroup>
+
+		
+		<p class="header-subtitle">我在路上</p>
+		
+
+		
+			<div class="switch-btn">
+				<div class="icon">
+					<div class="icon-ctn">
+						<div class="icon-wrap icon-house" data-idx="0">
+							<div class="birdhouse"></div>
+							<div class="birdhouse_holes"></div>
+						</div>
+						<div class="icon-wrap icon-ribbon hide" data-idx="1">
+							<div class="ribbon"></div>
+						</div>
+						
+						<div class="icon-wrap icon-link hide" data-idx="2">
+							<div class="loopback_l"></div>
+							<div class="loopback_r"></div>
+						</div>
+						
+						
+						<div class="icon-wrap icon-me hide" data-idx="3">
+							<div class="user"></div>
+							<div class="shoulder"></div>
+						</div>
+						
+					</div>
+					
+				</div>
+				<div class="tips-box hide">
+					<div class="tips-arrow"></div>
+					<ul class="tips-inner">
+						<li>菜单</li>
+						<li>标签</li>
+						
+						<li>友情链接</li>
+						
+						
+						<li>关于我</li>
+						
+					</ul>
+				</div>
+			</div>
+		
+
+		<div class="switch-area">
+			<div class="switch-wrap">
+				<section class="switch-part switch-part1">
+					<nav class="header-menu">
+						<ul>
+						
+							<li><a href="/">主页</a></li>
+				        
+							<li><a href="/archives">所有文章</a></li>
+				        
+						</ul>
+					</nav>
+					<nav class="header-nav">
+						<div class="social">
+							
+								<a class="github" target="_blank" href="https://github.com/zerohuan" title="github">github</a>
+					        
+								<a class="weibo" target="_blank" href="/#" title="weibo">weibo</a>
+					        
+								<a class="zhihu" target="_blank" href="http://www.zhihu.com/people/yan-jin-heng" title="zhihu">zhihu</a>
+					        
+								<a class="mail" target="_blank" href="mailto:yanjinheng@qq.com" title="mail">mail</a>
+					        
+						</div>
+					</nav>
+				</section>
+				
+				
+				<section class="switch-part switch-part2">
+					<div class="widget tagcloud" id="js-tagcloud">
+						<a href="/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a>
+					</div>
+				</section>
+				
+				
+				
+				<section class="switch-part switch-part3">
+					<div id="js-friends">
+					
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">奥巴马的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">卡卡的美丽传说</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">本泽马的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">吉格斯的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">习大大大不同</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">托蒂的博客</a>
+			        
+			        </div>
+				</section>
+				
+
+				
+				
+				<section class="switch-part switch-part4">
+				
+					<div id="js-aboutme">现南京大学研究生一枚，目前专注于Java Web方向。</div>
+				</section>
+				
+			</div>
+		</div>
+	</header>				
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+  	<div class="overlay">
+  		<div class="slider-trigger"></div>
+  		<h1 class="header-author js-mobile-header hide">Zerohuan</h1>
+  	</div>
+	<div class="intrude-less">
+		<header id="header" class="inner">
+			<div class="profilepic">
+				<img lazy-src="/avatar.jpg" class="js-avatar">
+			</div>
+			<hgroup>
+			  <h1 class="header-author">Zerohuan</h1>
+			</hgroup>
+			
+			<p class="header-subtitle">我在路上</p>
+			
+			<nav class="header-menu">
+				<ul>
+				
+					<li><a href="/">主页</a></li>
+		        
+					<li><a href="/archives">所有文章</a></li>
+		        
+		        <div class="clearfix"></div>
+				</ul>
+			</nav>
+			<nav class="header-nav">
+				<div class="social">
+					
+						<a class="github" target="_blank" href="https://github.com/zerohuan" title="github">github</a>
+			        
+						<a class="weibo" target="_blank" href="/#" title="weibo">weibo</a>
+			        
+						<a class="zhihu" target="_blank" href="http://www.zhihu.com/people/yan-jin-heng" title="zhihu">zhihu</a>
+			        
+						<a class="mail" target="_blank" href="mailto:yanjinheng@qq.com" title="mail">mail</a>
+			        
+				</div>
+			</nav>
+		</header>				
+	</div>
+</nav>
+      <div class="body-wrap"><article id="post-Java基础知识总结（七）——泛型和反射" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/06/Java基础知识总结（七）——泛型和反射/" class="article-date">
+  	<time datetime="2015-12-06T05:18:28.000Z" itemprop="datePublished">2015-12-06</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Java基础知识总结（七）——泛型和反射
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
+	</div>
+
+        
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>心得：<br>我觉得Java泛型的意义在于在我们使用父类引用操作子类时（擦除），让编译器和JVM来代替我们进行必要的类型检查和转换（checkcast指令，桥方法，signature这些都是编译器和JVM提供的额外帮助）。</p>
+<p>问题的关键在于签名实在调用者的方法表属性中的；而描述符是在自己类型信息中的。</p>
+<p>对象本身不知道自己的泛型参数具体是什么。</p>
+<h2 id="1-_泛型方法">1. 泛型方法</h2><p>泛型方法可以定义在泛型类或者普通类中。</p>
+<p>定义：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">T <span class="title">getT</span><span class="params">(T...t)</span> </span>{
+    <span class="keyword">return</span> t[<span class="number">0</span>];
+}
+</code></pre><p>泛型方法与编译器类型推断：<br>尤其和可变参数列表结合使用，对于编译器的类型判断稍有一些问题，方法<code>getT</code>有两个条件可以用来推断类型：<strong>返回值</strong>和<strong>参数类型</strong>；<br>比如：</p>
+<pre><code><span class="keyword">String </span><span class="keyword">str </span>= getT(<span class="string">"x"</span>, <span class="number">123</span>.<span class="number">0</span>, <span class="number">1</span>)<span class="comment">;</span>
+</code></pre><h4 id="因此需要了解以下事实：">因此需要了解以下事实：</h4><p>（1）传入泛型方法实参必须是对象，因此基本类型会自动装箱（这里是String，Double，Integer）；<br>（2）编译器会分析出所有参数的<strong>共同基类</strong>（这里是Comparable，Serializable，Object）；<br>（3）如果返回是void，传入不同类型的参数给可变参数列表方法不会有编译问题；如果返回类型为泛型参数（T），会根据使用的情况而定；<br>（4）如果使用了<code>&lt;String&gt;</code>限定：</p>
+<pre><code><span class="keyword">String</span> <span class="built_in">str</span> = GenericShow.&lt;<span class="keyword">String</span>&gt;getT(<span class="string">"xx"</span>, <span class="string">"123"</span>);
+</code></pre><p>那么参数的参数只能为String；<br>如果省略了限定，根据参数<strong>共同基类</strong>和<strong>变量类型</strong>决定，如果变量类型属于共同基类则编译没有问题，否则将会抛出异常；</p>
+<p>综合来看，编译器是在检查所有<code>&lt;T&gt;</code>的实现能否找到一个合理的类型统一解释。</p>
+<p>PS：实际使用的时候显然应该避免这么复杂的情况，设计合理的类型和方法才是正道。</p>
+<h2 id="2-_类型变量的限定与“擦除”">2. 类型变量的限定与“擦除”</h2><p>Java的泛型在编译时使用了“擦除”，被替换成限定类型；</p>
+<h4 id="（1）对于&lt;T&gt;的方法，描述符是：">（1）对于<code>&lt;T&gt;</code>的方法，描述符是：</h4><pre><code><span class="string">descriptor:</span> ([Ljava<span class="regexp">/lang/</span>Object;)Ljava<span class="regexp">/lang/</span>Object;
+</code></pre><p>因此，我们使用T类型的变量时只能直接使用Object拥有的方法/属性，实际上<code>&lt;T&gt;</code>是<code>&lt;T extends Object&gt;</code>；</p>
+<h4 id="（2）多个限定：Object类是所有类型的超类，可以通过限定符来“缩小范围”：">（2）多个限定：Object类是所有类型的超类，可以通过限定符来“缩小范围”：</h4><p>（1）<code>&lt;T extends Comparable&gt;</code>；<br>（2）<code>&lt;T extends Comparable &amp;&amp; Seriablizable &amp;&amp; List&gt;</code>；<br>（3）限定中如果有类，只能有一个且必须是第一个；<br>它们的描述符是：</p>
+<pre><code><span class="string">descriptor:</span> (Ljava<span class="regexp">/lang/</span>Comparable;)V
+</code></pre><p>因此可以使用Comparable的方法；</p>
+<h4 id="擦除与替换类型">擦除与替换类型</h4><p>将会使用第一个限定类型进行替换，因此在调用其他限定类型的方法时，需要先进行checkcast指令的检查和转型（虽然在编译和加载时会根据signature进行检查，这一步还是需要的，这是语言设计上的问题）；<br>这种强制类型转换在方法返回值，域访问赋值中（如果擦除替换的类型和实际泛型参数类型不匹配）都会出现；</p>
+<h2 id="3-_桥方法，泛型和多态">3. 桥方法，泛型和多态</h2><pre><code><span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Pair</span>&lt;<span class="title">T</span>&gt; </span>{
+    <span class="keyword">private</span> T first;
+    <span class="keyword">private</span> T second;
+    <span class="function"><span class="keyword">public</span> T <span class="title">getFirst</span><span class="params">()</span> </span>{<span class="keyword">return</span> first;}
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setFirst</span><span class="params">(T first)</span> </span>{<span class="keyword">this</span>.first = first;}
+    <span class="function"><span class="keyword">public</span> T <span class="title">getSecond</span><span class="params">()</span> </span>{<span class="keyword">return</span> second;}
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setSecond</span><span class="params">(T second)</span> </span>{<span class="keyword">this</span>.second = second;}
+}
+
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">DateInterval</span> <span class="keyword">extends</span> <span class="title">Pair</span>&lt;<span class="title">Date</span>&gt; </span>{
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setSecond</span><span class="params">(Date second)</span> </span>{
+    }
+}
+</code></pre><p>Pair类在擦除之后，实际上是基于Object的；<br>在子类DateInterval覆盖了setSecond使用的Date，如果是多态也就是使用Pair引用DateInterval调用实例方法setSecond方法（invokevirtual指令）也是查找setSecond(Object)的实现，因此这里需要一个桥方法：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">void</span> setSecond(java.lang.<span class="keyword">Object</span>);
+    descriptor: (Ljava/lang/<span class="keyword">Object</span>;)V
+</code></pre><p>实际上在桥方法中调用的是setSecond((Date)obj);</p>
+<p><strong>PS：协变返回类型也是需要桥方法，因此对于虚拟机来说返回值也是区别方法的一个重要特征</strong>；</p>
+<h2 id="4-_约束与局限性">4. 约束与局限性</h2><p>Java的泛型是基于擦除的，故而不能向C++的模板一样灵活，擦除之后类型参数在<strong>描述符中没有</strong>了，对于数组，instanceof，getClass来说它们不能识别原有的类型参数的区别，因此如果允许数组，instanceof等结合泛型使用，不能保证正确的类型，导致ClassCastException的风险大大增加，而泛型的意义在于可以自动进行类型的检查和转换（基于signature的），因此编译器禁止了这些做法。<br>（1）不能用基本类型实例化类型参数；<br>（2）运行时类型检查只适用于原始类型（instanceof，getClass，不管泛型参数如何它们都基于同一个Class对象）；<br>（3）不能创建参数化类型的数组（使用<code>ArraList&lt;Pair&lt;String&gt;&gt;</code>）；<br>（4）带泛型参数的类和可变参数列表，可变参数列表本质是数组实现的，这里是可行的，使用@SafeVarargs可以消除警告，但这样做，数组只会检查擦除之后的类型，因此实际使用有ClassCastException的风险；<br>（5）不能实例化类型变量（要想结合泛型创建实例或者数组只能通过反射创建）；<br>（6）泛型类的静态上下文中类型变量无效；<br>（7）不能抛出或捕获泛型类的实例：<br><code>class Problem&lt;T&gt; extends Throwable</code>和<code>catch(T e)</code>是不允许的，因为异常表需要具体的类型描述；<br><code>throw T</code>是允许的，擦除之后实际上声明的是        </p>
+<pre><code>Exceptions:
+  throws java<span class="class">.lang</span><span class="class">.Throwable</span>
+</code></pre><p>利用<code>throw T</code>可以消除对checked异常的检查：</p>
+<pre><code>  <span class="keyword">public</span> <span class="keyword">static</span> <span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
+    GenericLimit.&lt;RuntimeException&gt;doWork();
+}
+</code></pre><p>通过这个方法我们可以在实现类似Runnable接口run方法没有异常声明的接口方法中，以RuntimeException的方式抛出，不过我还是觉得这个没什么意义，通过<code>throw new RuntimeException(t);</code>的形式一样可以，或者使用Callable来代替Runnable；<br>（8）擦除后的冲突：</p>
+<pre><code>public boolean equals(T t) <span class="decorator">{...}</span>
+</code></pre><p>这样的方法在擦除后会和equals(Object)冲突；</p>
+<p>不同同时实现/继承两个带有不同类型参数的同一类型接口，比如</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">abstract</span> static <span class="class"><span class="keyword">class</span> <span class="title">P</span> <span class="title">implements</span> <span class="title">Comparable&lt;String&gt;</span> {</span>
+}
+<span class="keyword">private</span> static <span class="class"><span class="keyword">class</span> <span class="title">PA</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">P</span> <span class="title">implements</span> <span class="title">Comparable&lt;Integer&gt;</span></span>
+</code></pre><p>因为继承/实现带有类型参数的类/接口，会生成对应的桥方法，如果同时实现带不同类型惨数的两个同类型接口，必须要生成各自的桥方法，而桥方法的方法签名是完全相同的（包括返回值类型）；</p>
+<h2 id="5-_泛型类型的继承规则">5. 泛型类型的继承规则</h2><p>数组和泛型的区别：<br>（1）数组对象的描述符中是带有原始类型是啥的，因此它可以检查赋值的类型是否正确（错误抛出ArrayStoreException），同时数组SubClass[]和SuperClass[]是有继承关系的；<br>（2）<code>Pair&lt;SuperClass&gt;</code>和<code>Pair&lt;SubClass&gt;</code>之间没有关系，<strong>它们类型检查和变量的签名有关</strong>，实际上在堆中这两个类型的实例对象数据并没有什么性质上的差别，它们也同样基于同一个Class对象，因此它们是平行的，因此编译器会禁止不同类型参数的变量之间的赋值（因为泛型的本意就是让编译器和JVM来保证类型的检查和转换），它认为这种行为破坏了泛型的本意；<br>（3）<code>Pair p = new Pair&lt;SubClass&gt;();</code>是合法的，这意味着你放弃了编译器为你提供的额外帮助；<br>（4）真正具有继承关系的是形如：</p>
+<pre><code><span class="built_in">List</span>&lt;<span class="built_in">String</span>&gt; s = <span class="keyword">new</span> ArrayList&lt;<span class="built_in">String</span>&gt;();
+</code></pre><p>心得：问题的关键在于签名实在调用者的方法表属性中的；而描述符是在自己类型信息中的；</p>
+<h2 id="6-_通配符类型：">6. 通配符类型：</h2><p>我觉得通配符的运用可以参考离散数学中的集合，根据限定和extends（+），super（-）来确定范围；<br>范围大小（== 表示平行关系）：</p>
+<pre><code>Pair &gt; Pair<span class="variable">&lt;?&gt;</span> &gt; Pair<span class="variable">&lt;? super SubClass&gt;</span> &gt; Pair<span class="variable">&lt;SubClass&gt;</span> == Pair<span class="variable">&lt;Object&gt;</span> == Pair<span class="variable">&lt;SuperClass&gt;</span>
+Pair &gt; Pair<span class="variable">&lt;?&gt;</span> &gt; Pair<span class="variable">&lt;? extends SuperClass&gt;</span> &gt; Pair<span class="variable">&lt;SuperClass&gt;</span> == Pair<span class="variable">&lt;SubClass&gt;</span>
+</code></pre><p>（1）<code>&lt;? extends SuperClass&gt;</code>：包含SuperClass自身，对应的签名是<code>Lcom/yjh/generic/GenericAndWildcard$Pair&lt;+Lcom/yjh/generic/GenericAndWildcard$SuperClass;&gt;;</code>，带有子类限定的通配符可以用于从泛型对象中读取；<br>（2）<code>&lt;? super SubClass&gt;</code>：包含SubClass自身，对应的签名是<code>Lcom/yjh/generic/GenericAndWildcard$Pair&lt;-Lcom/yjh/generic/GenericAndWildcard$SubClass;&gt;;</code>，带有超类限定的通配符可以用于向泛型对象中写入；<br>一个典型的super关键字用法：</p>
+<pre><code><span class="keyword">static</span> &lt;T extends <span class="type">Comparable</span>&lt;? super T&gt;&gt; T min(T[] ts) <span class="decorator">{...}</span>
+</code></pre><p>（3）无限定通配符：签名<code>Lcom/yjh/generic/GenericAndWildcard$Pair&lt;*&gt;;</code>；<br>（4）如果方法内需要使用泛型参数声明变量，使用泛型方法要比<code>void swap(Pair&lt;?&gt; pair)</code>要方便；<br>（5）通配符捕获，只有在编译器能够确信通配符表达的是<strong>单个、确定</strong>的类型时才可以。<code>ArrayList&lt;Pair&lt;T&gt;&gt;</code>不能捕获<code>ArrayList&lt;Pair&lt;?&gt;&gt;</code>中的通配符；</p>
+<h2 id="通过反射读取泛型信息：">通过反射读取泛型信息：</h2><h2 id="附：C++中template和Java的泛型">附：C++中template和Java的泛型</h2><p>Java的泛型似乎是一种模拟的方式，本质还是基于向上转型（子类的引用可以赋值给父类引用）；</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2015/12/05/TCP-IP总结（一）——基本概念/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">TCP/IP总结（一）——基本概念</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<div class="share">
+	<!-- JiaThis Button BEGIN -->
+	<div class="jiathis_style">
+		<span class="jiathis_txt">分享到：</span>
+		<a class="jiathis_button_tsina"></a>
+		<a class="jiathis_button_cqq"></a>
+		<a class="jiathis_button_douban"></a>
+		<a class="jiathis_button_weixin"></a>
+		<a class="jiathis_button_tumblr"></a>
+		<a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jtico jtico_jiathis" target="_blank"></a>
+	</div>
+	<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=1405949716054953" charset="utf-8"></script>
+	<!-- JiaThis Button END -->
+</div>
+
+
+
+<div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="Java基础知识总结（七）——泛型和反射" data-title="Java基础知识总结（七）——泛型和反射" data-url="http://blog.ssearch.cn/2015/12/06/Java基础知识总结（七）——泛型和反射/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"true"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+
+
+</div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info">
+    	<div class="footer-left">
+    		&copy; 2015 Zerohuan
+    	</div>
+      	<div class="footer-right">
+      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
+      	</div>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+
+<script>
+	var yiliaConfig = {
+		fancybox: true,
+		mathjax: true,
+		animate: true,
+		isHome: false,
+		isPost: true,
+		isArchive: false,
+		isTag: false,
+		isCategory: false,
+		open_in_new: true
+	}
+</script>
+<script src="http://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js" type="text/javascript"></script>
+<script src="/js/main.js" type="text/javascript"></script>
+
+
+
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  </div>
+</body>
+</html>
