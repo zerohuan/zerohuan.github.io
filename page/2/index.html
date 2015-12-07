@@ -196,6 +196,693 @@
 </nav>
       <div class="body-wrap">
   
+    <article id="post-Java基础知识总结（四）——异常与异常处理表" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/02/Java基础知识总结（四）——异常与异常处理表/" class="article-date">
+  	<time datetime="2015-12-02T05:19:32.000Z" itemprop="datePublished">2015-12-02</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/02/Java基础知识总结（四）——异常与异常处理表/">Java基础知识总结（四）——异常与异常处理表</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>要想弄清楚异常的一些知识点，比如try/finally的return，异常的丢失等等，光记住“形式”是不够的，不从字节码异常表的层面分析是很难真正的将一些问题弄明白。</p>
+<h2 id="先吃两个栗子">先吃两个栗子</h2><p>（1）判断程序的返回值：</p>
+<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">hasException</span><span class="params">()</span> </span>{
+        <span class="keyword">int</span> x;
+        <span class="keyword">try</span> {
+            x = <span class="number">1</span>;
+            <span class="keyword">return</span> x;
+        } <span class="keyword">catch</span> (Exception e) {
+            x = <span class="number">2</span>;
+            <span class="keyword">return</span> x;
+        } finally {
+            x = <span class="number">3</span>;
+        }
+    }
+</code></pre><p>结果：<br>（1）未发生异常，返回1；<br>（2）发生Exception异常返回2；<br>（3）发生其他异常，没有返回值；</p>
+<p>以正常返回为例分析：<br>Java中返回值实际上是由一个returnValue变量保存的，编译器会将finally中的逻辑查到return之前，通过查看字节码可以知道，变量x等于1时，赋值给了returnValue变量，之后才赋值为3的，因此最后返回3。</p>
+<pre><code><span class="number">0</span>: iconst_1 <span class="comment">//常量1压入操作数栈</span>
+<span class="number">1</span>: istore_1 <span class="comment">//x=1,保存到局部变量表slot 1</span>
+<span class="number">2</span>: iload_1 <span class="comment">//局部变量表slot 1也就是x压入操作数栈</span>
+<span class="number">3</span>: istore_2 <span class="comment">//栈顶值“1”保存到slot 2，returnValue = 1</span>
+<span class="number">4</span>: iconst_3 <span class="comment">//常量3压入操作数栈</span>
+<span class="number">5</span>: istore_1 <span class="comment">//栈顶值“3”保存到局部变量表slot 1, x=3</span>
+<span class="number">6</span>: iload_2 <span class="comment">//returnValue压入操作数栈</span>
+<span class="number">7</span>: ireturn <span class="comment">//返回栈顶元素，returnValue的值</span>
+</code></pre><p>（2） finally中的return：</p>
+<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">finallyReturn</span><span class="params">()</span> </span>{
+    <span class="keyword">int</span> x;
+    <span class="keyword">try</span> {
+        x = <span class="number">1</span>;
+        <span class="keyword">return</span> x;
+    } <span class="keyword">catch</span>(Exception e) {
+        x = <span class="number">2</span>;
+        <span class="keyword">return</span> x;
+    } finally {
+        x = <span class="number">3</span>;
+        <span class="keyword">return</span> <span class="number">3</span>;
+    }
+}
+</code></pre><p>结果：<br>正常返回或者Exception异常或者其他异常都返回3；</p>
+<p>分析：<br>正如前叙，编译器会将finally中的逻辑插入各个分支之中。因此try和catch中的return都不会执行到（被编译器忽略了）。查看字节码：</p>
+<pre><code><span class="number">6</span>: iconst_3 <span class="comment">//常量3压入操作数栈</span>
+<span class="number">7</span>: ireturn <span class="comment">//返回栈顶元素3</span>
+</code></pre><p>PS：<br>能看懂字节码，很多问题轻松弄明白。<br>上述字节码使用javap -verbose -private xxxx输出查看。<br>后面finally子句小节中有更系统的解释。</p>
+<h2 id="1-_异常体系">1. 异常体系</h2><p><strong>基类</strong>：Throwable；<br><strong>子类划分</strong>：Error（内部错误/资源耗尽错误），Exception（又又子类RuntimeException）；</p>
+<p><strong>是否为受检查异常：</strong><br><strong>checked异常</strong>：Exception，因为为一些不可预测的情况导致的异常，checked的目的是为了让我们能够给出相应的恢复手段；<br><strong>unchecked异常</strong>：Error和RunntimeException，后者一般是“程序员自己的问题导致的”；</p>
+<h3 id="声明checked异常：">声明checked异常：</h3><p>throws关键字；<br>class文件中可以通过方法表的Exceptions属性查看（这是javap输出的，实际上Exceptions中保存的是异常类全限定名在常量池中的索引）：</p>
+<pre><code>Exceptions:
+throws java<span class="class">.io</span><span class="class">.IOException</span>, java<span class="class">.sql</span><span class="class">.SQLException</span>
+</code></pre><h3 id="声明异常与继承：">声明异常与继承：</h3><p> 子类重写父类方法，如果父类方法声明了异常，子类方法可以：<br> （1）不声明异常；<br> （2）声明父类方法中异常或其子类异常；</p>
+<pre><code><span class="keyword">private</span> static <span class="class"><span class="keyword">class</span> <span class="title">SuperClass</span> {</span>
+    <span class="keyword">protected</span> void f() <span class="keyword">throws</span> <span class="type">IOException</span> {}
+}
+
+<span class="keyword">private</span> static <span class="class"><span class="keyword">class</span> <span class="title">SubClass1</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">SuperClass</span> {</span>
+    <span class="annotation">@Override</span>
+    <span class="keyword">protected</span> void f() <span class="keyword">throws</span> <span class="type">ZipException</span> {}
+}
+
+<span class="keyword">private</span> static <span class="class"><span class="keyword">class</span> <span class="title">SubClass2</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">SuperClass</span> {</span>
+    <span class="annotation">@Override</span>
+    <span class="keyword">protected</span> void f() {}
+}
+</code></pre><h2 id="2-_捕获异常">2. 捕获异常</h2><p>在catch语句中重新包装异常，通过设置initCause的方式保证不丢失原始异常：</p>
+<pre><code><span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">catchAndThrowNew</span><span class="params">()</span> <span class="keyword">throws</span> Throwable </span>{
+    <span class="keyword">try</span> {
+        <span class="keyword">throw</span> <span class="keyword">new</span> SQLException();
+    } <span class="keyword">catch</span> (SQLException e) {
+        Throwable se = <span class="keyword">new</span> ServletException();
+        se.initCause(e);
+        <span class="keyword">throw</span> se;
+    }
+}
+</code></pre><h3 id="finally子句：">finally子句：</h3><h4 id="（1）与return的关系：">（1）与return的关系：</h4><p>正如开头的例子：<br>当try子句中有return语句，编译器将产生一个中间变量“returnValue”，保存try中return语句中变量在try语句中的最后赋值；<br>当finally子句中有return语句，将“覆盖”try中的return；<br>当finally子句中没有return语句，try中的return因为有returnValue值，不会受finally的影响；</p>
+<h4 id="（2）嵌套的finally子句：">（2）嵌套的finally子句：</h4><p>（1）如果不同层次的finally子句中包含return，内层的return语句将被忽略，最外层的return才有效；<br>（2）如果一个内层的finally子句中包含return，外层还有finally子句（没有return），编译器同样会生成一个“returnValue”中间变量，保证内层的return逻辑，可见Java设计的思想在于保证“可见”逻辑的正确性；<br>（3）执行顺序是先内后外；</p>
+<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">nestedTryCatch</span><span class="params">()</span> </span>{
+    <span class="keyword">int</span> x;
+    <span class="keyword">try</span> {
+        <span class="keyword">try</span> {
+            x = <span class="number">2</span>;
+        } finally {
+            x = <span class="number">3</span>;
+            <span class="keyword">return</span> x;
+        }
+    } finally {
+        x = <span class="number">4</span>;
+        <span class="keyword">return</span> x;
+    }
+}
+</code></pre><h4 id="（3）finally子句与AutoClosable接口：">（3）finally子句与AutoClosable接口：</h4><p>JSE 7中提供了“try-with-resources”的简化形式：</p>
+<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">tryWithResources</span>(<span class="params"></span>) throws IOException </span>{
+    <span class="keyword">try</span>(InputStream <span class="keyword">in</span> = <span class="keyword">new</span> ByteArrayInputStream(<span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">10</span>])) {
+        <span class="keyword">try</span> (Reader reader = <span class="keyword">new</span> BufferedReader(<span class="keyword">new</span> InputStreamReader(<span class="keyword">in</span>))) {
+
+        }
+    }
+}
+</code></pre><p><strong>注意：带资源的try语句也可以有自己的catch和finally，但是要在资源关闭之后执行。</strong></p>
+<h4 id="（4）finally与丢失异常：">（4）finally与丢失异常：</h4><p>情形1：finally中的新异常：</p>
+<pre><code><span class="keyword">try</span> {
+    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();
+} <span class="keyword">finally</span> {
+    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException();
+}
+</code></pre><p>情形2：finally中的return：</p>
+<pre><code><span class="keyword">try</span> {
+    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();
+} <span class="keyword">finally</span> {
+    <span class="keyword">return</span>;
+} 
+</code></pre><p>情形3：finally中没有新异常和return：</p>
+<pre><code><span class="keyword">try</span> {
+    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();
+} <span class="keyword">finally</span> {
+    <span class="keyword">int</span> x = <span class="number">3</span>;
+}
+</code></pre><h4 id="字节码分析：">字节码分析：</h4><p>首先，athrow指令是将栈顶异常引用抛出：<br>（1）情况1的字节码：</p>
+<pre><code>Code:
+  <span class="built_in">stack</span>=<span class="number">2</span>, locals=<span class="number">2</span>, args_size=<span class="number">1</span>
+     <span class="number">0</span>: <span class="keyword">new</span>           <span class="preprocessor">#<span class="number">21</span>                 <span class="comment">// class java/lang/IllegalArgumentException</span></span>
+     <span class="number">3</span>: dup
+     <span class="number">4</span>: invokespecial <span class="preprocessor">#<span class="number">22</span>                 <span class="comment">// Method java/lang/IllegalArgumentException."&lt;init&gt;":()V</span></span>
+     <span class="number">7</span>: athrow
+     <span class="number">8</span>: astore_1
+     <span class="number">9</span>: <span class="keyword">new</span>           <span class="preprocessor">#<span class="number">23</span>                 <span class="comment">// class java/lang/IllegalStateException</span></span>
+    <span class="number">12</span>: dup
+    <span class="number">13</span>: invokespecial <span class="preprocessor">#<span class="number">24</span>                 <span class="comment">// Method java/lang/IllegalStateException."&lt;init&gt;":()V</span></span>
+    <span class="number">16</span>: athrow
+  Exception table:
+     from    to  target type
+         <span class="number">0</span>     <span class="number">9</span>     <span class="number">8</span>   any
+</code></pre><p>分析：<br>从异常表中可以看到，0到9行中如果有任何的异常出现，转到8行进行处理，第8行之后就是finally之后的逻辑重新抛出了新的异常；</p>
+<p>（2）情形3字节码分析：</p>
+<pre><code>Code:
+  <span class="built_in">stack</span>=<span class="number">2</span>, locals=<span class="number">3</span>, args_size=<span class="number">1</span>
+     <span class="number">0</span>: <span class="keyword">new</span>           <span class="preprocessor">#<span class="number">21</span>                 <span class="comment">// class java/lang/IllegalArgumentException</span></span>
+     <span class="number">3</span>: dup
+     <span class="number">4</span>: invokespecial <span class="preprocessor">#<span class="number">22</span>                 <span class="comment">// Method java/lang/IllegalArgumentException."&lt;init&gt;":()V</span></span>
+     <span class="number">7</span>: athrow
+     <span class="number">8</span>: astore_1
+     <span class="number">9</span>: iconst_3
+    <span class="number">10</span>: istore_2
+    <span class="number">11</span>: aload_1
+    <span class="number">12</span>: athrow
+  Exception table:
+     from    to  target type
+         <span class="number">0</span>     <span class="number">9</span>     <span class="number">8</span>   any
+</code></pre><p>分析：异常表的逻辑和情形1是相同的，但是finally的逻辑对应的字节码将局部变量表中的异常引用取出执行了athrow；</p>
+<h3 id="因此，可以说finally的return和异常覆盖内层或者try中的return和异常">因此，可以说finally的return和异常覆盖内层或者try中的return和异常</h3><h2 id="3-_堆栈跟踪">3. 堆栈跟踪</h2><p>（1） Throwable的方法：printStackTrace和getStackTrace；<br>（2）Thread.getAllStackTraces()；</p>
+<h2 id="4-_异常使用技巧">4. 异常使用技巧</h2><p>（1）不能用异常处理代替逻辑判断，因为异常处理的性能开销较大；<br>（2）不要过分细化异常及处理；<br>（3）不要压制异常，异常要么声明，要么正确在该方法内处理；<br>（4）设计具有意义的自定义异常体系；</p>
+<p>PS：其他一些好的做法向《Efftive Java》中说的很详细。</p>
+<h2 id="5-_关于Java中的断言和日志">5. 关于Java中的断言和日志</h2><p>就我的经验来看，还是使用开源的框架中的断言（比如Spring Framework中的断言）和日志（比如Log4j）比较合适。</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-Java网络编程小记" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/01/Java网络编程小记/" class="article-date">
+  	<time datetime="2015-12-01T06:37:13.000Z" itemprop="datePublished">2015-12-01</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/01/Java网络编程小记/">Java基础知识总结（六）——网络编程</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在系统的看Tomcat源码的时候，先动手复习一下Java网络编程的基础知识，实现一个简单的服务器/客户端，并在实现中思考一个服务器需要考虑那些问题，记录下来，看Tomcat源码的时候带着这些问题。</p>
+<hr>
+<h3 id="积累的问题和思考：">积累的问题和思考：</h3><ol>
+<li>异常的处理，如何定义自己的异常体系，像具体协议HTTP的404等异常状态如何分发到对应页面；</li>
+<li>怎样设计软件结构，支持NIO和BIO切换，并和Servlet规范结合的；</li>
+<li>如何让Java进程成为类似Daemon进程，当前终端退出后不关闭（shell脚本控制？）；</li>
+<li>关闭服务器的时候，对于没有完成的连接是如何处理的；</li>
+<li>tomcat是如何支持HTTP协议的；</li>
+</ol>
+<h1 id="1-_Socket和InetAddress">1. Socket和InetAddress</h1><p>套接字连接：<br>需要注意：<br>（1）设置合理的超时时间，包括连接超时和读取超时；<br>（2）这是基于TCP的套接字连接，另外的UDP连接是数据报的形式，是无连接的。</p>
+<h3 id="基本用法：">基本用法：</h3><pre><code><span class="comment">//套接字连接</span>
+<span class="constant">Socket socket</span> = new Socket(<span class="string">"www.baidu.com"</span>, <span class="number">80</span>); <span class="comment">//在构造函数中连接/阻塞</span>
+<span class="comment">//获取输入输出流</span>
+<span class="constant">InputStream inputStream</span> = socket.getInputStream();
+<span class="constant">OutputStream outputStream</span> = socket.getOutputStream();
+<span class="comment">//关闭</span>
+socket.close();
+</code></pre><h3 id="套接字超时时间：">套接字超时时间：</h3><pre><code><span class="comment">//套接字超时时间</span>
+<span class="comment">//建立一个无连接的Socket</span>
+Socket socket1 = <span class="keyword">new</span> Socket();
+<span class="comment">//设置连接超时时间，超过时间直接返回</span>
+socket1.connect(<span class="keyword">new</span> InetSocketAddress(<span class="string">"www.baidu.com"</span>, <span class="number">80</span>), <span class="number">1000</span>);
+<span class="comment">//设置等待读取的超时时间，超时返回InterruptedIOException</span>
+socket1.setSoTimeout(<span class="number">5000</span>);
+<span class="keyword">BufferedReader</span> reader = <span class="keyword">new</span> <span class="keyword">BufferedReader</span>(<span class="keyword">new</span> InputStreamReader(socket1.getInputStream()));
+<span class="keyword">try</span> {
+    System.out.<span class="built_in">println</span>(reader.readLine());
+} <span class="keyword">catch</span> (InterruptedIOException e) {
+    e.printStackTrace();
+}
+<span class="comment">//检查是否已经连接</span>
+out.<span class="built_in">println</span>(socket.isConnected());
+out.<span class="built_in">println</span>(socket1.isConnected());
+<span class="comment">//是否关闭</span>
+out.<span class="built_in">println</span>(socket1.isClosed());
+socket1.close();
+out.<span class="built_in">println</span>(socket1.isClosed());
+</code></pre><h3 id="因特网地址">因特网地址</h3><p><strong>注意</strong>：<br>（1）如果一个主机名对应于多个ip，比如：<br><strong>基于DNS的负载均衡</strong>：<br>为多个ip地址配置相同的域名，客户端请求某个域名服务时，域名服务器采用轮询的方式为客户端选择一个ip地址。为不同的客户端选择不同的服务器，从而实现负载均衡的目的。<br>DNS做负载均衡简单方便，但存在不少问题。<br>a.DNS无法知道解析的服务节点是否有效，若服务节点无效，DNS服务器依然会将域名解析到该节点上，造成访问服务节点无效。<br>b.DNS的缓存时间较长，一旦出现问题，更新DNS信息需要等待客户数分钟甚至数十分钟，可靠性不高。<br>c.DNS无法知晓服务器间的差异，也不能反映服务器当前的运行状态。其有可能将轻量级的访问发给空闲的服务器，将重量级的访问发给负载已经很重的服务器。<br>（2）InetAddress使用工厂方法创建实例，根据主机名/地址返回具体的实现（Inet4Address或Inet6Address）；</p>
+<pre><code><span class="comment">//根据主机名获取一个地址，依赖DNS，如果服务器是负载均衡将随机得到一个ip地址</span>
+<span class="comment">//通过工厂方法返回Inet4Address或Inet6Address实例</span>
+InetAddress taobao = InetAddress.getByName(<span class="string">"www.taobao.com"</span>);
+<span class="comment">//得到ip地址</span>
+byte[] ip = taobao.getAddress();
+<span class="keyword">out</span>.println(<span class="string">"Taobao IP:"</span> + Arrays.<span class="keyword">toString</span>(ip));
+<span class="comment">//获取主机名对应的所有ip地址</span>
+InetAddress[] baidus = InetAddress.getAllByName(<span class="string">"www.baidu.com"</span>);
+<span class="keyword">out</span>.println(Arrays.<span class="keyword">toString</span>(baidus));
+<span class="comment">//获取本机地址</span>
+InetAddress localhost = InetAddress.getLocalHost();
+<span class="keyword">out</span>.println(localhost);
+<span class="keyword">out</span>.println(InetAddress.getLoopbackAddress());
+<span class="keyword">out</span>.println(localhost.getHostAddress());
+<span class="keyword">out</span>.println(localhost.getHostName());
+<span class="keyword">out</span>.println(localhost.getCanonicalHostName());
+</code></pre><h1 id="2-_简单的服务器实现">2. 简单的服务器实现</h1><p>（1）使用阻塞IO要使用线程池支持并发访问，这里我用的固定大小的线程池；<br>（2）Socket等产生的阻塞是不可中断的，实现可中断的阻塞可以用nio中的Channel；<br>（3）在客户端实现合适的半关闭策略；</p>
+<p><strong>代码实现：</strong><br>服务接口：</p>
+<pre><code><span class="comment">/**
+ * 服务接口
+ * Created by yjh on 15-12-1.
+ */</span>
+<span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Server</span> <span class="keyword">extends</span> <span class="title">Runnable</span>, <span class="title">AutoCloseable</span> </span>{
+    <span class="function"><span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>;
+}
+</code></pre><p>服务骨架类：<br>（1）原子类布尔值实现安全的close退出；<br>（2）设置是否为nio；</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">AbstractServer</span> <span class="keyword">implements</span> <span class="title">Server</span> </span>{
+    <span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">final</span> String EOF = <span class="string">"EOF"</span>;
+
+    <span class="keyword">protected</span> <span class="keyword">volatile</span> AtomicBoolean isDone = <span class="keyword">new</span> AtomicBoolean(<span class="keyword">false</span>);
+    <span class="keyword">protected</span> <span class="keyword">final</span> <span class="keyword">int</span> port;
+    <span class="keyword">protected</span> <span class="keyword">final</span> <span class="keyword">boolean</span> isNIO; <span class="comment">//false使用BIO</span>
+
+    <span class="function"><span class="keyword">protected</span> <span class="title">AbstractServer</span><span class="params">(<span class="keyword">int</span> port, <span class="keyword">boolean</span> isNIO)</span> </span>{
+        <span class="keyword">this</span>.port = port;
+        <span class="keyword">this</span>.isNIO = isNIO;
+
+    }
+}
+</code></pre><p>阻塞IO服务实现：<br>（1）用静态内部类包含线程池实例，延迟加载；<br>（2）使用固定大小的线程池；<br>（3）简单的数据处理逻辑：返回客户端的请求数据；<br>（4）使用Scanner和PrintWriter包装操作输入输出流；<br>（5）使用CAS操作布尔值控制线程安全；</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BioServer</span> <span class="keyword">extends</span> <span class="title">AbstractServer</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger logger = LogManager.getLogger();
+    <span class="keyword">private</span> ServerSocket serverSocket;
+
+    <span class="function"><span class="keyword">public</span> <span class="title">BioServer</span><span class="params">(<span class="keyword">int</span> port)</span> </span>{
+        <span class="keyword">super</span>(port, <span class="keyword">false</span>);
+        <span class="keyword">try</span> {
+            serverSocket = <span class="keyword">new</span> ServerSocket(port);
+        } <span class="keyword">catch</span> (IOException e) {
+            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"serverSocket created fail."</span>);
+        }
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> </span>{
+        run();
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+        <span class="keyword">try</span> (ServerSocket serverSocket = <span class="keyword">this</span>.serverSocket) {
+            <span class="keyword">while</span>(!isDone.get()) {
+                Socket incoming = serverSocket.accept();
+                ThreadPoolHolder.executor.execute(<span class="keyword">new</span> SocketHandler(incoming));
+            }
+        } <span class="keyword">catch</span> (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    <span class="comment">/**
+     * 静态内部类，包含一个线程池实例，延迟加载
+     */</span>
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">ThreadPoolHolder</span> </span>{
+        <span class="comment">//延时加载，固定大小10的线程池</span>
+        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ExecutorService executor = Executors.newFixedThreadPool(<span class="number">10</span>);
+    }
+
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">SocketHandler</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>{
+        <span class="keyword">private</span> Socket incoming;
+
+        <span class="function"><span class="keyword">public</span> <span class="title">SocketHandler</span><span class="params">(Socket incoming)</span> </span>{
+            <span class="keyword">this</span>.incoming = incoming;
+            logger.info(Thread.currentThread().getName() + <span class="string">"'s connection is established"</span>);
+        }
+
+        <span class="annotation">@Override</span>
+        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+            <span class="keyword">try</span> {
+                <span class="keyword">try</span>(Socket incoming = <span class="keyword">this</span>.incoming) {
+                    InputStream inputStream = incoming.getInputStream();
+                    OutputStream outputStream = incoming.getOutputStream();
+
+                    <span class="keyword">try</span>(Scanner in = <span class="keyword">new</span> Scanner(inputStream);
+                        PrintWriter out = <span class="keyword">new</span> PrintWriter(outputStream, <span class="keyword">true</span>)) {
+                        out.println(<span class="string">"Accepted request, send '"</span> + EOF  + <span class="string">"' to exit"</span>);
+
+                        <span class="keyword">boolean</span> isDone = <span class="keyword">false</span>;
+                        String line;
+                        <span class="keyword">while</span>(!isDone &amp;&amp; in.hasNextLine()) {
+                            line = in.nextLine();
+                            out.println(<span class="string">"Echo: "</span> + line);
+                            <span class="keyword">if</span>(line.trim().equalsIgnoreCase(EOF) || StringUtils.isEmpty(line.trim())) isDone = <span class="keyword">true</span>;
+                        }
+                    }
+                }
+            } <span class="keyword">catch</span> (IOException e) {
+                e.printStackTrace();
+            }
+            logger.info(Thread.currentThread().getName() + <span class="string">"'s connection is closed"</span>);
+        }
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">close</span><span class="params">()</span> </span>{
+        <span class="keyword">while</span>(isDone.compareAndSet(<span class="keyword">false</span>, <span class="keyword">true</span>)) {
+            ThreadPoolHolder.executor.shutdownNow();
+        }
+    }
+}
+</code></pre><p>非阻塞IO实现：<br>（1）使用ServerSocketChannel，SocketChannel注册到Selector，由Selector轮询并通知执行对应的回调（订阅-分发模式）；<br>（2）设置Channel设置为（同步）非阻塞模式，提高IO效率，增加CPU的负载，适用于并发量大，数据量小的情形；</p>
+<pre><code>public class <span class="type">NioServer</span> extends <span class="type">AbstractServer</span> {
+    private <span class="keyword">static</span> final <span class="type">Logger</span> logger = <span class="type">LogManager</span>.getLogger();
+
+    private final <span class="type">ServerSocketChannel</span> serverChannel;
+    private final <span class="type">Selector</span> selector;
+    private <span class="keyword">static</span> final <span class="type">int</span> <span class="type">BufferSize</span> = <span class="number">4096</span>;
+    private <span class="keyword">static</span> final <span class="type">int</span> <span class="type">TIME_OUT</span> = <span class="number">3000</span>;
+
+    public <span class="type">NioServer</span>(<span class="type">int</span> port, boolean isNIO) {
+        super(port, isNIO);
+        <span class="keyword">try</span> {
+            selector = <span class="type">Selector</span>.open();
+            serverChannel = <span class="type">ServerSocketChannel</span>.open();
+            serverChannel.configureBlocking(!isNIO);
+        } catch (<span class="type">IOException</span> e) {
+            throw new <span class="type">RuntimeException</span>(<span class="string">"serverSocket created fail."</span>);
+        }
+    }
+
+    @<span class="type">Override</span>
+    public <span class="type">void</span> start() throws <span class="type">IOException</span> {
+        serverChannel.socket().<span class="keyword">bind</span>(new <span class="type">InetSocketAddress</span>(port));
+        serverChannel.register(selector, <span class="type">SelectionKey</span>.<span class="type">OP_ACCEPT</span>);
+        run();
+    }
+
+    @<span class="type">Override</span>
+    public <span class="type">void</span> close() throws <span class="type">Exception</span> {
+        <span class="keyword">try</span> {
+            serverChannel.close();
+        } <span class="keyword">finally</span> {
+            isDone.compareAndSet(<span class="literal">false</span>, <span class="literal">true</span>);
+        }
+    }
+
+    @<span class="type">Override</span>
+    public <span class="type">void</span> run() {
+        <span class="type">Protocol</span> protocol = new <span class="type">NioTCPProtocol</span>(<span class="type">BufferSize</span>);
+        <span class="keyword">while</span>(!isDone.get()) {
+            <span class="type">Iterator</span>&lt;<span class="type">SelectionKey</span>&gt; <span class="keyword">iterator</span> = null;
+            <span class="keyword">try</span> {
+                <span class="keyword">if</span>(selector.select(<span class="type">TIME_OUT</span>) == <span class="number">0</span>) <span class="keyword">continue</span>;
+
+                <span class="type">Set</span>&lt;<span class="type">SelectionKey</span>&gt; selectionKeys = selector.selectedKeys();
+                <span class="keyword">for</span>(<span class="keyword">iterator</span> = selectionKeys.<span class="keyword">iterator</span>(); <span class="keyword">iterator</span>.hasNext();) {
+                    <span class="type">SelectionKey</span> key = <span class="keyword">iterator</span>.next();
+                    <span class="keyword">if</span>(key.isAcceptable()) {
+                        protocol.handleAccept(key);
+                    } <span class="keyword">else</span> <span class="keyword">if</span>(key.isConnectable()) {
+                        <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"doSomething when be able to connect"</span>);
+                    } <span class="keyword">else</span> <span class="keyword">if</span>(key.isReadable()) {
+                        protocol.handleRead(key);
+                    } <span class="keyword">else</span> <span class="keyword">if</span>(key.isWritable()) {
+                        protocol.handleWrite(key);
+                    }
+                    <span class="keyword">iterator</span>.remove(); //注意要从就绪集合中删除，下次就绪有selector添加
+                }
+            } catch (<span class="type">Exception</span> e) {
+                logger.error(e);
+                <span class="keyword">if</span>(<span class="keyword">iterator</span> != null)
+                    <span class="keyword">iterator</span>.remove();
+            }
+        }
+    }
+
+}
+</code></pre><p>处理对应Select事件：</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NioProtocol</span> <span class="keyword">implements</span> <span class="title">Protocol</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger logger = LogManager.getLogger();
+
+    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> bufferSize; <span class="comment">//缓冲区大小</span>
+
+    <span class="function"><span class="keyword">public</span> <span class="title">NioProtocol</span><span class="params">(<span class="keyword">int</span> bufferSize)</span> </span>{
+        <span class="keyword">this</span>.bufferSize = bufferSize;
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleAccept</span><span class="params">(SelectionKey key)</span> <span class="keyword">throws</span> IOException </span>{
+        <span class="comment">//accept事件，由ServerSokcetChannel打开SocketChannel，并设置非阻塞和注册</span>
+        SocketChannel channel = ((ServerSocketChannel)key.channel()).accept();
+        channel.configureBlocking(<span class="keyword">false</span>);
+        channel.register(key.selector(), SelectionKey.OP_READ,
+                ByteBuffer.allocate(bufferSize));
+        logger.info(channel.getRemoteAddress() + <span class="string">"'s connection is established."</span>);
+    }
+
+    <span class="comment">//客户端发送数据，通过Buffer从Channel中读取请求数据并返回</span>
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleRead</span><span class="params">(SelectionKey key)</span> <span class="keyword">throws</span> IOException </span>{
+        SocketChannel channel = (SocketChannel) key.channel();
+        <span class="comment">//创建缓冲区</span>
+        ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
+        buffer.clear();
+        <span class="keyword">long</span> len = <span class="number">0</span>;
+        StringBuilder sb = <span class="keyword">new</span> StringBuilder();
+        Charset charset = Charset.forName(<span class="string">"UTF8"</span>);
+        <span class="keyword">while</span> ((len = channel.read(buffer)) &gt; <span class="number">0</span>) {
+            buffer.flip();
+            sb.append(charset.decode(buffer).toString());
+            buffer.clear();
+        }
+        logger.debug(sb.toString());
+        <span class="keyword">if</span> (sb.length() == <span class="number">0</span>) {
+            logger.info(channel.getRemoteAddress() + <span class="string">"'s connection is closed."</span>);
+            channel.close();
+        } <span class="keyword">else</span> {
+            <span class="comment">//TODO 抽象出事件处理机制，类似Servlet的回调，分发给特定的处理点</span>
+            <span class="keyword">byte</span>[] bytes = sb.toString().getBytes(<span class="string">"UTF8"</span>);
+            ByteBuffer responseBuffer = ByteBuffer.allocate(bytes.length);
+            responseBuffer.put(bytes);
+            responseBuffer.flip();
+            channel.write(responseBuffer);
+            key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+        }
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleWrite</span><span class="params">(SelectionKey key)</span> <span class="keyword">throws</span> IOException </span>{
+
+    }
+}
+</code></pre><h1 id="3-_URI，URL，URLConnection获取Web数据">3. URI，URL，URLConnection获取Web数据</h1><p>URI是统一资源标识符，起描述作用；<br>URL是统一资源定位符，起定位作用；URL是URI的特例；</p>
+<p>URI的各个部分：<br>[scheme:][schemeSpecificPart][#fragment]<br>（1）绝对与相对：是否包含scheme部分；<br>（2）透明与不透明：schemeSpecificPart是否以”/“开头；<br>schemeSpecificPart又进一步分层：<br>[//authority][path][?query]<br>authority又可以分为：<br>[user-info@]host:[port]；</p>
+<pre><code>URI uri = URI.create(<span class="string">"http://localhost:8080/example/servlets/servlet/空幻?author=空幻<span class="subst">#success</span>"</span>);
+</code></pre><p>scheme：http；<br>schemeSpecificPart：localhost:8080/example/servlets/servlet/空幻?author=空幻；<br>fragment：success<br>authority：localhost:8080<br>path：/example/servlets/servlet/空幻<br>query：author=空幻<br>host：localhost<br>port：8080</p>
+<p>对于Servlet规范来说这个URI可能是这样的：<br>getUri：/example/servlets/servlet/空幻，返回相对的；<br>Url：<a href="http://localhost:8080/example/servlets/servlet/空幻；" target="_blank" rel="external">http://localhost:8080/example/servlets/servlet/空幻；</a><br>ContextPath：example；<br>servletPath：/servlets/servlet<br>PathInfo：空幻<br>QueryString：author=空幻</p>
+<h2 id="使用URLConnection">使用URLConnection</h2><p>（1）创建：</p>
+<pre><code><span class="keyword">URL</span> url = new <span class="keyword">URL</span>(<span class="string">"http://localhost:8080/debug"</span>);
+HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+</code></pre><p>（2）设置连接属性：</p>
+<pre><code><span class="function">setOutput</span>(true); <span class="comment">//如果要写入必须设置</span>
+<span class="function">setUseCaches</span>(boolean); <span class="comment">//URLConnection本身不提供缓存支持需要外部实现，如浏览器；</span>
+<span class="function">setConnectionTimeout</span>(); <span class="comment">//连接超时时间</span>
+<span class="function">setReadTimeout</span>(); <span class="comment">//读取超时时间</span>
+</code></pre><p>使用HttpURLConnection时，使用post应该设置setContentLength；<br>（3）连接：</p>
+<pre><code>connect()<span class="comment">;</span>
+</code></pre><p>（4）获取响应属性：</p>
+<pre><code><span class="function">getHeaderFields</span>();
+<span class="function">getHeaderFieldKey</span>();
+<span class="function">getHeaderField</span>();
+<span class="function">getContentLength</span>();
+<span class="function">getContentType</span>();
+<span class="function">getContentEncoding</span>();
+<span class="comment">//等等</span>
+</code></pre><p>（5）获取响应数据：</p>
+<pre><code><span class="function">getInputStream</span>();
+<span class="function">getContent</span>(); <span class="comment">//不常用，需要MIME类型支持，对应的处理器处理</span>
+</code></pre><p>补充：HttpURLConnection包含了一些额外方法，如：<br>setRequestMethod，getErrStream等；</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-Java-Servlet-4-0-Specification解读" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/11/30/Java-Servlet-4-0-Specification解读/" class="article-date">
+  	<time datetime="2015-11-30T09:34:47.000Z" itemprop="datePublished">2015-11-30</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/11/30/Java-Servlet-4-0-Specification解读/">Java Servlet 4.0 Specification解读</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/技术更新/">技术更新</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-学习JVM的一点感想" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/11/30/学习JVM的一点感想/" class="article-date">
+  	<time datetime="2015-11-30T06:05:27.000Z" itemprop="datePublished">2015-11-30</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/11/30/学习JVM的一点感想/">学习JVM的一点感想</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="契子">契子</h1><p>最近一段时间，系统的学习整理了JVM的知识，很多在学习Java时在语言层面的困惑突然显得并没有复杂，在理解了JVM相关原理后这些困惑背后的原因显得很清晰，很简单。因此，我不由得想那些向JVM一样的基础知识，向操作系统，网络，甚至编码等等。在实际工作和学习中到底起着什么重要的作用呢，毕竟大多数人在学习这些知识的时候并没有那么的实际经验去结合起来考虑它们的实际作用。</p>
+<h1 id="思考">思考</h1><p>由计算机组成的这个庞大系统性结构一个重要性质就是分层的，我们大多数人的大多数时间都是在一个抽象的层次上工作（比如用Java，Js，C++这样的高级语言），虽然层与层之间很多设计都做到是“透明”的，屏蔽了底层的细节，但是难免有一些耦合，由于“透明”的特性，我们难免会有一些困惑。很多前辈都强调建立“系统的知识体系”的重要，我想我在学习中也渐渐明白了这一点。</p>
+<h2 id="说说我在实际中的一些困惑或者思考：">说说我在实际中的一些困惑或者思考：</h2><ol>
+<li><p>在没有很好的掌握设计模式的时候，我觉得Java里的东西太多了，就拿字符串操作来说，光有String还不行，必须有StringBuffer和StringBuilder，在循环里使用+操作String会产生很多StringBuilder对象，为什么要这么麻烦。后来在看了一些东西后我明白字符串为了避免重复创建，它们是不可变的，故而可以共享，因此操作的时候会产生大量的字符串组合，所有需要StirngBuilder这个可变辅助类保存中间状态，并且它使用了生成器模式来接受大量的参数。正是因为理解了设计模式，我在去看Java和像Spirng这样复杂系统就可以发现其中的规律和设计思想，学会理解组件/类之间的关联和意义。</p>
+</li>
+<li><p>学习编码的时候，我知道了字顺，高位和低位，并且也知道了Java的字节码是以8字节为最小单位的Big-endian的字顺保存。因此，写一个将字节码int类型转换成byte数组的函数时我想到了这一点，我当时在想，如果我不知道Big-endian和Java字节码的字顺我是不是又得产生困惑了，然后搜一通了。</p>
+</li>
+<li><p>还有一个Java语言层面的例子，内部类中使用外围类方法的局部变量要加final，当时我觉得这个理解起来很抽象，去网上搜了一搜，很多人从作用域、生命周期等等角度分析，当时觉得很有道理，但是随着学习的深入，我觉得好像不是这么回事，看了JVM相关知识后，我动手查看了下外围类和内部类的字节码，清楚的看到了内部类实际上时间局部变量的值通过&lt;init&gt;方法传给了由Java编译器生成的final成员变量（它是局部变量的副本），在局部变量前加final是Java设计团队为了保证一致性的设计方案。</p>
+</li>
+</ol>
+<p>例子很多。回头来说说自己的情况，本科的时候虽然也上了C++，计算机网络，数据结构等课，但是因为处在“计算机相关专业”课业的要求本身不高，一直主要靠自己，大一时接触HTML/CSS一系列东西，觉得很有趣，不停的自己动手做一些东西，到后来学习Java，Java Web，随着接触的东西越多，想的东西越多，越觉得基础的重要性。很多做东西产生的困惑，其实都是对基础概念的理解不深，不熟。很多相对底层的东西很简单，反映到高层就显得不那么明显。</p>
+<p>所以我现在觉得，以前学数据结构，计算机网络等基础知识，一方面是知识本身，一方面是对整个由计算机构建起来的系统的理解，培养和训练自己学习和思考的方式。就像分析数据库性能瓶颈，应当使用“漏斗原则”，从IO效率最低磁盘处入手，这显然建立在对硬件系统的理解上。还有理解了编译的流程和动态类型语言和静态类型语言的差别，在学习一门语言时在宏观上就有了正确思路。</p>
+<h2 id="小结">小结</h2><p>不知不觉写了很多，留在学校的日子算一算也没有多少了，剩下的时间很宝贵，我想工作后也难有这么多时间去做自己想做的事了。结合以前做的东西，写一写有些深度的代码，结合实际系统地好好巩固那些相对底层的知识是我紧迫要做的事情了。</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/杂谈-感悟/">杂谈/感悟</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
     <article id="post-Spring容器的启动和IoC容器原理" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
