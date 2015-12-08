@@ -372,13 +372,104 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        
+        <p>心得：每个对象都对应自己类的Class对象，这个Class对象是这个类的类新信息的对外入口，通过这个Class对象我们可以从方法区知道这个类有哪些域，构造器，方法，结合具体的对象可以获得域在运行时的值，还可以基于Method调用（查找方法表调用？）。反射的意义在于<strong>运行时</strong>的扩展能力。</p>
+<p>PS：<br>（1）在HotSpot（JDK 1.7）中Class对象是放在方法区中的。<br>（2）自己动手写一个工具输入类名，将类的完整信息输出出来，结合类图，整个结构就清晰了。</p>
+<h2 id="1-_获取Class对象">1. 获取Class对象</h2><p>Class对象是类型信息的<strong>入口</strong>。</p>
+<p>获取Class对象的三个方法：<br>（1）obj.getClass()；<br>（2）Object.class；<br>（3）Class.forName(String)；</p>
+<h2 id="2-_反射的主要功能">2. 反射的主要功能</h2><h3 id="2-1_获取类信息">2.1 获取类信息</h3><p><strong>三个大块</strong>：<br>（1）Field；<br>（2）Method；<br>（3）Constructor；</p>
+<p><strong>核心结构类图：</strong><br><img src="http://blog.zerohuan.com/images/reflect_structure.png" alt="reflect类图"><br>（1）Member：修饰符，名称，是否为编译器生成等；<br>（2）AccessibleObject：获取修改访问控制权限等；<br>（3）Executale：可执行的（Constructor，Method的抽象父类），类型参数，参数列表，异常列表，注解，是否为可变参数列表等；<br>（4）Method：返回类型，是否为默认方法（JDK1.8新方法），是否为桥方法，注解，调用（invoke）；<br>（5）Constructor：方法的大部分功能（没有getReturnType方法），创建新对象（newInstance）；<br>（6）Class：获取方法，域，构造器，实现接口，getXXXs获取包括父类公有方法，域，getDeclaredXXXs包括private，protected等，创建对象（newInstance）；</p>
+<h3 id="2-2_反射创建对象">2.2 反射创建对象</h3><p>（1）通过Class对象（默认构造器创建）：</p>
+<pre><code><span class="class"><span class="keyword">class</span>.<span class="title">newInstance</span>();</span>
+</code></pre><p>（2）通过构造器创建：</p>
+<pre><code><span class="keyword">try</span> {
+        Constructor&lt;A&gt; <span class="constructor"><span class="keyword">constructor</span> = aClass.getConstructor(int.class);
+        <span class="keyword">constructor</span>.newInstance(1);
+    } catch (NoSuchMethodException | InvocationTargetException e) </span>{
+        e.printStackTrace();
+    }
+</code></pre><p>（3）反射创建数组：<br>这时Arrays中的泛型方法，很经典，注意数组的反射创建方法在Array类中。</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">static</span> &lt;T,U&gt; T[] copyOf(U[] original, <span class="built_in">int</span> newLength, Class&lt;? extends T[]&gt; newType) {
+    @SuppressWarnings(<span class="string">"unchecked"</span>)
+    T[] <span class="built_in">copy</span> = ((<span class="keyword">Object</span>)newType == (<span class="keyword">Object</span>)<span class="keyword">Object</span>[].class)
+            ? (T[]) <span class="keyword">new</span> <span class="keyword">Object</span>[newLength]
+            : (T[]) <span class="keyword">Array</span>.newInstance(newType.getComponentType(), newLength);
+    System.arraycopy(original, <span class="number">0</span>, <span class="built_in">copy</span>, <span class="number">0</span>,
+            Math.<span class="built_in">min</span>(original.length, newLength));
+    <span class="keyword">return</span> <span class="built_in">copy</span>;
+}
+</code></pre><h3 id="2-3_分析对象">2.3 分析对象</h3><p>主要是Field.get(obj)，注意Accessible的修改和返回类型：</p>
+<pre><code><span class="keyword">try</span> {
+        A a = <span class="keyword">new</span> A();
+        Field intField = aClass.getField(<span class="string">"publicSuperField"</span>);
+        Field stringField = aClass.getDeclaredField(<span class="string">"privateStringField"</span>);
+        stringField.setAccessible(<span class="keyword">true</span>); <span class="comment">//读写私有域</span>
+        Integer intaa = (Integer)intField.<span class="literal">get</span>(a);<span class="comment">//返回值自动装箱成Integer</span>
+        <span class="built_in">int</span> inta = intField.getInt(a);
+        intField.<span class="literal">set</span>(a, <span class="number">1</span>);
+        <span class="built_in">String</span> intStr = (<span class="built_in">String</span>)stringField.<span class="literal">get</span>(a);
+        stringField.<span class="literal">set</span>(a, <span class="string">"123"</span>);
+    } <span class="keyword">catch</span> (NoSuchFieldException e) {
+        e.printStackTrace();
+    }
+</code></pre><h3 id="2-4_反射调用方法">2.4 反射调用方法</h3><p>（1）一样有访问权限的问题，注意修改；<br>（2）返回值同样是Object；<br>（3）很多人吐槽反射效率低，但我觉得还是要结合具体需求，如果反射可以便于开发，性能开销相比业务开销又微不足道，该使用就用。</p>
+<h4 id="反射调用异常：InvocationTargetException">反射调用异常：InvocationTargetException</h4><p>调用目标方法/构造器中发生异常会导致该异常，通过getTargetException获取实际的异常。</p>
+<h3 id="2-5_反射读取泛型信息">2.5 反射读取泛型信息</h3><p>泛型信息几个重要类：<br>Class类：具体类型：<br>TypeVariable接口：类型变量，形如<code>T extends Comparable&lt;? super T&gt;</code>；<br>WildcardType接口：通配符，形如<code>? super T</code>；<br>ParameterizedType接口：泛型类或泛型接口，形如；<br>GenericArrayType接口：泛型数组；</p>
+<p><img src="http://blog.zerohuan.com/images/generic_type_structure.png" alt="泛型类型类图"></p>
+<p>这也采用了面向接口的思想：<br>（1）获取方法参数类型，域类型，接口列表，方法返回类型，都有得到擦除之后和带有泛型信息两个版本的方法可以用（比如field.getGenericType()和field.getType()，parameter.getType()和parameter.getParameterizedType()）；<br>（2）返回的Type可能有不同的实现，比如返回方法的参数类型： <code>public static &lt;T&gt; void gMethod(T t, Object o1, Comparable&lt;? super T&gt; o2)</code>，第一个是TypeVariable，第二个是Class，第三个是ParameterizedType；</p>
+<h2 id="3-_判断对象类型">3. 判断对象类型</h2><h2 id="3-1_几种基本方法">3.1 几种基本方法</h2><p>（1）instanceof关键字：<code>objectref instanceof 类/接口名（的符号引用）</code>；<br>（2）isInstance方法：<code>claz.isInstance(obj)</code>；<br>（3）通过“==”比较Class对象是否是同一实例；</p>
+<p>前两个只要对象是类或接口的派生（或者直接是类的实例）或实现就返回<code>true</code>，对象引用为null时都返回<code>false</code>；</p>
+<h3 id="3-2_instanceof的实现原理">3.2 instanceof的实现原理</h3><p>（1）从编译说起：</p>
+<p>（2）运行时，指令在执行引擎中的行为：<br>instanceof指令和checkcast指令很相似，但是区别在于</p>
+<h2 id="4-_动态代理">4. 动态代理</h2><p>实现原理：反射+InvocationHandler+生成字节码；</p>
+<p>动态代理的意义在于<strong>在具体原始类和接口还未知的时候就可以定义代理类的代理行为</strong>。这就是<strong>动态</strong>的体现，相对于我们编写代理类时需要实现被代理类的接口。</p>
+<p>一个动态代理的构建和使用包括3个部分：<br><strong>（1）方法调度器（核心）</strong>：InvocationHandler，核心方法<code>public Object invoke(Object proxy, Method method, Object[] args) throws Throwable</code>，在编写时不要涉及将被代理的类型，当我们在调用；<br><strong>（2）一组接口</strong>：在具体使用时，传给Proxy.newProxyInstance(类加载器, 要实现的接口, 方法调度器)；<br><strong>（3）实际的代理类实例</strong>：</p>
+<pre><code><span class="keyword">Interface</span> proxy = (<span class="keyword">Interface</span>)Proxy.newProxyInstance(<span class="keyword">Interface</span>.<span class="keyword">class</span>.getClassLoader(),
+            <span class="keyword">new</span> <span class="keyword">Class</span>&lt;?&gt;[]{<span class="keyword">Interface</span>.<span class="keyword">class</span>}, <span class="keyword">new</span> InvocationHandlerT(itf));
+</code></pre><p>这个代理类（注意是类）是运行时创建的，设置<code>System.getProperties().put(&quot;sun.misc.ProxyGenerator.saveGeneratedFiles&quot;, &quot;true&quot;);</code>可以在磁盘上保存这个代理类的class文件：<br>（1）这个代理类实现我们传入的接口类型，只能传入接口的类型，因为生成的代理类继承了Proxy（包含一个InvocationHandler）。<br>（2）通过反射获得包括接口方法在类的必要方法，通过<code>super.h.invoke(this, m3, (Object[])null);</code>调用；</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> $Proxy0 <span class="keyword">extends</span> Proxy <span class="keyword">implements</span> <span class="keyword">Interface</span> {
+    <span class="keyword">private</span> <span class="keyword">static</span> Method m1;
+    <span class="keyword">private</span> <span class="keyword">static</span> Method m2;
+    <span class="keyword">private</span> <span class="keyword">static</span> Method m3;
+    <span class="keyword">private</span> <span class="keyword">static</span> Method m0;
+
+    <span class="keyword">public</span> $Proxy0(InvocationHandler var1) <span class="keyword">throws</span>  {
+        <span class="keyword">super</span>(var1);
+    }
+
+    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> f() <span class="keyword">throws</span>  {
+        <span class="keyword">try</span> {
+            <span class="keyword">super</span>.h.invoke(<span class="keyword">this</span>, m3, (Object[])<span class="keyword">null</span>);
+        } <span class="keyword">catch</span> (RuntimeException | Error var2) {
+            <span class="keyword">throw</span> var2;
+        } <span class="keyword">catch</span> (Throwable var3) {
+            <span class="keyword">throw</span> <span class="keyword">new</span> UndeclaredThrowableException(var3);
+        }
+    }
+    <span class="comment">//...省略toString，hashCode，equals方法</span>
+    <span class="keyword">static</span> {
+        <span class="keyword">try</span> {
+            m1 = <span class="keyword">Class</span>.forName(<span class="string">"java.lang.Object"</span>).getMethod(<span class="string">"equals"</span>, <span class="keyword">new</span> <span class="keyword">Class</span>[]{<span class="keyword">Class</span>.forName(<span class="string">"java.lang.Object"</span>)});
+            m2 = <span class="keyword">Class</span>.forName(<span class="string">"java.lang.Object"</span>).getMethod(<span class="string">"toString"</span>, <span class="keyword">new</span> <span class="keyword">Class</span>[<span class="number">0</span>]);
+            m3 = <span class="keyword">Class</span>.forName(<span class="string">"com.yjh.reflect.InvocationHandlerTest$Interface"</span>).getMethod(<span class="string">"f"</span>, <span class="keyword">new</span> <span class="keyword">Class</span>[<span class="number">0</span>]);
+            m0 = <span class="keyword">Class</span>.forName(<span class="string">"java.lang.Object"</span>).getMethod(<span class="string">"hashCode"</span>, <span class="keyword">new</span> <span class="keyword">Class</span>[<span class="number">0</span>]);
+        } <span class="keyword">catch</span> (NoSuchMethodException var2) {
+            <span class="keyword">throw</span> <span class="keyword">new</span> NoSuchMethodError(var2.getMessage());
+        } <span class="keyword">catch</span> (ClassNotFoundException var3) {
+            <span class="keyword">throw</span> <span class="keyword">new</span> NoClassDefFoundError(var3.getMessage());
+        }
+    }
+}
+</code></pre>
       
     </div>
     
     <div class="article-info article-info-index">
       
       
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
+	</div>
+
       
 
       
@@ -413,7 +504,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/06/Java基础知识总结（七）——泛型/">Java基础知识总结（七）——泛型和反射</a>
+      <a class="article-title" href="/2015/12/06/Java基础知识总结（七）——泛型/">Java基础知识总结（七）——泛型</a>
     </h1>
   
 
@@ -443,7 +534,7 @@
 <h4 id="（2）多个限定：Object类是所有类型的超类，可以通过限定符来“缩小范围”：">（2）多个限定：Object类是所有类型的超类，可以通过限定符来“缩小范围”：</h4><p>（1）<code>&lt;T extends Comparable&gt;</code>；<br>（2）<code>&lt;T extends Comparable &amp;&amp; Seriablizable &amp;&amp; List&gt;</code>；<br>（3）限定中如果有类，只能有一个且必须是第一个；<br>它们的描述符是：</p>
 <pre><code><span class="string">descriptor:</span> (Ljava<span class="regexp">/lang/</span>Comparable;)V
 </code></pre><p>因此可以使用Comparable的方法；</p>
-<h4 id="擦除与替换类型">擦除与替换类型</h4><p>将会使用第一个限定类型进行替换，因此在调用其他限定类型的方法时，需要先进行checkcast指令的检查和转型（虽然在编译和加载时会根据signature进行检查，这一步还是需要的，这是语言设计上的问题）；<br>这种强制类型转换在方法返回值，域访问赋值中（如果擦除替换的类型和实际泛型参数类型不匹配）都会出现；</p>
+<h4 id="擦除与替换类型">擦除与替换类型</h4><p>将会使用第一个限定类型进行替换，因此在调用其他限定类型的方法时，需要先进行checkcast指令的检查和转型（虽然在编译和加载时会根据signature进行检查，这一步还是需要的，这是语言设计上的问题）；<br>在调用者方法中这种强制类型转换在方法返回值，域访问赋值中（如果擦除替换的类型和实际泛型参数类型不匹配）都会出现；</p>
 <h2 id="3-_桥方法，泛型和多态">3. 桥方法，泛型和多态</h2><pre><code><span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Pair</span>&lt;<span class="title">T</span>&gt; </span>{
     <span class="keyword">private</span> T first;
     <span class="keyword">private</span> T second;
@@ -463,7 +554,20 @@
     descriptor: (Ljava/lang/<span class="keyword">Object</span>;)V
 </code></pre><p>实际上在桥方法中调用的是setSecond((Date)obj);</p>
 <p><strong>PS：协变返回类型也是需要桥方法，因此对于虚拟机来说返回值也是区别方法的一个重要特征</strong>；</p>
-<h2 id="4-_约束与局限性">4. 约束与局限性</h2><p>Java的泛型是基于擦除的，故而不能向C++的模板一样灵活，擦除之后类型参数在<strong>描述符中没有</strong>了，对于数组，instanceof，getClass来说它们不能识别原有的类型参数的区别，因此如果允许数组，instanceof等结合泛型使用，不能保证正确的类型，导致ClassCastException的风险大大增加，而泛型的意义在于可以自动进行类型的检查和转换（基于signature的），因此编译器禁止了这些做法。<br>（1）不能用基本类型实例化类型参数；<br>（2）运行时类型检查只适用于原始类型（instanceof，getClass，不管泛型参数如何它们都基于同一个Class对象）；<br>（3）不能创建参数化类型的数组（使用<code>ArraList&lt;Pair&lt;String&gt;&gt;</code>）；<br>（4）带泛型参数的类和可变参数列表，可变参数列表本质是数组实现的，这里是可行的，使用@SafeVarargs可以消除警告，但这样做，数组只会检查擦除之后的类型，因此实际使用有ClassCastException的风险；<br>（5）不能实例化类型变量（要想结合泛型创建实例或者数组只能通过反射创建）；<br>（6）泛型类的静态上下文中类型变量无效；<br>（7）不能抛出或捕获泛型类的实例：<br><code>class Problem&lt;T&gt; extends Throwable</code>和<code>catch(T e)</code>是不允许的，因为异常表需要具体的类型描述；<br><code>throw T</code>是允许的，擦除之后实际上声明的是        </p>
+<h2 id="4-_约束与局限性">4. 约束与局限性</h2><p>Java的泛型是基于擦除的，故而不能向C++的模板一样灵活，擦除之后类型参数在<strong>描述符中没有</strong>了，对于数组，instanceof，getClass来说它们不能识别原有的类型参数的区别，因此如果允许数组，instanceof等结合泛型使用，不能保证正确的类型，导致ClassCastException的风险大大增加，而泛型的意义在于可以自动进行类型的检查和转换（基于signature的），因此编译器禁止了这些做法。<br>（1）不能用基本类型实例化类型参数；<br>（2）运行时类型检查只适用于原始类型（instanceof，getClass，不管泛型参数如何它们都基于同一个Class对象）；<br>（3）不能创建参数化类型的数组（使用<code>ArraList&lt;Pair&lt;String&gt;&gt;</code>）：<br>数组类型没有能力（因为擦除）检查写入泛型类型对象的类型是否与签名（类型参数）一致，因此这样的写法<code>List&lt;Stirng&gt; lsa = new ArrayList&lt;String&gt;[10];</code>使得<code>new ArrayList&lt;String&gt;</code>的定义毫无意义，违反这句代码的本意；</p>
+<pre><code><span class="comment">//为什么不可以</span>
+<span class="built_in">List</span>&lt;Stirng&gt; lsa = <span class="keyword">new</span> ArrayList&lt;<span class="built_in">String</span>&gt;[<span class="number">10</span>]; <span class="comment">//假设可以</span>
+<span class="built_in">Object</span>[] oa = (<span class="built_in">Object</span>[])lsa;
+<span class="built_in">List</span>&lt;Integer&gt; li = <span class="keyword">new</span> ArrayLIst&lt;Integer&gt;();
+li.add(<span class="keyword">new</span> Integer(<span class="number">3</span>));
+oa[<span class="number">1</span>] = li; <span class="comment">//可以通过</span>
+<span class="built_in">String</span> s = lsa[<span class="number">1</span>].<span class="literal">get</span>(<span class="number">0</span>); <span class="comment">//ClassCastException</span>
+
+<span class="comment">//这两种是可以的，因为你你这样写编译器认为你</span>
+<span class="comment">//主动放弃了编译器和JVM提供的类型检查和转换，或者说，你本来就希望放入O比较恶臭它</span>
+<span class="literal">static</span> <span class="built_in">List</span>&lt;<span class="built_in">String</span>&gt;[] ls = <span class="keyword">new</span> ArrayList[<span class="number">10</span>];
+<span class="literal">static</span> <span class="built_in">List</span>&lt;?&gt;[] ls1 = <span class="keyword">new</span> ArrayList&lt;?&gt;[<span class="number">10</span>];
+</code></pre><p>（4）带泛型参数的类和可变参数列表，可变参数列表本质是数组实现的，这里是可行的，使用@SafeVarargs可以消除警告，但这样做，数组只会检查擦除之后的类型，因此实际使用有ClassCastException的风险；<br>（5）不能实例化类型变量（要想结合泛型创建实例或者数组只能通过反射创建）；<br>（6）泛型类的静态上下文中类型变量无效；<br>（7）不能抛出或捕获泛型类的实例：<br><code>class Problem&lt;T&gt; extends Throwable</code>和<code>catch(T e)</code>是不允许的，因为异常表需要具体的类型描述；<br><code>throw T</code>是允许的，擦除之后实际上声明的是        </p>
 <pre><code>Exceptions:
   throws java<span class="class">.lang</span><span class="class">.Throwable</span>
 </code></pre><p>利用<code>throw T</code>可以消除对checked异常的检查：</p>
@@ -487,7 +591,7 @@ Pair &gt; Pair<span class="variable">&lt;?&gt;</span> &gt; Pair<span class="vari
 </code></pre><p>（1）<code>&lt;? extends SuperClass&gt;</code>：包含SuperClass自身，对应的签名是<code>Lcom/yjh/generic/GenericAndWildcard$Pair&lt;+Lcom/yjh/generic/GenericAndWildcard$SuperClass;&gt;;</code>，带有子类限定的通配符可以用于从泛型对象中读取；<br>（2）<code>&lt;? super SubClass&gt;</code>：包含SubClass自身，对应的签名是<code>Lcom/yjh/generic/GenericAndWildcard$Pair&lt;-Lcom/yjh/generic/GenericAndWildcard$SubClass;&gt;;</code>，带有超类限定的通配符可以用于向泛型对象中写入；<br>一个典型的super关键字用法：</p>
 <pre><code><span class="keyword">static</span> &lt;T extends <span class="type">Comparable</span>&lt;? super T&gt;&gt; T min(T[] ts) <span class="decorator">{...}</span>
 </code></pre><p>（3）无限定通配符：签名<code>Lcom/yjh/generic/GenericAndWildcard$Pair&lt;*&gt;;</code>；<br>（4）如果方法内需要使用泛型参数声明变量，使用泛型方法要比<code>void swap(Pair&lt;?&gt; pair)</code>要方便；<br>（5）通配符捕获，只有在编译器能够确信通配符表达的是<strong>单个、确定</strong>的类型时才可以。<code>ArrayList&lt;Pair&lt;T&gt;&gt;</code>不能捕获<code>ArrayList&lt;Pair&lt;?&gt;&gt;</code>中的通配符；</p>
-<h2 id="通过反射读取泛型信息：">通过反射读取泛型信息：</h2><h2 id="附：C++中template和Java的泛型">附：C++中template和Java的泛型</h2><p>Java的泛型似乎是一种模拟的方式，本质还是基于向上转型（子类的引用可以赋值给父类引用）；</p>
+<h2 id="附：C++中template和Java的泛型">附：C++中template和Java的泛型</h2><p>Java的泛型似乎是一种模拟的方式，本质还是基于向上转型（子类的引用可以赋值给父类引用）；</p>
 
       
     </div>
