@@ -3,18 +3,27 @@
 <head>
   <meta charset="utf-8">
   
-  <title>TCP/IP总结（一）——基本概念 | Zerohuan的博客</title>
+  <title>TCP/IP学习笔记（一）——基本概念 | Zerohuan的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="从CSDN迁徙而来">
+  <meta name="description" content="心得：（1）分层设计屏蔽细节，各司其职，但是不要过于拘泥定义，像ARP，RARP就不好定位，结合实际解决问题才是主题；（2）“自由地接受，保守地发送”是TCP/IP协议族每一层的稳健性原则；（3）封装和分用是相对的两个过程；
+其他资料：（1）阮一峰老师两篇博文：互联网协议入门（一）互联网协议入门（二）
+1. 分层层的设计可以隐藏层之间的细节，使得上层可透明地使用下层。
+四层协议系统（或者再加上“实">
 <meta property="og:type" content="article">
-<meta property="og:title" content="TCP/IP总结（一）——基本概念">
+<meta property="og:title" content="TCP/IP学习笔记（一）——基本概念">
 <meta property="og:url" content="http://blog.ssearch.cn/2015/12/05/TCP-IP总结（一）——基本概念/index.html">
 <meta property="og:site_name" content="Zerohuan的博客">
-<meta property="og:description" content="从CSDN迁徙而来">
-<meta property="og:updated_time" content="2015-12-05T10:56:37.000Z">
+<meta property="og:description" content="心得：（1）分层设计屏蔽细节，各司其职，但是不要过于拘泥定义，像ARP，RARP就不好定位，结合实际解决问题才是主题；（2）“自由地接受，保守地发送”是TCP/IP协议族每一层的稳健性原则；（3）封装和分用是相对的两个过程；
+其他资料：（1）阮一峰老师两篇博文：互联网协议入门（一）互联网协议入门（二）
+1. 分层层的设计可以隐藏层之间的细节，使得上层可透明地使用下层。
+四层协议系统（或者再加上“实">
+<meta property="og:updated_time" content="2015-12-10T17:54:46.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="TCP/IP总结（一）——基本概念">
-<meta name="twitter:description" content="从CSDN迁徙而来">
+<meta name="twitter:title" content="TCP/IP学习笔记（一）——基本概念">
+<meta name="twitter:description" content="心得：（1）分层设计屏蔽细节，各司其职，但是不要过于拘泥定义，像ARP，RARP就不好定位，结合实际解决问题才是主题；（2）“自由地接受，保守地发送”是TCP/IP协议族每一层的稳健性原则；（3）封装和分用是相对的两个过程；
+其他资料：（1）阮一峰老师两篇博文：互联网协议入门（一）互联网协议入门（二）
+1. 分层层的设计可以隐藏层之间的细节，使得上层可透明地使用下层。
+四层协议系统（或者再加上“实">
   
     <link rel="alternative" href="/atom.xml" title="Zerohuan的博客" type="application/atom+xml">
   
@@ -115,7 +124,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java小工具/" style="font-size: 10px;">Java小工具</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a>
+						<a href="/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 10px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java小工具/" style="font-size: 10px;">Java小工具</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 10px;">TCP/IP</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a>
 					</div>
 				</section>
 				
@@ -212,7 +221,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      TCP/IP总结（一）——基本概念
+      TCP/IP学习笔记（一）——基本概念
     </h1>
   
 
@@ -220,6 +229,10 @@
       
       <div class="article-info article-info-post">
         
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/TCP-IP/">TCP/IP</a></li></ul>
+	</div>
+
         
 
         <div class="clearfix"></div>
@@ -228,7 +241,28 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        
+        <p>心得：<br>（1）分层设计屏蔽细节，各司其职，但是不要过于拘泥定义，像ARP，RARP就不好定位，结合实际解决问题才是主题；<br>（2）“自由地接受，保守地发送”是TCP/IP协议族每一层的稳健性原则；<br>（3）封装和分用是相对的两个过程；</p>
+<p>其他资料：<br>（1）阮一峰老师两篇博文：<br><a href="http://www.ruanyifeng.com/blog/2012/05/internet_protocol_suite_part_i.html" target="_blank" rel="external">互联网协议入门（一）</a><br><a href="http://www.ruanyifeng.com/blog/2012/06/internet_protocol_suite_part_ii.html" target="_blank" rel="external">互联网协议入门（二）</a></p>
+<h2 id="1-_分层">1. 分层</h2><p>层的设计可以隐藏层之间的细节，使得上层可透明地使用下层。</p>
+<p><strong>四层协议系统（或者再加上“实体层”）：</strong><br><strong>（1）链路层：</strong>操作系统中的设备驱动程序和网络接口卡（网卡），它们一起处理与电缆的<strong>物理接口细节</strong>，比如以太网协议，每个网卡有独一无二的MAC地址，根据对方的MAC地址发送给对方，要获得对方MAC地址就需要使用<strong>ARP（地址解析，已知IP获取对方MAC地址）</strong>，发送数据在同一网络中进行<strong>广播</strong>，因此一共要发n-1个包，因此需要网络层划分子网；<br><strong>（2）网络层：</strong>处理分组在网络中的活动，在TCP/IP协议族中，包括IP协议和ICMP协议（Internet互联网控制报文协议）以及IGMP协议（Intenet组管理协议）；<br><strong>（3）传输层：</strong>提供两台主机间应用程序的<strong>端到端</strong>通信，包括TCP和UDP；<br><strong>（4）应用层：</strong>负责处理特定的应用程序细节。比如Telnet，FTP，SMTP，SNMP，HTTP；</p>
+<p><strong>注意</strong>：<br>（1）应用层和传输层是端到端（End-to-end）协议，只有端系统需要使用它们；<br>网络层提供逐跳（Hop-by-hop）协议，两端系统和中间系统都要使用它；<br>（2）底3层在操作系统的内核中进行，应用层处理应用程序的细节在应用进程；</p>
+<p>路由器（网关）：使用相同协议族连接两（多）个不同类型的<strong>物理网络</strong>，比如以太网和令牌环网络，它是在网络层对网络进行互连；<br>网桥：在链路层上对网络进行互连，使得多个LAN组合在一起，这样对上层来说就像一个局域网；</p>
+<h2 id="2-_TCP/IP协议族分层：">2. TCP/IP协议族分层：</h2><h3 id="网络层">网络层</h3><p><strong>IP</strong>：提供的是不可靠的服务，尽可能快的把分组从源结点发送到目标结点（路由），不提供可靠性保证；<br><strong>ICMP</strong>：是IP协议的附属协议，IP层使用ICMP与其他主机或路由器交换错误和其他重要信息，Ping和Traceroute都使用了ICMP；<br><strong>IGMP</strong>：Internet组管理协议，它用来把一个UDP数据报多播到多个主机；</p>
+<h3 id="传输层">传输层</h3><p><strong>TCP</strong>：在IP上建立了一个<strong>可靠</strong>的服务，比如超时重传，序列号+确认等等；<br><strong>UDP</strong>：没有确认号，数据报的到达顺序也不一定按顺序，因此它是“无连接的”；</p>
+<h3 id="链路层">链路层</h3><p><strong>ARP和RARP</strong>：地址解析协议和逆地址解析协议用来转换IP层和网络接口层使用的地址（IP地址和MAC地址）；</p>
+<h2 id="3-_IP地址">3. IP地址</h2><p>A：0    ，    8位网络号（0～127）；<br>B：10，16位网络号（128～191）；<br>C：110，24位网络号（192～223）；<br>D：1110，多播，28位多播组号（224～239）；<br>E：11110    ，27位留待后用（240～255）；</p>
+<p><strong>InterNIC</strong>（互联网络信息中心），分配网络号，主机号分配由系统管理员负责；<br>InterNIC由三部分：<strong>注册服务</strong>，<strong>目录和数据库服务</strong>，<strong>信息服务</strong>。 </p>
+<p><strong>IP地址分类</strong>：<br>（1）单播地址；<br>（2）广播地址；<br>（3）多播（组播）地址；</p>
+<h2 id="4-_域名系统">4. 域名系统</h2><p>DNS，一个分布式数据库，IP和主机名之间的映射信息。</p>
+<h2 id="5-_封装">5. 封装</h2><p>应用数据被送入<strong>协议栈</strong>，通过每一层增加首部信息（有时包括尾部信息）。<br>TCP段——&gt;IP数据报（最长65535）——&gt;帧（Frame，以太网传输的比特流，46～1500字节）；<br><strong>注意点</strong>：<br>（1）IP接受TCP，UDP，ICMP，IGMP的数据，因此有一个8位的协议域标识；<br>（2）IP，ARP和RARP数据，需要网络接口（网卡）发送和接受，因此以太网帧首部也有标识（16位帧类型域）指明生成数据的网络层协议；<br>（3）协议具体属于那一层并不是绝对可以划分的，比如ARP，RARP即使网络驱动程序一部分，也有以太网数据帧类型；ICMP和IGMP既被封装IP数据报，也是IP的附属协议；</p>
+<h2 id="6-_分用（Demultiplexing）">6. 分用（Demultiplexing）</h2><p><strong>分用</strong>：主机接受到以太网数据帧后，数据需要<strong>从底向上升</strong>去掉各层协议的首部。每层协议盒检查报文首部的协议标识，确定接收的上层协议。</p>
+<h2 id="7-_客户-服务器模型">7. 客户-服务器模型</h2><p><strong>分类</strong>：<strong>重复型</strong>和<strong>并发型</strong>；<br>一般来说，TCP服务器是并发的，UDP服务器是重复的；</p>
+<h2 id="8-_端口号">8. 端口号</h2><p>0-1023是系统占用端口号（保留端口号）<br>FTP：21；<br>Telnet：23；<br>TFTP：69；</p>
+<p>服务器使用知名端口号，客户端使用临时设定的端口号；</p>
+<p>/etc/services包含了知名端口号，查看<strong>知名端口号</strong>：<br>grep telnet /etc/services</p>
+<h2 id="9-_标准化过程">9. 标准化过程</h2><p>TCP/IP协议族的重要组织：<br>（1）ISOC：Internet协会；<br>（2）IAB：Internet体系结构委员会；<br>（3）IETF：Internet工程专门小组；<br>（4）IRIF：Internet研究专门小组；</p>
+<p>RFC：Internet正式标准：<br>（1）赋值RFC：1340，Internet协议中使用的数字和常数；<br>（2）Internet正式标准协议，RFC1600；<br>（3）主机需求RFC，1122和1123；<br>（4）路由器需求RFC，1009；</p>
+
       
     </div>
     
@@ -277,7 +311,7 @@
 
 <div class="duoshuo">
 	<!-- 多说评论框 start -->
-	<div class="ds-thread" data-thread-key="TCP-IP总结（一）——基本概念" data-title="TCP/IP总结（一）——基本概念" data-url="http://blog.ssearch.cn/2015/12/05/TCP-IP总结（一）——基本概念/"></div>
+	<div class="ds-thread" data-thread-key="TCP-IP总结（一）——基本概念" data-title="TCP/IP学习笔记（一）——基本概念" data-url="http://blog.ssearch.cn/2015/12/05/TCP-IP总结（一）——基本概念/"></div>
 	<!-- 多说评论框 end -->
 	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
 	<script type="text/javascript">
