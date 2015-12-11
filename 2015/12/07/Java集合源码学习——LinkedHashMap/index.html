@@ -13,7 +13,7 @@
 <meta property="og:site_name" content="Zerohuan的博客">
 <meta property="og:description" content="参考学习资料：（1）JDK1.7之前的【Java集合源码剖析】LinkedList源码剖析
 1. LinkedList的要点（1）双向链表：LinkedList基于双向链表实现的（Entry有next，previous指针），因此可以把它当栈，队列和双端队列使用；在JDK1.7之前LinkedList之前是循环链表的方式实现两端插入的，包含一个无值的头结点，JDK1.7及以上是包含两个指针分别指向">
-<meta property="og:updated_time" content="2015-12-10T17:55:50.000Z">
+<meta property="og:updated_time" content="2015-12-11T13:09:15.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java 8集合源码学习——LinkedList">
 <meta name="twitter:description" content="参考学习资料：（1）JDK1.7之前的【Java集合源码剖析】LinkedList源码剖析
@@ -118,7 +118,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 10px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java小工具/" style="font-size: 10px;">Java小工具</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 10px;">TCP/IP</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a>
+						<a href="/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java小工具/" style="font-size: 10px;">Java小工具</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 10px;">TCP/IP</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a>
 					</div>
 				</section>
 				
@@ -236,7 +236,7 @@
     <div class="article-entry" itemprop="articleBody">
       
         <p>参考学习资料：<br>（1）<a href="http://blog.csdn.net/ns_code/article/details/35787253" target="_blank" rel="external">JDK1.7之前的【Java集合源码剖析】LinkedList源码剖析</a></p>
-<h2 id="1-_LinkedList的要点">1. LinkedList的要点</h2><p><strong>（1）双向链表</strong>：LinkedList基于双向链表实现的（Entry有next，previous指针），因此可以把它当栈，队列和双端队列使用；<br>在JDK1.7之前LinkedList之前是循环链表的方式实现两端插入的，包含一个无值的头结点，JDK1.7及以上是包含两个指针分别指向头结点和尾结点；<br><strong>（3）线程不安全</strong>：LinkedList通过维护modCount修改计数，每个迭代器保存各自的修改计数与modCount对比检验的方式防止并发修改；<br><strong>（4）性能特点</strong>：由于是链表实现，<strong>不支持快速随机存取</strong>，因此get(index)效率不高，在循环时一定注意不能误用；支持<strong>高效的结构性修改</strong>（只需要移动指针指向）；<br><strong>（5）克隆和序列化</strong>：实现了Serializable和Cloneable接口，支持序列化和克隆，其中序列化使用writeObject和readObject不采用默认的序列化机制，只保存size和元素对象，一方面是隐藏内部表示信息，一方面节省了开销；<br><strong>（6）置空操作</strong>：强调一点，对应容器，删除结点时<code>x = null;</code>是很有必要的，让容器，容器中的结点在清除后不要互相引用的保存在堆中，影响垃圾回收，因为JVM一般是进行可达性分析的；</p>
+<h2 id="1-_LinkedList的要点">1. LinkedList的要点</h2><p><strong>（1）双向链表</strong>：LinkedList基于双向链表实现的（Entry有next，previous指针），因此可以把它当栈，队列和双端队列使用；<br>在JDK1.7之前LinkedList之前是循环链表的方式实现两端插入的，包含一个无值的头结点，JDK1.7及以上是包含两个指针分别指向头结点和尾结点；<br><strong>（3）线程不安全</strong>：LinkedList通过维护modCount修改计数，每个迭代器保存各自的修改计数与modCount对比检验的方式防止并发修改；<br><strong>（4）性能特点</strong>：由于是链表实现，<strong>不支持快速随机存取</strong>，因此get(index)效率不高，在循环时一定注意不能误用；支持<strong>高效的结构性修改</strong>（只需要移动指针指向）；因此LinkedList定义了内部类实现ListIterator，避免使用效率低下的<code>get()</code>（AbstractList的迭代器是基于<code>get()</code>的），<code>iterator()</code>返回也是这个内部类实例；<br><strong>（5）克隆和序列化</strong>：实现了Serializable和Cloneable接口，支持序列化和克隆，其中序列化使用writeObject和readObject不采用默认的序列化机制，只保存size和元素对象，一方面是隐藏内部表示信息，一方面节省了开销；<br><strong>（6）置空操作</strong>：强调一点，对应容器，删除结点时<code>x = null;</code>是很有必要的，让容器，容器中的结点在清除后不要互相引用的保存在堆中，影响垃圾回收，因为JVM一般是进行可达性分析的；</p>
 <h2 id="2-_基本结构">2. 基本结构</h2><h3 id="2-1_结点类">2.1 结点类</h3><p>双向链表，链表包含2个指针：头结点指针，尾结点指针；<br>结点（Node），包含2个指针，指向前驱结点和后序结点；</p>
 <pre><code>transient int size = <span class="number">0</span>;    
 //不变式：(first == null &amp;&amp; last == null) || (first.prev == null &amp;&amp; first.item != null)
@@ -496,7 +496,7 @@ Node&lt;E&gt; node(<span class="keyword">int</span> index) {
     <span class="keyword">if</span>(isPositionIndex(<span class="keyword">index</span>))
         <span class="keyword">throw</span> <span class="keyword">new</span> IndexOutOfBoundsException(outOfBoundsMsg(<span class="keyword">index</span>));
 } 
-</code></pre><h3 id="3-3_List接口实现">3.3 List接口实现</h3><p>基于Node内部表示，因此List的关键方法也要依赖与内部表示：</p>
+</code></pre><h3 id="3-3_List接口实现">3.3 List接口实现</h3><p>（1）基于Node内部表示，因此List的关键方法也要依赖与内部表示；<br>（2）注意，LinkedList的subList实现没有覆盖AbstractList的实现；</p>
 <pre><code><span class="comment">//添加结点，在表尾</span>
 <span class="annotation">@Override</span>
 <span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">add</span><span class="params">(E e)</span> </span>{

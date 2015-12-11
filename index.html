@@ -114,7 +114,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 10px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java小工具/" style="font-size: 10px;">Java小工具</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 10px;">TCP/IP</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a>
+						<a href="/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java小工具/" style="font-size: 10px;">Java小工具</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 10px;">TCP/IP</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a>
 					</div>
 				</section>
 				
@@ -195,6 +195,578 @@
 	</div>
 </nav>
       <div class="body-wrap">
+  
+    <article id="post-Java 8集合源码学习——ArrayList" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/11/Java 8集合源码学习——ArrayList/" class="article-date">
+  	<time datetime="2015-12-11T06:48:41.000Z" itemprop="datePublished">2015-12-11</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/11/Java 8集合源码学习——ArrayList/">Java 8集合源码学习——ArrayList</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>心得：<br>学习、实践的时候如果能够触类旁通是一件很爽的事，学习源码能很学到很多优秀思想和设计，而优秀的思想总是相通的。比如ArrayList中扩展数组大小时，最少扩展为原数组的3/2，这种做法避免了频繁小幅度的扩展造成频繁的复制动作（让我想到了TCP拥塞控制的滑动窗口的大小控制），集合框架中有很多精妙的思想和技巧，深入学习，仔细思考真的可以受益颇多。</p>
+<h2 id="1-_ArrayList要点">1. ArrayList要点</h2><p><strong>（1）基于数组实现</strong>：内部表示通过控制对象数组的访问，数组是不能动态修改大小的，因此根据元素数量/指定容量大小，通过创建新数组，复制元素对象是ArrayList的核心原理之一；<br><strong>（2）性能特点</strong>：因为基于数组的，因此可以实现快速随机访问，比LinkedList效率高；但是增加/删除等需要通过复制数组元素（部分或全部）来实现，效率比LinkedList低；<br><strong>（3）线程不安全</strong>：同样使用modCount修改计数，类似乐观锁的fail-fast来防止并发修改带来的不一致，ArrayList的每个Iterator，ListIterator，SubList实例都独立维护一个基于ArrayList实例modCount的expectedModCount；<br><strong>（4）优化手段</strong>：<br><strong>单例模式应用</strong>：EMPTY_ELEMENTDATA和DEFAULTCAPACITY_EMPTY_ELEMENTDATA这两个单例的空数组对象，分别被“空状态”和“默认状态”的ArrayList共享；<br><strong>grow方法的增长机制</strong>：每次扩展数组的大小至少扩展到原数据的3/2大小，减少了创建新数组和复制动作的次数；<br><strong>（5）克隆和序列化</strong>：实现了Serializable和Cloneable接口，支持序列化和克隆，其中序列化使用writeObject和readObject不采用默认的序列化机制，只保存size和元素对象，一方面是隐藏内部表示信息，一方面节省了开销；<br><strong>（6）防止内存泄漏的置空动作</strong>：维护一个数组也是自己维护内存管理，因为数组也持有这引用，删除时要及时置空不能影响GC活动，虽然LinkedList已经说了，再强调下；</p>
+<h2 id="2-_基本结构和操作">2. 基本结构和操作</h2><h3 id="2-1_重要属性">2.1 重要属性</h3><pre><code><span class="comment">//默认初始化容量</span>
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="built_in">int</span> DEFAULT_CAPACITY = <span class="number">10</span>;
+<span class="comment">/*
+ 所有Empty数组列表共享一个空数组对象，不仅可以减少重复对象的创建（单例模式应用），还可以标识空列表状态
+ 单例模式（区别于享元模式）：
+ 一是这里只有一个对象；
+ 二是不仅仅是节省内存，更重要的是起到共享并标识“空数组列表”的作用；
+ EMPTY_ELEMENTDATA标识“空”状态，DEFAULTCAPACITY_EMPTY_ELEMENTDATA标识默认状态
+ */</span>
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">Object</span>[] EMPTY_ELEMENTDATA = {};
+<span class="comment">/*
+ 默认状态创建数组列表实例使用该数组，使用一个单例空数组并且不直接使用EMPTY_ELEMENTDATA而是新键一个空数组的原因是：
+ 一是用于标识不同的状态，区别于“空数组列表”，DEFAULTCAPACITY_EMPTY_ELEMENTDATA表示数组列表还未插入元素；
+ 二是等到实际有元素再分配合适大小的数组内存空间，起到延迟加载的作用；
+ 三是同样单例可以让所有默认状态列表使用一个空数组对象，节省内存；
+*/</span>
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">Object</span>[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
+<span class="comment">/*
+使用transient的目的是为了隐藏内部表示
+使用Object的原因：
+（1）Object可以引用所有具体类型的数组对象；
+（2）实际的ArrayList的类型参数对于ArrayList对象本身是不可知的，泛型的本质是擦除，并借助变量，方法，类的签名来进行类型检查和转换;
+    因此可以用Object数组存放元素对象，依赖方法和类型参数让编译器和JVM进行类型检查和转换（比如插入checkcast指令等等）；
+ */</span>
+<span class="keyword">transient</span> <span class="keyword">Object</span>[] elementData;
+<span class="comment">//元素个数</span>
+<span class="keyword">private</span> <span class="built_in">int</span> <span class="built_in">size</span>;
+
+<span class="comment">/*
+翻译：
+一些实现可能会保存一些首部信息在数组对象中。
+试图分配一个比MAX_ARRAY_SIZE大的数组可能会造成OOM（Requested array size exceeds VM limit）。
+也就是说一些JVM的实现可能会限制数组大小小于Integer.MAX_VALUE，因此检查是必要的。
+ */</span>
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="built_in">int</span> MAX_ARRAY_SIZE = Integer.MAX_VALUE - <span class="number">8</span>; 
+</code></pre><h3 id="2-2_不同版本的构造器">2.2 不同版本的构造器</h3><p>这里可以看到在创建ArrayList对象实例的时候：<br>（1）ArrayList()：默认状态，使用DEFAULTCAPACITY_EMPTY_ELEMENTDATA，这也是一个空数组，延迟加载，第一次插入时才分配内存；<br>（2）如果指定的初始化容量为0,拷贝构造器传入集合为空，使用EMPTY_ELEMENTDATA；</p>
+<pre><code><span class="comment">/*
+不同版本的构造器
+ */</span>
+<span class="comment">//如果指定初始化容量为“0”，使用EMPTY_ELEMENTDATA</span>
+<span class="function"><span class="keyword">public</span> <span class="title">ArrayList</span><span class="params">(<span class="keyword">int</span> initialCapacity)</span> </span>{
+    <span class="keyword">if</span> (initialCapacity &gt; <span class="number">0</span>) {
+        <span class="keyword">this</span>.elementData = <span class="keyword">new</span> Object[initialCapacity];
+    } <span class="keyword">else</span> <span class="keyword">if</span> (initialCapacity == <span class="number">0</span>) {
+        <span class="keyword">this</span>.elementData = EMPTY_ELEMENTDATA;
+    } <span class="keyword">else</span> {
+        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"Illegal Capacity: "</span>+
+                initialCapacity);
+    }
+}
+<span class="comment">//创建默认初始化容量列表，使用DEFAULTCAPACITY_EMPTY_ELEMENTDATA</span>
+<span class="function"><span class="keyword">public</span> <span class="title">ArrayList</span><span class="params">()</span> </span>{
+    <span class="keyword">this</span>.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
+}
+
+<span class="comment">//拷贝构造器，注意使用toArray获取要插入元素对象</span>
+<span class="function"><span class="keyword">public</span> <span class="title">ArrayList</span><span class="params">(Collection&lt;? extends E&gt; c)</span> </span>{
+    elementData = c.toArray();
+    <span class="keyword">if</span>((size = elementData.length) != <span class="number">0</span>) {
+        <span class="comment">/*
+        注意，toArray返回的Object[]引用，而Object[]可以作为超类引用子类对象比如A[]（假设A是E的子类）
+        如果toArray返回是A[]数组对象，那么如果类型B对象（B extends E）可能会引起后续的插入时的ArrayStoreException，读取元素时的ClassCheckException
+        因此如果返回的不是Object[]对象，要创建一个Object[]并复制元素引用
+         */</span>
+        <span class="keyword">if</span>(elementData.getClass() != Object[].<span class="keyword">class</span>) {
+            elementData = Arrays.copyOf(elementData, size, Objects[].<span class="keyword">class</span>);
+        }
+    } <span class="keyword">else</span> {
+        <span class="comment">//一个空数组列表，直接使用EMPTY_ELEMENTDATA</span>
+        elementData = EMPTY_ELEMENTDATA;
+    }
+}
+</code></pre><h3 id="2-3_核心操作">2.3 核心操作</h3><p>主要方法包括：trimToSize（压缩缓存数组），grow（扩展容量），ensure～（不同情况下调用的扩容方法），removeRange（范围删除），batchRemove（批量删除），fastRemove（基于复制的快速复制），这些方法供之后方法调用；</p>
+<pre><code><span class="comment">//压缩缓存区大小，最小化存储区域到size相同的大小</span>
+<span class="keyword">public</span> <span class="keyword">void</span> trimToSize() {
+    modCount++;
+    <span class="keyword">if</span>(<span class="built_in">size</span> &lt; elementData.length) {
+        elementData = (<span class="built_in">size</span> == <span class="number">0</span>)
+                ? EMPTY_ELEMENTDATA
+                : Arrays.copyOf(elementData, <span class="built_in">size</span>);
+    }
+}
+
+<span class="comment">//增加容量到指定大小（溢出会抛出OOM），通过这个方法可以打破MAX_ARRAY_SIZE限制</span>
+<span class="keyword">private</span> <span class="keyword">void</span> grow(<span class="built_in">int</span> minCapacity) {
+    <span class="comment">// overflow-conscious code</span>
+    <span class="built_in">int</span> oldCapacity = elementData.length;
+    <span class="comment">//首先尝试将新容量设置为原容量的（3/2）</span>
+    <span class="comment">//这样做可以避免频繁小幅度的扩张带来的开销，我联想到一个类似的做法是滑动窗口中修改窗口大小的机制</span>
+    <span class="built_in">int</span> newCapacity = oldCapacity + (oldCapacity &gt;&gt; <span class="number">1</span>);
+    <span class="comment">//如果尚未达到指定大小（这说明扩张幅度够大），设置为指定大小</span>
+    <span class="keyword">if</span> (newCapacity - minCapacity &lt; <span class="number">0</span>)
+        newCapacity = minCapacity;
+    <span class="keyword">if</span> (newCapacity - MAX_ARRAY_SIZE &gt; <span class="number">0</span>)
+        newCapacity = hugeCapacity(minCapacity);
+    <span class="comment">// minCapacity is usually close to size, so this is a win:</span>
+    elementData = Arrays.copyOf(elementData, newCapacity);
+}
+
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="built_in">int</span> hugeCapacity(<span class="built_in">int</span> minCapacity) {
+    <span class="keyword">if</span> (minCapacity &lt; <span class="number">0</span>) <span class="comment">// overflow</span>
+        <span class="keyword">throw</span> <span class="keyword">new</span> OutOfMemoryError();
+    <span class="keyword">return</span> (minCapacity &gt; MAX_ARRAY_SIZE) ?
+            Integer.MAX_VALUE :
+            MAX_ARRAY_SIZE;
+}
+
+<span class="comment">//当ArrayList不处于默认状态时，才可能扩展大小为小于DEFAULT_CAPACITY的容量；</span>
+<span class="comment">// 否则只有指定大小超过DEFAULT_CAPACITY时才进行扩展；</span>
+<span class="comment">//注意这个方法是public，区别于ensureCapacityInternal，这个方法是在外部使用的；</span>
+<span class="keyword">public</span> <span class="keyword">void</span> ensureCapacity(<span class="built_in">int</span> minCapacity) {
+    <span class="built_in">int</span> minExpand = (elementData != DEFAULTCAPACITY_EMPTY_ELEMENTDATA)
+            <span class="comment">// any size if not default element table</span>
+            ? <span class="number">0</span>
+            <span class="comment">// larger than default for default empty table. It's already</span>
+            <span class="comment">// supposed to be at default size.</span>
+            : DEFAULT_CAPACITY;
+
+    <span class="keyword">if</span> (minCapacity &gt; minExpand) {
+        ensureExplicitCapacity(minCapacity);
+    }
+}
+
+<span class="comment">//ArrayList内部扩展大小使用此方法，没有上个条件方法限制</span>
+<span class="comment">//但如果处于默认状态，扩展大小仍然不能小于DEFAULT_CAPACITY</span>
+<span class="keyword">private</span> <span class="keyword">void</span> ensureCapacityInternal(<span class="built_in">int</span> minCapacity) {
+    <span class="keyword">if</span> (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+        minCapacity = Math.<span class="built_in">max</span>(DEFAULT_CAPACITY, minCapacity);
+    }
+
+    ensureExplicitCapacity(minCapacity);
+}
+
+<span class="keyword">private</span> <span class="keyword">void</span> ensureExplicitCapacity(<span class="built_in">int</span> minCapacity) {
+    modCount++;
+
+    <span class="comment">// overflow-conscious code</span>
+    <span class="keyword">if</span> (minCapacity - elementData.length &gt; <span class="number">0</span>)
+        grow(minCapacity);
+}
+
+<span class="comment">//删除[fromIndex, toIndex)范围的元素</span>
+<span class="comment">//操作后将末尾newSize之后的元素置空，防止内存泄漏</span>
+<span class="keyword">protected</span> <span class="keyword">void</span> removeRange(<span class="built_in">int</span> fromIndex, <span class="built_in">int</span> toIndex) {
+    modCount++; <span class="comment">//fail-fast</span>
+    <span class="built_in">int</span> numMoved = <span class="built_in">size</span> - toIndex;
+    System.arraycopy(elementData, fromIndex, elementData, toIndex,
+            numMoved);
+
+    <span class="comment">//清空多余的元素引用</span>
+    <span class="built_in">int</span> newSize = <span class="built_in">size</span> - (toIndex - fromIndex);
+    <span class="keyword">for</span>(<span class="built_in">int</span> i = newSize; i &lt; <span class="built_in">size</span>; i++)
+        elementData[i] = <span class="keyword">null</span>;
+    <span class="built_in">size</span> = newSize;
+}
+
+<span class="comment">//批量删除，complement为false时删除数组缓冲区中集合c包含的元素，true，删除集合c中不包含的元素，可以用实现交，差等集合运算</span>
+<span class="comment">//使用复制的方法，而不是调用remove()的方式，减少了元素的重复复制</span>
+<span class="comment">//同样要将newSize之外的元素引用置空，防止内存泄漏</span>
+<span class="keyword">private</span> <span class="built_in">boolean</span> batchRemove(Collection&lt;?&gt; c, <span class="built_in">boolean</span> complement) {
+    <span class="keyword">final</span> <span class="keyword">Object</span>[] elementData = <span class="keyword">this</span>.elementData;
+    <span class="built_in">int</span> r = <span class="number">0</span>, w = <span class="number">0</span>; <span class="comment">//不变式，w &lt;= r</span>
+    <span class="built_in">boolean</span> modified = <span class="keyword">false</span>;
+    <span class="keyword">try</span> {
+        <span class="keyword">for</span> (; r &lt; <span class="built_in">size</span>; r++) {
+            <span class="keyword">if</span>(c.contains(elementData[r]) == complement) {
+                elementData[w++] = elementData[r];
+            }
+        }
+    } <span class="keyword">finally</span> {
+        <span class="comment">//如果有异常抛出，保存好还未处理的数组元素</span>
+        <span class="keyword">if</span> (r != <span class="built_in">size</span>) {
+            System.arraycopy(elementData, r,
+                    elementData, w,
+                    <span class="built_in">size</span> - r);
+            w += <span class="built_in">size</span> - r;
+        }
+        <span class="keyword">if</span>(w != <span class="built_in">size</span>) {
+            <span class="keyword">for</span>(<span class="built_in">int</span> i = w; i &lt; <span class="built_in">size</span>; i++)
+                elementData[i] = <span class="keyword">null</span>;
+            modCount += <span class="built_in">size</span> - w;
+            <span class="built_in">size</span> = w;
+            modified = <span class="keyword">true</span>;
+        }
+    }
+    <span class="keyword">return</span> modified;
+}
+
+<span class="comment">//由调用者检查index是否合法</span>
+<span class="keyword">private</span> <span class="keyword">void</span> fastRemove(<span class="built_in">int</span> index) {
+    modCount++;
+    <span class="built_in">int</span> numMoved = <span class="built_in">size</span> - index - <span class="number">1</span>;
+    <span class="keyword">if</span> (numMoved &gt; <span class="number">0</span>)
+        System.arraycopy(elementData, index+<span class="number">1</span>, elementData, index,
+                numMoved);
+    elementData[--<span class="built_in">size</span>] = <span class="keyword">null</span>; <span class="comment">// clear to let GC do its work</span>
+}
+</code></pre><h3 id="2-4_辅助方法">2.4 辅助方法</h3><p>（1）检查索引是否合法；<br>（2）返回指定位置的元素；</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">void</span> rangeCheck(<span class="keyword">int</span> <span class="keyword">index</span>) {
+    <span class="keyword">if</span> (<span class="keyword">index</span> &gt;= size)
+        <span class="keyword">throw</span> <span class="keyword">new</span> IndexOutOfBoundsException(outOfBoundsMsg(<span class="keyword">index</span>));
+}
+
+<span class="keyword">private</span> <span class="keyword">void</span> rangeCheckForAdd(<span class="keyword">int</span> <span class="keyword">index</span>) {
+    <span class="keyword">if</span> (<span class="keyword">index</span> &gt; size || <span class="keyword">index</span> &lt; <span class="number">0</span>)
+        <span class="keyword">throw</span> <span class="keyword">new</span> IndexOutOfBoundsException(outOfBoundsMsg(<span class="keyword">index</span>));
+}
+
+<span class="keyword">private</span> String outOfBoundsMsg(<span class="keyword">int</span> <span class="keyword">index</span>) {
+    <span class="keyword">return</span> <span class="string">"Index: "</span>+<span class="keyword">index</span>+<span class="string">", Size: "</span>+size;
+}
+
+<span class="comment">//复用</span>
+@SuppressWarnings(<span class="string">"unchecked"</span>)
+E elementData(<span class="keyword">int</span> <span class="keyword">index</span>) {
+    <span class="keyword">return</span> (E) elementData[<span class="keyword">index</span>];
+}
+</code></pre><h3 id="2-5_SubList与ArrayList的关系">2.5 SubList与ArrayList的关系</h3><p>该SubList是非静态内部类实现，基于同一个缓存数组，和Iterator一样维护一个modCount副本，防止并发修改；</p>
+<pre><code><span class="annotation">@Override</span>
+<span class="function"><span class="keyword">public</span> List&lt;E&gt; <span class="title">subList</span><span class="params">(<span class="keyword">int</span> fromIndex, <span class="keyword">int</span> toIndex)</span> </span>{
+    subListRangeCheck(fromIndex, toIndex, size);
+    <span class="keyword">return</span> <span class="keyword">new</span> SubList(<span class="keyword">this</span>, <span class="number">0</span>, fromIndex, toIndex);
+}
+</code></pre><h3 id="2-6_List实现要点">2.6 List实现要点</h3><p>toArray使用保护性拷贝；<br>总来的来说这一块比较简单；</p>
+<pre><code><span class="comment">//获取指定位置的元素对象引用</span>
+@Override
+<span class="keyword">public</span> E <span class="built_in">get</span>(<span class="built_in">int</span> index) {
+    rangeCheck(index);
+    <span class="keyword">return</span> elementData(index);
+}
+
+<span class="comment">//注意set方法不是结构性修改，因此并没有modCount++</span>
+@Override
+<span class="keyword">public</span> E <span class="built_in">set</span>(<span class="built_in">int</span> index, E element) {
+    rangeCheck(index);
+    E oldValue = elementData(index);
+    elementData[index] = element;
+    <span class="keyword">return</span> oldValue;
+}
+
+<span class="comment">//各种add方法实现</span>
+@Override
+<span class="keyword">public</span> <span class="built_in">boolean</span> <span class="built_in">add</span>(E e) {
+    <span class="comment">//检查并扩增大小，该方法会增加修改计数器，并且一次扩展(3/2)大小防止了频繁扩展带来的开销</span>
+    ensureCapacityInternal(<span class="built_in">size</span> + <span class="number">1</span>);
+    elementData[<span class="built_in">size</span>++] = e;
+    <span class="keyword">return</span> <span class="keyword">true</span>;
+}
+
+@Override
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="built_in">add</span>(<span class="built_in">int</span> index, E element) {
+    rangeCheckForAdd(index);
+
+    ensureCapacityInternal(<span class="built_in">size</span> + <span class="number">1</span>);
+    <span class="comment">//将数组缓冲区中，index及之后的结点后移</span>
+    System.arraycopy(elementData, index, elementData, index + <span class="number">1</span>,
+            <span class="built_in">size</span> - index);
+    elementData[index] = element;
+    <span class="built_in">size</span>++;
+}
+
+@Override
+<span class="keyword">public</span> <span class="built_in">boolean</span> addAll(Collection&lt;? extends E&gt; c) {
+    <span class="comment">//获取集合中的元素数组，这样做的好处在于可以自由操作这些元素，而不用影响集合c</span>
+    <span class="keyword">Object</span>[] a = c.toArray();
+    <span class="built_in">int</span> numNew = a.length;
+    ensureCapacityInternal(<span class="built_in">size</span> + numNew); <span class="comment">//增加modCount</span>
+    System.arraycopy(a, <span class="number">0</span>, elementData, <span class="built_in">size</span>, numNew);
+    <span class="built_in">size</span> += numNew;
+    <span class="keyword">return</span> <span class="keyword">true</span>;
+}
+
+@Override
+<span class="keyword">public</span> <span class="built_in">boolean</span> addAll(<span class="built_in">int</span> index, Collection&lt;? extends E&gt; c) {
+    rangeCheckForAdd(index);
+
+    <span class="keyword">Object</span>[] a = c.toArray();
+    <span class="built_in">int</span> numNew = a.length;
+    ensureCapacityInternal(<span class="built_in">size</span> + numNew); <span class="comment">//增加modCount</span>
+
+    <span class="comment">//如果是在尾部插入就不需要移动了</span>
+    <span class="built_in">int</span> numMoved = <span class="built_in">size</span> - index;
+    <span class="keyword">if</span>(numMoved &gt; <span class="number">0</span>)
+        System.arraycopy(elementData, index, elementData, index + numNew,
+                numMoved);
+
+    System.arraycopy(a, <span class="number">0</span>, elementData, index, numNew);
+    <span class="built_in">size</span> += numNew;
+    <span class="keyword">return</span> <span class="keyword">true</span>;
+}
+
+<span class="comment">//各种删除的实现</span>
+@Override
+<span class="keyword">public</span> E remove(<span class="built_in">int</span> index) {
+    rangeCheck(index);
+
+    modCount++; <span class="comment">//fail-fast</span>
+    E oldValue = elementData(index);
+
+    <span class="built_in">int</span> numMoved = <span class="built_in">size</span> - index - <span class="number">1</span>;
+    <span class="keyword">if</span>(numMoved &gt; <span class="number">0</span>)
+        System.arraycopy(elementData, index + <span class="number">1</span>, elementData, index,
+                numMoved);
+    elementData[--<span class="built_in">size</span>] = <span class="keyword">null</span>; <span class="comment">//防止内存泄漏</span>
+
+    <span class="keyword">return</span> oldValue;
+}
+
+@Override
+<span class="keyword">public</span> <span class="built_in">boolean</span> remove(<span class="keyword">Object</span> o) {
+    <span class="keyword">if</span> (o == <span class="keyword">null</span>) {
+        <span class="keyword">for</span> (<span class="built_in">int</span> index = <span class="number">0</span>; index &lt; <span class="built_in">size</span>; index++)
+            <span class="keyword">if</span> (elementData[index] == <span class="keyword">null</span>) {
+                fastRemove(index);
+                <span class="keyword">return</span> <span class="keyword">true</span>;
+            }
+    } <span class="keyword">else</span> {
+        <span class="keyword">for</span> (<span class="built_in">int</span> index = <span class="number">0</span>; index &lt; <span class="built_in">size</span>; index++)
+            <span class="keyword">if</span> (o.equals(elementData[index])) {
+                fastRemove(index);
+                <span class="keyword">return</span> <span class="keyword">true</span>;
+            }
+    }
+    <span class="keyword">return</span> <span class="keyword">false</span>;
+}
+
+<span class="comment">//保留差集</span>
+@Override
+<span class="keyword">public</span> <span class="built_in">boolean</span> removeAll(Collection&lt;?&gt; c) {
+    Objects.nonNull(c);
+    <span class="keyword">return</span> batchRemove(c, <span class="keyword">false</span>);
+}
+
+<span class="comment">//保留交集</span>
+@Override
+<span class="keyword">public</span> <span class="built_in">boolean</span> retainAll(Collection&lt;?&gt; c) {
+    Objects.nonNull(c);
+    <span class="keyword">return</span> batchRemove(c, <span class="keyword">true</span>);
+}
+
+<span class="comment">//置空防止内存泄漏</span>
+@Override
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="built_in">clear</span>() {
+    modCount++;
+
+    <span class="keyword">for</span>(<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; <span class="built_in">size</span>; i++)
+        elementData[i] = <span class="keyword">null</span>;
+
+    <span class="built_in">size</span> = <span class="number">0</span>;
+}
+
+<span class="comment">//正向查找，返回元素第一次出现的索引值</span>
+@Override
+<span class="keyword">public</span> <span class="built_in">int</span> indexOf(<span class="keyword">Object</span> o) {
+    <span class="keyword">if</span>(o == <span class="keyword">null</span>) {
+        <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; <span class="built_in">size</span>; i++)
+            <span class="keyword">if</span> (elementData[i] == <span class="keyword">null</span>)
+                <span class="keyword">return</span> i;
+    } <span class="keyword">else</span> {
+        <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; <span class="built_in">size</span>; i++)
+            <span class="keyword">if</span> (o.equals(elementData[i]))
+                <span class="keyword">return</span> i;
+    }
+    <span class="keyword">return</span> -<span class="number">1</span>;
+}
+
+<span class="comment">//反向查找，返回元素最后一次出现的索引值</span>
+@Override
+<span class="keyword">public</span> <span class="built_in">int</span> lastIndexOf(<span class="keyword">Object</span> o) {
+    <span class="keyword">if</span>(o == <span class="keyword">null</span>) {
+        <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="built_in">size</span> - <span class="number">1</span>; i &gt;= <span class="number">0</span>; --i)
+            <span class="keyword">if</span>(elementData[i] == <span class="keyword">null</span>)
+                <span class="keyword">return</span> i;
+    } <span class="keyword">else</span> {
+        <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="built_in">size</span> - <span class="number">1</span>; i &gt;= <span class="number">0</span>; --i)
+            <span class="keyword">if</span> (o.equals(elementData[i]))
+                <span class="keyword">return</span> i;
+    }
+    <span class="keyword">return</span> -<span class="number">1</span>;
+}
+
+@Override
+<span class="keyword">public</span> <span class="built_in">boolean</span> contains(<span class="keyword">Object</span> o) {
+    <span class="keyword">return</span> indexOf(o) &gt;= <span class="number">0</span>;
+}
+
+<span class="comment">//对数组进行排序</span>
+@Override
+@SuppressWarnings(<span class="string">"unchecked"</span>)
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="built_in">sort</span>(Comparator&lt;? <span class="keyword">super</span> E&gt; c) {
+    <span class="keyword">final</span> <span class="built_in">int</span> expectedModCount = modCount;
+    Arrays.<span class="built_in">sort</span>((E[]) elementData, <span class="number">0</span>, <span class="built_in">size</span>, c);
+    <span class="keyword">if</span> (modCount != expectedModCount) {
+        <span class="keyword">throw</span> <span class="keyword">new</span> ConcurrentModificationException();
+    }
+    modCount++;
+}
+
+
+<span class="comment">//保护性拷贝</span>
+@Override
+<span class="keyword">public</span> <span class="keyword">Object</span>[] toArray() {
+    <span class="keyword">return</span> Arrays.copyOf(elementData, <span class="built_in">size</span>);
+}
+
+@SuppressWarnings(<span class="string">"unchecked"</span>)
+@Override
+<span class="keyword">public</span> &lt;T&gt; T[] toArray(T[] a) {
+    <span class="keyword">if</span>(a.length &lt; <span class="built_in">size</span>)
+        <span class="comment">//必须创建一个与参数类型相同的数组</span>
+        <span class="keyword">return</span> (T[])Arrays.copyOf(elementData, <span class="built_in">size</span>, a.getClass());
+    System.arraycopy(elementData, <span class="number">0</span>, a, <span class="number">0</span>, <span class="built_in">size</span>);
+    <span class="keyword">if</span> (a.length &gt; <span class="built_in">size</span>)
+        a[<span class="built_in">size</span>] = <span class="keyword">null</span>; <span class="comment">//用来帮助调用者确定集合长度（只有在明确知道集合中没有null元素时才有用）</span>
+    <span class="keyword">return</span> a;
+} 
+</code></pre>
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-8集合框架源码/">Java 8集合框架源码</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-Java-8集合源码学习——ArrayList" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/11/Java-8集合源码学习——ArrayList/" class="article-date">
+  	<time datetime="2015-12-11T06:48:41.000Z" itemprop="datePublished">2015-12-11</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/11/Java-8集合源码学习——ArrayList/">Java 8集合源码学习——ArrayList</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-Java基础知识总结（九）——序列化" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/11/Java基础知识总结（九）——序列化/" class="article-date">
+  	<time datetime="2015-12-11T06:48:19.000Z" itemprop="datePublished">2015-12-11</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/11/Java基础知识总结（九）——序列化/">Java基础知识总结（九）——序列化</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
   
     <article id="post-反射工具——运行时打印对象状态（包括数组域）" class="article article-type-post" itemscope itemprop="blogPost">
   
@@ -386,7 +958,7 @@
     <div class="article-entry" itemprop="articleBody">
       
         <p>参考学习资料：<br>（1）<a href="http://blog.csdn.net/ns_code/article/details/35787253" target="_blank" rel="external">JDK1.7之前的【Java集合源码剖析】LinkedList源码剖析</a></p>
-<h2 id="1-_LinkedList的要点">1. LinkedList的要点</h2><p><strong>（1）双向链表</strong>：LinkedList基于双向链表实现的（Entry有next，previous指针），因此可以把它当栈，队列和双端队列使用；<br>在JDK1.7之前LinkedList之前是循环链表的方式实现两端插入的，包含一个无值的头结点，JDK1.7及以上是包含两个指针分别指向头结点和尾结点；<br><strong>（3）线程不安全</strong>：LinkedList通过维护modCount修改计数，每个迭代器保存各自的修改计数与modCount对比检验的方式防止并发修改；<br><strong>（4）性能特点</strong>：由于是链表实现，<strong>不支持快速随机存取</strong>，因此get(index)效率不高，在循环时一定注意不能误用；支持<strong>高效的结构性修改</strong>（只需要移动指针指向）；<br><strong>（5）克隆和序列化</strong>：实现了Serializable和Cloneable接口，支持序列化和克隆，其中序列化使用writeObject和readObject不采用默认的序列化机制，只保存size和元素对象，一方面是隐藏内部表示信息，一方面节省了开销；<br><strong>（6）置空操作</strong>：强调一点，对应容器，删除结点时<code>x = null;</code>是很有必要的，让容器，容器中的结点在清除后不要互相引用的保存在堆中，影响垃圾回收，因为JVM一般是进行可达性分析的；</p>
+<h2 id="1-_LinkedList的要点">1. LinkedList的要点</h2><p><strong>（1）双向链表</strong>：LinkedList基于双向链表实现的（Entry有next，previous指针），因此可以把它当栈，队列和双端队列使用；<br>在JDK1.7之前LinkedList之前是循环链表的方式实现两端插入的，包含一个无值的头结点，JDK1.7及以上是包含两个指针分别指向头结点和尾结点；<br><strong>（3）线程不安全</strong>：LinkedList通过维护modCount修改计数，每个迭代器保存各自的修改计数与modCount对比检验的方式防止并发修改；<br><strong>（4）性能特点</strong>：由于是链表实现，<strong>不支持快速随机存取</strong>，因此get(index)效率不高，在循环时一定注意不能误用；支持<strong>高效的结构性修改</strong>（只需要移动指针指向）；因此LinkedList定义了内部类实现ListIterator，避免使用效率低下的<code>get()</code>（AbstractList的迭代器是基于<code>get()</code>的），<code>iterator()</code>返回也是这个内部类实例；<br><strong>（5）克隆和序列化</strong>：实现了Serializable和Cloneable接口，支持序列化和克隆，其中序列化使用writeObject和readObject不采用默认的序列化机制，只保存size和元素对象，一方面是隐藏内部表示信息，一方面节省了开销；<br><strong>（6）置空操作</strong>：强调一点，对应容器，删除结点时<code>x = null;</code>是很有必要的，让容器，容器中的结点在清除后不要互相引用的保存在堆中，影响垃圾回收，因为JVM一般是进行可达性分析的；</p>
 <h2 id="2-_基本结构">2. 基本结构</h2><h3 id="2-1_结点类">2.1 结点类</h3><p>双向链表，链表包含2个指针：头结点指针，尾结点指针；<br>结点（Node），包含2个指针，指向前驱结点和后序结点；</p>
 <pre><code>transient int size = <span class="number">0</span>;    
 //不变式：(first == null &amp;&amp; last == null) || (first.prev == null &amp;&amp; first.item != null)
@@ -646,7 +1218,7 @@ Node&lt;E&gt; node(<span class="keyword">int</span> index) {
     <span class="keyword">if</span>(isPositionIndex(<span class="keyword">index</span>))
         <span class="keyword">throw</span> <span class="keyword">new</span> IndexOutOfBoundsException(outOfBoundsMsg(<span class="keyword">index</span>));
 } 
-</code></pre><h3 id="3-3_List接口实现">3.3 List接口实现</h3><p>基于Node内部表示，因此List的关键方法也要依赖与内部表示：</p>
+</code></pre><h3 id="3-3_List接口实现">3.3 List接口实现</h3><p>（1）基于Node内部表示，因此List的关键方法也要依赖与内部表示；<br>（2）注意，LinkedList的subList实现没有覆盖AbstractList的实现；</p>
 <pre><code><span class="comment">//添加结点，在表尾</span>
 <span class="annotation">@Override</span>
 <span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">add</span><span class="params">(E e)</span> </span>{
@@ -1508,399 +2080,9 @@ Pair &gt; Pair<span class="variable">&lt;?&gt;</span> &gt; Pair<span class="vari
 
 
   
-    <article id="post-TCP-IP总结（一）——基本概念" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/12/05/TCP-IP总结（一）——基本概念/" class="article-date">
-  	<time datetime="2015-12-05T10:56:37.000Z" itemprop="datePublished">2015-12-05</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/05/TCP-IP总结（一）——基本概念/">TCP/IP学习笔记（一）——基本概念</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>心得：<br>（1）分层设计屏蔽细节，各司其职，但是不要过于拘泥定义，像ARP，RARP就不好定位，结合实际解决问题才是主题；<br>（2）“自由地接受，保守地发送”是TCP/IP协议族每一层的稳健性原则；<br>（3）封装和分用是相对的两个过程；</p>
-<p>其他资料：<br>（1）阮一峰老师两篇博文：<br><a href="http://www.ruanyifeng.com/blog/2012/05/internet_protocol_suite_part_i.html" target="_blank" rel="external">互联网协议入门（一）</a><br><a href="http://www.ruanyifeng.com/blog/2012/06/internet_protocol_suite_part_ii.html" target="_blank" rel="external">互联网协议入门（二）</a></p>
-<h2 id="1-_分层">1. 分层</h2><p>层的设计可以隐藏层之间的细节，使得上层可透明地使用下层。</p>
-<p><strong>四层协议系统（或者再加上“实体层”）：</strong><br><strong>（1）链路层：</strong>操作系统中的设备驱动程序和网络接口卡（网卡），它们一起处理与电缆的<strong>物理接口细节</strong>，比如以太网协议，每个网卡有独一无二的MAC地址，根据对方的MAC地址发送给对方，要获得对方MAC地址就需要使用<strong>ARP（地址解析，已知IP获取对方MAC地址）</strong>，发送数据在同一网络中进行<strong>广播</strong>，因此一共要发n-1个包，因此需要网络层划分子网；<br><strong>（2）网络层：</strong>处理分组在网络中的活动，在TCP/IP协议族中，包括IP协议和ICMP协议（Internet互联网控制报文协议）以及IGMP协议（Intenet组管理协议）；<br><strong>（3）传输层：</strong>提供两台主机间应用程序的<strong>端到端</strong>通信，包括TCP和UDP；<br><strong>（4）应用层：</strong>负责处理特定的应用程序细节。比如Telnet，FTP，SMTP，SNMP，HTTP；</p>
-<p><strong>注意</strong>：<br>（1）应用层和传输层是端到端（End-to-end）协议，只有端系统需要使用它们；<br>网络层提供逐跳（Hop-by-hop）协议，两端系统和中间系统都要使用它；<br>（2）底3层在操作系统的内核中进行，应用层处理应用程序的细节在应用进程；</p>
-<p>路由器（网关）：使用相同协议族连接两（多）个不同类型的<strong>物理网络</strong>，比如以太网和令牌环网络，它是在网络层对网络进行互连；<br>网桥：在链路层上对网络进行互连，使得多个LAN组合在一起，这样对上层来说就像一个局域网；</p>
-<h2 id="2-_TCP/IP协议族分层：">2. TCP/IP协议族分层：</h2><h3 id="网络层">网络层</h3><p><strong>IP</strong>：提供的是不可靠的服务，尽可能快的把分组从源结点发送到目标结点（路由），不提供可靠性保证；<br><strong>ICMP</strong>：是IP协议的附属协议，IP层使用ICMP与其他主机或路由器交换错误和其他重要信息，Ping和Traceroute都使用了ICMP；<br><strong>IGMP</strong>：Internet组管理协议，它用来把一个UDP数据报多播到多个主机；</p>
-<h3 id="传输层">传输层</h3><p><strong>TCP</strong>：在IP上建立了一个<strong>可靠</strong>的服务，比如超时重传，序列号+确认等等；<br><strong>UDP</strong>：没有确认号，数据报的到达顺序也不一定按顺序，因此它是“无连接的”；</p>
-<h3 id="链路层">链路层</h3><p><strong>ARP和RARP</strong>：地址解析协议和逆地址解析协议用来转换IP层和网络接口层使用的地址（IP地址和MAC地址）；</p>
-<h2 id="3-_IP地址">3. IP地址</h2><p>A：0    ，    8位网络号（0～127）；<br>B：10，16位网络号（128～191）；<br>C：110，24位网络号（192～223）；<br>D：1110，多播，28位多播组号（224～239）；<br>E：11110    ，27位留待后用（240～255）；</p>
-<p><strong>InterNIC</strong>（互联网络信息中心），分配网络号，主机号分配由系统管理员负责；<br>InterNIC由三部分：<strong>注册服务</strong>，<strong>目录和数据库服务</strong>，<strong>信息服务</strong>。 </p>
-<p><strong>IP地址分类</strong>：<br>（1）单播地址；<br>（2）广播地址；<br>（3）多播（组播）地址；</p>
-<h2 id="4-_域名系统">4. 域名系统</h2><p>DNS，一个分布式数据库，IP和主机名之间的映射信息。</p>
-<h2 id="5-_封装">5. 封装</h2><p>应用数据被送入<strong>协议栈</strong>，通过每一层增加首部信息（有时包括尾部信息）。<br>TCP段——&gt;IP数据报（最长65535）——&gt;帧（Frame，以太网传输的比特流，46～1500字节）；<br><strong>注意点</strong>：<br>（1）IP接受TCP，UDP，ICMP，IGMP的数据，因此有一个8位的协议域标识；<br>（2）IP，ARP和RARP数据，需要网络接口（网卡）发送和接受，因此以太网帧首部也有标识（16位帧类型域）指明生成数据的网络层协议；<br>（3）协议具体属于那一层并不是绝对可以划分的，比如ARP，RARP即使网络驱动程序一部分，也有以太网数据帧类型；ICMP和IGMP既被封装IP数据报，也是IP的附属协议；</p>
-<h2 id="6-_分用（Demultiplexing）">6. 分用（Demultiplexing）</h2><p><strong>分用</strong>：主机接受到以太网数据帧后，数据需要<strong>从底向上升</strong>去掉各层协议的首部。每层协议盒检查报文首部的协议标识，确定接收的上层协议。</p>
-<h2 id="7-_客户-服务器模型">7. 客户-服务器模型</h2><p><strong>分类</strong>：<strong>重复型</strong>和<strong>并发型</strong>；<br>一般来说，TCP服务器是并发的，UDP服务器是重复的；</p>
-<h2 id="8-_端口号">8. 端口号</h2><p>0-1023是系统占用端口号（保留端口号）<br>FTP：21；<br>Telnet：23；<br>TFTP：69；</p>
-<p>服务器使用知名端口号，客户端使用临时设定的端口号；</p>
-<p>/etc/services包含了知名端口号，查看<strong>知名端口号</strong>：<br>grep telnet /etc/services</p>
-<h2 id="9-_标准化过程">9. 标准化过程</h2><p>TCP/IP协议族的重要组织：<br>（1）ISOC：Internet协会；<br>（2）IAB：Internet体系结构委员会；<br>（3）IETF：Internet工程专门小组；<br>（4）IRIF：Internet研究专门小组；</p>
-<p>RFC：Internet正式标准：<br>（1）赋值RFC：1340，Internet协议中使用的数字和常数；<br>（2）Internet正式标准协议，RFC1600；<br>（3）主机需求RFC，1122和1123；<br>（4）路由器需求RFC，1009；</p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/TCP-IP/">TCP/IP</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
-    <article id="post-Java基础知识总结（一）——创建和销毁" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/12/05/Java基础知识总结（一）——创建和销毁/" class="article-date">
-  	<time datetime="2015-12-05T10:26:28.000Z" itemprop="datePublished">2015-12-05</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/05/Java基础知识总结（一）——创建和销毁/">Java基础知识总结（一）——创建和销毁</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="契子">契子</h2><p>明年就要离开学校找工作了，时间过的真快，想一想这几年，做了一些事，也有一些事并没有做好，有很多收获，也有不少遗憾。感性的话在此不宜多说，既然选择了程序员这条道路，也要有把它到做事业的态度。在正式找工作前还有几个月的时间，做东西，尝试新的技术固然很爽，但是基础也很重要，在这短短的几个月的时间里，我将把以前学过的一些知识，Java，数据结构，算法，网络，OS&amp;Linux，J2EE等等知识查缺补漏，好好梳理一遍，不光是为了找工作，也是一种必须要坚持的态度。<br>对于Java知识的整理，基于《Effetive Java》2nd和《Java编程思想》4th辅以JVM和设计模式的相关知识，结合书本上的知识和我的理解进行整理。好了，开始我的一篇——创建和销毁对象。</p>
-<h2 id="1-_Java中的构造器：">1. Java中的构造器：</h2><p>构造器是一种特殊类型的方法，它和类同名，没有返回类型，和new关键字结合可以返回对象实例的引用。TIJ中说它是一种静态方法，但是通过字节码我们可以看到其实并没有static关键字，它的行为也和其他静态方法有异（可以访问非静态成员变量），因此这种说法并不完全准确，这里不再深究。</p>
-<h3 id="1-1_定义构造器：">1.1 定义构造器：</h3><p>一个类可以有多个构造器，如果你没有定义构造器，Java编译器会在语义分析的阶段，首先添加一个默认构造器。<br>多个构造器可以通过方法重载（overload）实现，注意只有同方法名和不同参数列表可以区别不同的重载版本，返回类型并不能区分。<br>尤其是使用基本类型参数重载时，要注意类型的自动转换如（char—&gt;int，小转大）和窄化转换（强制类型转换，大转小），当然会使用最匹配的类型。</p>
-<p>###1.2 this关键字：<br>通过this指针我们可以访问类的实例变量和方法，但最好是在必要的时候（需要返回或使用该实例，内部类访问外部类同名实例变量方法，构造器设置属性等）使用它，否则你不必添加它，编译同样会帮你添加。<br>在存在多个重载版本的构造器时我们可以在构造器内使用this调用其他构造器，可以避免一些重复的代码：</p>
-<pre><code><span class="function"><span class="keyword">public</span> <span class="title">ConstructorTest</span><span class="params">(<span class="keyword">int</span> a)</span> </span>{
-    <span class="keyword">this</span>.a = a;
-}
-
-<span class="function"><span class="keyword">public</span> <span class="title">ConstructorTest</span><span class="params">(<span class="keyword">int</span> a, String s)</span> </span>{
-    <span class="keyword">this</span>(a);
-    <span class="keyword">this</span>.s = s;
-}
-</code></pre><p>PS：在构造器存在很多参数情况下，重叠构造器是一种选择，但是更好的做法是使用Builder模式，后面会讲到。</p>
-<h3 id="1-3_static关键字：">1.3 static关键字：</h3><p>static（静态），static方法和static变量是类方法和类变量，它们不能使用this引用，都放在方法区中，供各个线程共享。static变量初始化和static初始化其，会在类加载（隐式加载或显示加载）后执行一次。</p>
-<h2 id="2-_清理，终结对象（finalize）/垃圾回收（CG）：">2. 清理，终结对象（finalize）/垃圾回收（CG）：</h2><p>这涉及到很多内容。Java提供了垃圾回收器，但内存泄漏可能以很隐秘的方式发生（使用引用数组时），同时对于对象中可能使用的一些资源必须在对象不再使用时进行释放（Connection，FileInputStream等）。</p>
-<p>首先对象实例作为类的副本存放在Java堆中，在JVM中，一般使用可达性分析进行垃圾回收，也就是说，如果顺着引用追溯的话，“活”的对象应该可以到达CG Root（包括，静态变量，常量引用，栈中的本地变量表以及本地方法栈JNI native方法中的引用）。垃圾回收器会对不可达对象进行标记，在堆的不同区域使用不同的方法进行回收。</p>
-<p><strong>标记-清除</strong>：如果只有很少的垃圾的话，它很快，而且简单，但是如果垃圾很多的话，会产生大量的碎片；</p>
-<p><strong>复制</strong>：我们可以将需要进行垃圾回收的内存区域分为2个部分，比如A和B，需要CG时，将A的存活的对象直接复制到B（之前为空）中，清空A就可以了，不需要考虑碎片的问题，实际上在JVM（Hotspot）中分成了3个部分，一般比例可以为8：1：1,它们分别命名为eden，surivor1,surivor2，因为据统计Java程序中95%以上的对象很快就不再使用，因此eden很大，surivor可以较小（存活的对象少）。这实际上多用与新生代的垃圾回收。</p>
-<p><strong>标记-整理</strong>：有新生代当然也有老年代了，与新生代不同，老年代的对象相对稳定的多，垃圾回收很少，毕竟是经过了minor CG洗礼的不会那么容易挂掉，开个玩笑。标记-整理与清除的不同的地方在，它并不是直接在原位置清除掉，而是将存活的对象移向一端，之后直接就可以一起清除掉挂了的对象。因为我们也说了老年代的对象回收的少，因此移动的也相对较少。这样就不会有大多的碎片了。</p>
-<p>因此我们可以看到，JVM多采用分代回收的方式，对于不同的情况分而治之。</p>
-<h3 id="释放资源，终结（finalize方法）和垃圾回收有什么关系：">释放资源，终结（finalize方法）和垃圾回收有什么关系：</h3><p>首先，垃圾回收只和内存的使用状况有关，当内存不足（或满足我们设置的条件）时，才会进行CG。<br>finalize()是什么时候执行的呢，对于那些不可达的对象，到它们真正被回收至少需要经过两次标记阶段：<br>（1）首先筛选那些不需要执行finalize方法的对象，没有override finalize方法的和已经执行过finalize方法的对象，那它们就可以“等死”了，对于finalize尚未执行的对象，它们进入F-Queue队列，相当于是“死缓”，还有一线生机；<br>（2）F-Queue队列中的，有一个终结线程专门去调用这些对象的finalize方法（所以finalize方法是一个回调方法），如果在finalize方法有和CG Roots有了关联，OK，它活了，否则“等死”去。</p>
-<p>因此，我们看到finalize方法依赖直接于垃圾回收和终结线程，终结线程的优先级很低，这代表它可能很长时间都得不到执行，而垃圾回收也是你无法直接控制的（System.gc和System.runFinalize也是要看JVM脸的），所以finalize和C++中的析构函数并不是一回事；</p>
-<p>而对于数据库连接、文件访问句柄等等占用数据库资源和系统资源的对象，我们必须及时的释放/关闭它们。你可以定义一个close方法，在try-finally中保证必要的关闭得到执行，Java中甚至有Closable接口，FileInputStream，Connection等都实现了它们。</p>
-<h3 id="Finalize方法到底有什么用：">Finalize方法到底有什么用：</h3><p>（1）你可以在finalize方法检查close方法是否已经执行，这时一种安全敏感的做法，FileInputStream，Connection，Timer都是这样做的。<br>（2）使用JNI时，如果本地对象中要释放敏感资源，需要显示override finalize方法，进行释放。<br>（3）可以在finalize方法中拯救自己。</p>
-<p>如果你要使用它，注意在继承体系中，要我们手动维持“终止方法链”，这和构造器方法是一样的道理。<br>总的来说除此以外尽量不要使用finalize方法。</p>
-<h2 id="3-_初始化：">3. 初始化：</h2><p>如果想真正弄清楚对象初始化，而不是仅仅记住一些像成员变量的初始值这样的规则，我觉得应该了解一个类在第一个创建对象时是如何从字节码编程的可用的对象的。<br>在第一次使用一个类的时候，无论是显示加载一个类（Class.forName等）还是隐式加载一个类（A.staticVariable，new A()）时，首先要有ClassLoader进行加载：<br>（1）ClassLoader首先通过类名定位到类文件的位置（通过classpath等），将字节码加载到内存，通过准备、字节码验证和resolve等环节将等到一个个Class对象，放到方法区中；<br>（2）在此之后就是类初始化，这是类中的静态变量和静态初始化器将按照位置顺序进行初始化工作，静态变量同样放在方法区中；<br>（3）如果你进行是实例创建的化，接下来的工作首先是在堆上分配内存了，具体的方法可能有指针碰撞和空闲列表；<br>（4）获得了内存空间后，首先全部置零，这也就是为什么类的成员变量会还有初始值的原因，之后如果指定了初始化值，同样这里也是按顺序进行的；<br>（5）最后将执行<init>也就是我们定义使用的构造器来进行我们自定义的初始化过程了，这里就可以获得我们想要的对象实例的引用了。<br>所以在类中，各个部分的初始化顺序是：静态变量，静态初始化器（按位置顺序）——&gt;非静态成员变量（按位置顺序）——&gt;构造器；<br>说完了基本过程，我们来看看在Java中一些具体的类型是怎样进行初始化的。</init></p>
-<h3 id="3-1_数组初始化：">3.1 数组初始化：</h3><p>在Java中数组同样也是一种对象，但它并不是由某个类实例化而来，而是有JVM直接创建的，它的父类是Object，因此你可以在数组上使用Object的方法。<br>首先来复习下基本的语法：<br>通过数组初始化器：int[] a = {12,3};<br>通过new动态创建：int[] a = new int[5]; </p>
-<p>对于垃圾回收来说，数组同时也是一种特殊的类型，看下面的例子：</p>
-<pre><code><span class="keyword">public</span> class MStack {
-    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="built_in">int</span> DEFAULT_SIZE = <span class="number">20</span>;
-    <span class="keyword">private</span> <span class="keyword">Object</span>[] elements = <span class="keyword">new</span> <span class="keyword">Object</span>[DEFAULT_SIZE];
-    <span class="keyword">private</span> <span class="built_in">int</span> <span class="built_in">size</span> = <span class="number">0</span>;
-
-<span class="keyword">public</span> MStack() {
-    elements = <span class="keyword">new</span> <span class="keyword">Object</span>[DEFAULT_SIZE];
-}
-
-<span class="keyword">public</span> <span class="keyword">void</span> push(<span class="keyword">Object</span> element) {
-    ensureCapacity();
-    elements[<span class="built_in">size</span>++] = element;
-}
-
-<span class="keyword">public</span> <span class="keyword">Object</span> pop() {
-    <span class="keyword">if</span>(<span class="built_in">size</span> == <span class="number">0</span>) {
-        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"empty stack cannot pop"</span>);
-    }
-    <span class="keyword">return</span> elements[--<span class="built_in">size</span>];
-}
-
-<span class="keyword">public</span> <span class="keyword">void</span> ensureCapacity() {
-    <span class="keyword">if</span>(<span class="built_in">size</span> == elements.length) {
-        elements = Arrays.copyOf(elements, <span class="number">2</span> * <span class="built_in">size</span> + <span class="number">1</span>);
-    }
-}
-</code></pre><p>}</p>
-<p>这是《Effective Java》的一个例子，该例中的Stack在pop是并没有将已经出栈的引用置为null；这些引用是“过期引用”，这些引用虽然没有被使用，但是它将随着Arrays.copy一起被复制到更大的数组中，对于JVM来说它们同样是存活的对象，但是对我们的应用程序来说这些是无用的。在一个需要长期运行的服务中如果出现这样的问题很容易导致OOM。</p>
-<h3 id="3-2_可变参数列表：">3.2 可变参数列表：</h3><p>JDK1.5的特性，它和数组息息相关。实际上，可变参数列表实际还是通过数组来传递一组参数的，我觉得可以看作是一种语法糖。<br>可变参数列表与方法重载有关（静态分派，在编译和解析阶段确定），优先级最低；<br>使用可变参数列表时，如果有多个重载版本，会根据所传递的参数类型执行最匹配的版本，但是需要注意一些会产生“冲突”的情况：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">VarArgsInit</span> {
-    <span class="comment">//overload with var argument</span>
-    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">f</span>(<span class="params">Long...longs</span>) </span>{
-        System.<span class="keyword">out</span>.println(<span class="string">"f_long_varArgs"</span>);
-    }
-
-<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">f</span>(<span class="params">Character...characters</span>) </span>{
-    System.<span class="keyword">out</span>.println(<span class="string">"f_character_varArgs"</span>);
-}
-
-<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">f</span>(<span class="params"><span class="keyword">float</span> f, Character...characters</span>) </span>{
-    System.<span class="keyword">out</span>.println(<span class="string">"f_float_character_varArgs"</span>);
-}
-
-<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">g</span>(<span class="params"><span class="keyword">float</span> f, Character...characters</span>) </span>{
-    System.<span class="keyword">out</span>.println(<span class="string">"g_float_character_varArgs"</span>);
-}
-
-<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">g</span>(<span class="params"><span class="keyword">char</span> c, Character...characters</span>) </span>{
-    System.<span class="keyword">out</span>.println(<span class="string">"g_char_character_varArgs"</span>);
-}
-
-<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
-<span class="comment">//        f(); //Error:(19, 9) java: reference to f is ambiguous</span>
-<span class="comment">//        f();</span>
-        f(<span class="number">1</span>, <span class="string">'a'</span>); <span class="comment">//OK</span>
-<span class="comment">//        f('a', 'b'); //Error:(19, 9) java: reference to f is ambiguous</span>
-        g(<span class="string">'a'</span>, <span class="string">'b'</span>); <span class="comment">//OK</span>
-    }
-</code></pre><p>这个例子中，f(‘a’,’b’)会引起编译错误，因为它会同时匹配第3个和第2个f()版本（因为’a’可以转换成float），解决方法，很简单g方法的两个版本就不会有这种冲突。</p>
-<h3 id="3-3_枚举：">3.3 枚举：</h3><p>JDK1.5的添加特性。enum也是类，它派生自Enum抽象类，但是与普通的类不同的时，编译器会给它添加一些特性，我觉得可以认为enum是一种具有特殊功能的class：<br>我们来看看一个枚举类型的字节码：</p>
-<pre><code>final <span class="keyword">enum</span> hr.test.Color {
-
- <span class="comment">// 所有的枚举值都是类静态常量</span>
- <span class="keyword">public</span> <span class="keyword">static</span> final <span class="keyword">enum</span> hr.test.Color RED;
- <span class="keyword">public</span> <span class="keyword">static</span> final <span class="keyword">enum</span> hr.test.Color BLUE;
- <span class="keyword">public</span> <span class="keyword">static</span> final <span class="keyword">enum</span> hr.test.Color BLACK;
- <span class="keyword">public</span> <span class="keyword">static</span> final <span class="keyword">enum</span> hr.test.Color YELLOW;
- <span class="keyword">public</span> <span class="keyword">static</span> final <span class="keyword">enum</span> hr.test.Color GREEN;
-
-<span class="keyword">private</span> <span class="keyword">static</span> final synthetic hr.test.Color[] ENUM$VALUES;
-
-  <span class="comment">// 初始化过程，对枚举类的所有枚举值对象进行第一次初始化</span>
- <span class="keyword">static</span> {
-       <span class="number">0</span>  <span class="keyword">new</span> hr.test.Color [<span class="number">1</span>] 
-      <span class="number">3</span>  dup
-      <span class="number">4</span>  ldc &lt;String <span class="string">"RED"</span>&gt; [<span class="number">16</span>] <span class="comment">//把枚举值字符串"RED"压入操作数栈</span>
-      <span class="number">6</span>  iconst_0  <span class="comment">// 把整型值0压入操作数栈</span>
-      <span class="number">7</span>  invokespecial hr.test.Color(java.lang.String, <span class="keyword">int</span>) [<span class="number">17</span>] <span class="comment">//调用Color类的私有构造器创建Color对象RED</span>
-     <span class="number">10</span>  putstatic hr.test.Color.RED : hr.test.Color [<span class="number">21</span>]  <span class="comment">//将枚举对象赋给Color的静态常量RED。</span>
-      .........  枚举对象BLUE等与上同
-    <span class="number">102</span>  <span class="keyword">return</span>
-};
-
-  <span class="comment">// 私有构造器，外部不可能动态创建一个枚举类对象(也就是不可能动态创建一个枚举值)。</span>
- <span class="function"><span class="keyword">private</span> <span class="title">Color</span><span class="params">(java.lang.String arg0, <span class="keyword">int</span> arg1)</span></span>{
-     <span class="comment">// 调用父类Enum的受保护构造器创建一个枚举对象</span>
-     <span class="number">3</span>  invokespecial java.lang.Enum(java.lang.String, <span class="keyword">int</span>) [<span class="number">38</span>]
-};
-
- <span class="keyword">public</span> <span class="keyword">static</span> hr.test.Color[] values();
-
-  <span class="keyword">public</span> <span class="keyword">static</span> hr.test.<span class="function">Color <span class="title">valueOf</span><span class="params">(java.lang.String arg0)</span></span>;
-}
-</code></pre><p>从字节码解析中，首先可以看到：<br>（1）它是final的，因此我们无法继承它；<br>（2）所有枚举值，都是Color的实例，它们都是public static final的；</p>
-<h4 id="编译器生成的方法：">编译器生成的方法：</h4><p>我们还有看到，编译器为enum添加了3个方法：<br>（1）私有构造器，保证无法从动态创建一个该类型的枚举对象；同时我们也无法使用反射创建一个enum类型实例：</p>
-<pre><code>public <span class="class"><span class="keyword">enum</span>  <span class="title">MEnum</span> {</span>
-    <span class="constant">E1</span>;
-
-    static <span class="class"><span class="keyword">class</span> <span class="title">A</span> {</span>
-        <span class="keyword">private</span> <span class="constant">A</span>(){
-        }
-    }
-
-    public static void main(<span class="constant">String</span>[] args) throws <span class="constant">Exception</span> {
-        <span class="constant">Class</span>&lt;<span class="constant">A</span>&gt; a = <span class="constant">A</span>.<span class="keyword">class</span>;
-        <span class="constant">Constructor</span> constructor = a.getDeclaredConstructor();
-        constructor.setAccessible(<span class="literal">true</span>);
-        constructor.newInstance();
-        <span class="constant">Class</span>&lt;?&gt; ec = <span class="constant">MEnum</span>.<span class="keyword">class</span>;
-        <span class="constant">Constructor</span> constructor1 = ec.getDeclaredConstructor(<span class="constant">String</span>.<span class="keyword">class</span>, int.<span class="keyword">class</span>);
-        constructor1.setAccessible(<span class="literal">true</span>);
-        constructor1.newInstance(<span class="string">"YJH"</span>, <span class="number">2</span>);
-    }
-
-}
-</code></pre><p>结果：A类可以正常创建，而enum类型，java.lang.IllegalArgumentException: Cannot reflectively create enum objects，因为在class.newInstance中有这样的检查：<br> if ((clazz.getModifiers() &amp; Modifier.ENUM) != 0)<br>            throw new IllegalArgumentException(“Cannot reflectively create enum objects”);<br>（2）values静态方法；<br>（3）valueOf(String)静态方法：它们都是编译器为具体的enum类型添加的，你在Enum抽象类中看不到它们；</p>
-<p>enum可以说是严格全局不可修改的安全类型，它同样可以进行安全的序列化而不用担心不唯一的情况，正因为如此，使用单元素枚举创建单例对象是一种极佳的方法，同时可以不用担心反射攻击。</p>
-<p>PS：enum可以和switch结合使用，十分方便；</p>
-<h2 id="4-_创建和销毁对象的实践：">4. 创建和销毁对象的实践：</h2><p>《Effetive Java》中对于这一块给出了一些优秀的建议，以后在每一篇终结之后我都附上关于这篇的好的实践模式和要注意的反模式。学习这些思想和设计模式我觉得对我使用和理解Java中不同模块以及Spring等框架有很大的好处，因为它们都是基于这些的思想和模式建立的，能够帮助我更好的理解它们的结构和功能。</p>
-<h3 id="4-1_使用静态工厂方法代替构造器：">4.1 使用静态工厂方法代替构造器：</h3><p><strong>优点</strong>：<br>（1）在具有比较复杂参数的构造器的时候，使用这很难通过重载版本来区别它们之间的功能差别，而使用静态工厂方法可以根据功能命名，像Executors中创建不同功能的线程池实例一样，静态工厂方法掩盖了构造器的复杂性；<br>（2）不必在每次调用它们的时候都创建一个新对象，静态工厂方法可以用于单例，享元模式，不可变类（final class，final field），不可实例化类（private 构造器）这些不同的场景；<br>（3）返回原返回类型的任何子类型：这一点影响觉得深远，广大，首先，在collection包中有Collection，List，Set，Map，Iterator等接口，Collections工具类，提供了很多具有附加功能的集合类实现，而它们都是定义在Collections中的嵌套类，通过静态工厂方法返回，还有Iterator，也是基于内部类实现的，通过它来返回，静态工厂方法可以隐藏具体的实现，支持面向接口的编程。<br>在开发J2EE项目时，经常用到Java Persistence API，websocket API，servlet API等等，它们是J2EE规范的一部分，我们仅仅引用了API，接口，而具体的实现我们可以会用到hibernate，spring的子项目，像servlet和websokcet API，它们的具体实现则多由J2EE 应用服务器实现它们，另外tomcat8.0也提供了websocket的实现。<br>这就是“服务提供者框架（service provider framework）”，提供者提供Service接口的具体实现，提供者可以使用提供者注册接口注册自己，提供者也可以实现provider接口或者通过类名直接注册，客户端使用者通过服务访问接口（其实就是静态工厂方法）；<br>（4）本来是用来简化有泛型参数时对象创建的，不过有了diomand表达式，java已经可以自己推导类型了；</p>
-<h3 id="4-2_多个构造器参数时使用Builder模式：">4.2 多个构造器参数时使用Builder模式：</h3><p>重叠构造器和Bean+setter创建的方式真的不好维护，写过都知道，builder模式不仅仅可以灵活的组配参数；还可以创建不可变的对象。</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">HasBuilder</span> </span>{
-    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> i1;
-    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> i2;
-    <span class="keyword">private</span> <span class="keyword">final</span> String s1;
-
-<span class="function"><span class="keyword">public</span> <span class="title">HasBuilder</span><span class="params">(Builder builder)</span> </span>{
-    <span class="keyword">this</span>.i1 = builder.i1;
-    <span class="keyword">this</span>.i2 = builder.i2;
-    <span class="keyword">this</span>.s1 = builder.s1;
-}
-
-<span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Builder</span> </span>{
-    <span class="keyword">private</span> <span class="keyword">int</span> i1;
-    <span class="keyword">private</span> <span class="keyword">int</span> i2;
-    <span class="keyword">private</span> String s1;
-
-    <span class="function"><span class="keyword">public</span> Builder <span class="title">i1</span><span class="params">(<span class="keyword">int</span> i1)</span> </span>{
-        <span class="keyword">this</span>.i1 = i1;
-        <span class="keyword">return</span> <span class="keyword">this</span>;
-    }
-    <span class="function"><span class="keyword">public</span> Builder <span class="title">i2</span><span class="params">(<span class="keyword">int</span> i2)</span> </span>{
-        <span class="keyword">this</span>.i2 = i2;
-        <span class="keyword">return</span> <span class="keyword">this</span>;
-    }
-    <span class="function"><span class="keyword">public</span> Builder <span class="title">s1</span><span class="params">(String s1)</span> </span>{
-        <span class="keyword">this</span>.s1 = s1;
-        <span class="keyword">return</span> <span class="keyword">this</span>;
-    }
-
-    <span class="function"><span class="keyword">public</span> HasBuilder <span class="title">build</span><span class="params">()</span> </span>{
-        <span class="keyword">return</span> <span class="keyword">new</span> HasBuilder(<span class="keyword">this</span>);
-    }
-}
-</code></pre><p>}<br>你可以通过在build构建在具体的设值方法里进行约束检查。</p>
-<h3 id="4-3_建立合适的单例：">4.3 建立合适的单例：</h3><p>大致总结一下，有5种不同的单例模式：<br>（1）饿汉模式；<br>（2）懒汉模式：延迟加载，这就涉及到了线程安全的问题，用synchronized方法关键字效率太低；<br>（3）基于双检锁的单例：JDK1.5是安全的，需要通过volitale来保证可见性，一定要有手写它的能力！；<br>（4）基于静态内部类的方式：让静态内部类持有一个static final的实例，因为是内部类，所以自然也就可以延迟加载；</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">SingletonWithInnerClass</span> {
-    <span class="function"><span class="keyword">private</span> <span class="title">SingletonWithInnerClass</span>(<span class="params"></span>) </span>{
-        System.<span class="keyword">out</span>.println(<span class="string">"initialized"</span>);
-    }
-
-    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title">SingletonHolder</span> {
-        <span class="keyword">private</span> <span class="keyword">static</span> final SingletonWithInnerClass s = <span class="keyword">new</span> SingletonWithInnerClass();
-    }
-
-    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> SingletonWithInnerClass <span class="title">getInstance</span>(<span class="params"></span>) </span>{
-        <span class="keyword">return</span> SingletonHolder.s;
-    }
-
-    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
-        Class c = SingletonWithInnerClass.class; <span class="comment">//这里并没有进行初始化</span>
-        System.<span class="keyword">out</span>.println(<span class="string">"start initialization:"</span>);
-        SingletonWithInnerClass singletonWithInnerClass = SingletonWithInnerClass.getInstance();
-
-    }
-}
-</code></pre><p>这段代码的输出结果：</p>
-<pre><code><span class="operator"><span class="keyword">start</span> initialization:
-<span class="keyword">initialized</span></span>
-</code></pre><p>可见是延迟加载的；<br>（5）单元素枚举的方法，前面已经讨论过了，最佳，无偿序列化，防止反射攻击；</p>
-<h3 id="4-4_私有构造器防止实例化：">4.4 私有构造器防止实例化：</h3><p>对于一些工具类或者存放全局变量来说，使用private构造器可以防止继承/实例化，如果使用接口和抽象类来实现，是一种反模式；</p>
-<h3 id="4-5_避免创建不必要的对象：">4.5 避免创建不必要的对象：</h3><p>（1）注意String是有常量池的，它实际上是通过private final char[]来存放的，所以它是不可变的，只有第一次使用这个字符串组合的时候才进入常量池：<br>new String(“abc”);实际上是有两个字符串对象，”abc”是编译期存在，它已经进入常量池了；<br>（2）对于Calendar这样的实例化代价较大的对象考虑尽量复用；<br>（3）使用自动装箱类型一定要特别小心，以免在循环中因为自动装箱而创建大量对象，能用基本类型就不要用装箱类型；<br>（4）小对象的创建和销毁代价是很小的，因此，使用对象池的时候一定要考虑是不是值得，使用对象池管理不当也可能造成内存泄漏。</p>
-<h3 id="4-6_消除过期引用：">4.6 消除过期引用：</h3><p>（1）自己管理内存的时候：之前提到的MyStack（自己管理内存之外），还有两个情形容易导致内存泄漏：<br>（2）缓存：不要让缓存的引用成为阻止垃圾回收的唯一原因，尽量使用weakHashMap，它不会影响引用，当然使用它需要注意，只有缓存项的生命周期依赖与它的外部引用时才可以使用它；常见的情况，使用一个后台线程Timer或者ScheduledTreadPoolExecutor或者添加新条目的时候检查（LinkedHashMap提供了这样的机制）；<br>（3）回调：这种基于观察者模式的方式都需要监听器或回调来注册，因此如果不再合适的时候释放也会造成泄漏，用弱引用是一种好的做法；<br>其实看看内存泄漏原因直接起来就是管理不当的引用池，这时由JVM可达性分析机制决定的；</p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
-    <article id="post-Java中的中介者模式" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/12/03/Java中的中介者模式/" class="article-date">
-  	<time datetime="2015-12-03T07:21:37.000Z" itemprop="datePublished">2015-12-03</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/03/Java中的中介者模式/">Java中的中介者模式</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
   
     <nav id="page-nav">
-      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
     </nav>
   
 </div>

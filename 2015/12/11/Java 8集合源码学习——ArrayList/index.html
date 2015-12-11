@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Java 8集合源码学习——ArrayList | Zerohuan的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="心得：学习、实践的时候如果能够触类旁通是一件很爽的事，学习源码能很学到很多优秀思想和设计，而优秀的思想总是相通的。比如ArrayList中扩展数组大小时，最少扩展为原数组的3/2，这种做法避免了频繁小幅度的扩展造成频繁的复制动作（让我想到了TCP拥塞控制的滑动窗口的大小控制），集合框架中有很多精妙的思想和技巧，深入学习，仔细思考真的可以受益颇多。
+1. ArrayList要点（1）基于数组实现：内">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java 8集合源码学习——ArrayList">
+<meta property="og:url" content="http://blog.ssearch.cn/2015/12/11/Java 8集合源码学习——ArrayList/index.html">
+<meta property="og:site_name" content="Zerohuan的博客">
+<meta property="og:description" content="心得：学习、实践的时候如果能够触类旁通是一件很爽的事，学习源码能很学到很多优秀思想和设计，而优秀的思想总是相通的。比如ArrayList中扩展数组大小时，最少扩展为原数组的3/2，这种做法避免了频繁小幅度的扩展造成频繁的复制动作（让我想到了TCP拥塞控制的滑动窗口的大小控制），集合框架中有很多精妙的思想和技巧，深入学习，仔细思考真的可以受益颇多。
+1. ArrayList要点（1）基于数组实现：内">
+<meta property="og:updated_time" content="2015-12-11T17:08:33.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java 8集合源码学习——ArrayList">
+<meta name="twitter:description" content="心得：学习、实践的时候如果能够触类旁通是一件很爽的事，学习源码能很学到很多优秀思想和设计，而优秀的思想总是相通的。比如ArrayList中扩展数组大小时，最少扩展为原数组的3/2，这种做法避免了频繁小幅度的扩展造成频繁的复制动作（让我想到了TCP拥塞控制的滑动窗口的大小控制），集合框架中有很多精妙的思想和技巧，深入学习，仔细思考真的可以受益颇多。
+1. ArrayList要点（1）基于数组实现：内">
+  
+    <link rel="alternative" href="/atom.xml" title="Zerohuan的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+	<header id="header" class="inner">
+		<a href="/" class="profilepic">
+			
+			<img lazy-src="/avatar.jpg" class="js-avatar">
+			
+		</a>
+
+		<hgroup>
+		  <h1 class="header-author"><a href="/">Zerohuan</a></h1>
+		</hgroup>
+
+		
+		<p class="header-subtitle">我在路上</p>
+		
+
+		
+			<div class="switch-btn">
+				<div class="icon">
+					<div class="icon-ctn">
+						<div class="icon-wrap icon-house" data-idx="0">
+							<div class="birdhouse"></div>
+							<div class="birdhouse_holes"></div>
+						</div>
+						<div class="icon-wrap icon-ribbon hide" data-idx="1">
+							<div class="ribbon"></div>
+						</div>
+						
+						<div class="icon-wrap icon-link hide" data-idx="2">
+							<div class="loopback_l"></div>
+							<div class="loopback_r"></div>
+						</div>
+						
+						
+						<div class="icon-wrap icon-me hide" data-idx="3">
+							<div class="user"></div>
+							<div class="shoulder"></div>
+						</div>
+						
+					</div>
+					
+				</div>
+				<div class="tips-box hide">
+					<div class="tips-arrow"></div>
+					<ul class="tips-inner">
+						<li>菜单</li>
+						<li>标签</li>
+						
+						<li>友情链接</li>
+						
+						
+						<li>关于我</li>
+						
+					</ul>
+				</div>
+			</div>
+		
+
+		<div class="switch-area">
+			<div class="switch-wrap">
+				<section class="switch-part switch-part1">
+					<nav class="header-menu">
+						<ul>
+						
+							<li><a href="/">主页</a></li>
+				        
+							<li><a href="/archives">所有文章</a></li>
+				        
+						</ul>
+					</nav>
+					<nav class="header-nav">
+						<div class="social">
+							
+								<a class="github" target="_blank" href="https://github.com/zerohuan" title="github">github</a>
+					        
+								<a class="weibo" target="_blank" href="/#" title="weibo">weibo</a>
+					        
+								<a class="zhihu" target="_blank" href="http://www.zhihu.com/people/yan-jin-heng" title="zhihu">zhihu</a>
+					        
+								<a class="mail" target="_blank" href="mailto:yanjinheng@qq.com" title="mail">mail</a>
+					        
+						</div>
+					</nav>
+				</section>
+				
+				
+				<section class="switch-part switch-part2">
+					<div class="widget tagcloud" id="js-tagcloud">
+						<a href="/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java小工具/" style="font-size: 10px;">Java小工具</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 10px;">TCP/IP</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a>
+					</div>
+				</section>
+				
+				
+				
+				<section class="switch-part switch-part3">
+					<div id="js-friends">
+					
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">奥巴马的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">卡卡的美丽传说</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">本泽马的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">吉格斯的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">习大大大不同</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">托蒂的博客</a>
+			        
+			        </div>
+				</section>
+				
+
+				
+				
+				<section class="switch-part switch-part4">
+				
+					<div id="js-aboutme">现南京大学研究生一枚，目前专注于Java Web方向。</div>
+				</section>
+				
+			</div>
+		</div>
+	</header>				
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+  	<div class="overlay">
+  		<div class="slider-trigger"></div>
+  		<h1 class="header-author js-mobile-header hide">Zerohuan</h1>
+  	</div>
+	<div class="intrude-less">
+		<header id="header" class="inner">
+			<div class="profilepic">
+				<img lazy-src="/avatar.jpg" class="js-avatar">
+			</div>
+			<hgroup>
+			  <h1 class="header-author">Zerohuan</h1>
+			</hgroup>
+			
+			<p class="header-subtitle">我在路上</p>
+			
+			<nav class="header-menu">
+				<ul>
+				
+					<li><a href="/">主页</a></li>
+		        
+					<li><a href="/archives">所有文章</a></li>
+		        
+		        <div class="clearfix"></div>
+				</ul>
+			</nav>
+			<nav class="header-nav">
+				<div class="social">
+					
+						<a class="github" target="_blank" href="https://github.com/zerohuan" title="github">github</a>
+			        
+						<a class="weibo" target="_blank" href="/#" title="weibo">weibo</a>
+			        
+						<a class="zhihu" target="_blank" href="http://www.zhihu.com/people/yan-jin-heng" title="zhihu">zhihu</a>
+			        
+						<a class="mail" target="_blank" href="mailto:yanjinheng@qq.com" title="mail">mail</a>
+			        
+				</div>
+			</nav>
+		</header>				
+	</div>
+</nav>
+      <div class="body-wrap"><article id="post-Java 8集合源码学习——ArrayList" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/11/Java 8集合源码学习——ArrayList/" class="article-date">
+  	<time datetime="2015-12-11T06:48:41.000Z" itemprop="datePublished">2015-12-11</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Java 8集合源码学习——ArrayList
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-8集合框架源码/">Java 8集合框架源码</a></li></ul>
+	</div>
+
+        
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>心得：<br>学习、实践的时候如果能够触类旁通是一件很爽的事，学习源码能很学到很多优秀思想和设计，而优秀的思想总是相通的。比如ArrayList中扩展数组大小时，最少扩展为原数组的3/2，这种做法避免了频繁小幅度的扩展造成频繁的复制动作（让我想到了TCP拥塞控制的滑动窗口的大小控制），集合框架中有很多精妙的思想和技巧，深入学习，仔细思考真的可以受益颇多。</p>
+<h2 id="1-_ArrayList要点">1. ArrayList要点</h2><p><strong>（1）基于数组实现</strong>：内部表示通过控制对象数组的访问，数组是不能动态修改大小的，因此根据元素数量/指定容量大小，通过创建新数组，复制元素对象是ArrayList的核心原理之一；<br><strong>（2）性能特点</strong>：因为基于数组的，因此可以实现快速随机访问，比LinkedList效率高；但是增加/删除等需要通过复制数组元素（部分或全部）来实现，效率比LinkedList低；<br><strong>（3）线程不安全</strong>：同样使用modCount修改计数，类似乐观锁的fail-fast来防止并发修改带来的不一致，ArrayList的每个Iterator，ListIterator，SubList实例都独立维护一个基于ArrayList实例modCount的expectedModCount；<br><strong>（4）优化手段</strong>：<br><strong>单例模式应用</strong>：EMPTY_ELEMENTDATA和DEFAULTCAPACITY_EMPTY_ELEMENTDATA这两个单例的空数组对象，分别被“空状态”和“默认状态”的ArrayList共享；<br><strong>grow方法的增长机制</strong>：每次扩展数组的大小至少扩展到原数据的3/2大小，减少了创建新数组和复制动作的次数；<br><strong>（5）克隆和序列化</strong>：实现了Serializable和Cloneable接口，支持序列化和克隆，其中序列化使用writeObject和readObject不采用默认的序列化机制，只保存size和元素对象，一方面是隐藏内部表示信息，一方面节省了开销；<br><strong>（6）防止内存泄漏的置空动作</strong>：维护一个数组也是自己维护内存管理，因为数组也持有这引用，删除时要及时置空不能影响GC活动，虽然LinkedList已经说了，再强调下；</p>
+<h2 id="2-_基本结构和操作">2. 基本结构和操作</h2><h3 id="2-1_重要属性">2.1 重要属性</h3><pre><code><span class="comment">//默认初始化容量</span>
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="built_in">int</span> DEFAULT_CAPACITY = <span class="number">10</span>;
+<span class="comment">/*
+ 所有Empty数组列表共享一个空数组对象，不仅可以减少重复对象的创建（单例模式应用），还可以标识空列表状态
+ 单例模式（区别于享元模式）：
+ 一是这里只有一个对象；
+ 二是不仅仅是节省内存，更重要的是起到共享并标识“空数组列表”的作用；
+ EMPTY_ELEMENTDATA标识“空”状态，DEFAULTCAPACITY_EMPTY_ELEMENTDATA标识默认状态
+ */</span>
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">Object</span>[] EMPTY_ELEMENTDATA = {};
+<span class="comment">/*
+ 默认状态创建数组列表实例使用该数组，使用一个单例空数组并且不直接使用EMPTY_ELEMENTDATA而是新键一个空数组的原因是：
+ 一是用于标识不同的状态，区别于“空数组列表”，DEFAULTCAPACITY_EMPTY_ELEMENTDATA表示数组列表还未插入元素；
+ 二是等到实际有元素再分配合适大小的数组内存空间，起到延迟加载的作用；
+ 三是同样单例可以让所有默认状态列表使用一个空数组对象，节省内存；
+*/</span>
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">Object</span>[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
+<span class="comment">/*
+使用transient的目的是为了隐藏内部表示
+使用Object的原因：
+（1）Object可以引用所有具体类型的数组对象；
+（2）实际的ArrayList的类型参数对于ArrayList对象本身是不可知的，泛型的本质是擦除，并借助变量，方法，类的签名来进行类型检查和转换;
+    因此可以用Object数组存放元素对象，依赖方法和类型参数让编译器和JVM进行类型检查和转换（比如插入checkcast指令等等）；
+ */</span>
+<span class="keyword">transient</span> <span class="keyword">Object</span>[] elementData;
+<span class="comment">//元素个数</span>
+<span class="keyword">private</span> <span class="built_in">int</span> <span class="built_in">size</span>;
+
+<span class="comment">/*
+翻译：
+一些实现可能会保存一些首部信息在数组对象中。
+试图分配一个比MAX_ARRAY_SIZE大的数组可能会造成OOM（Requested array size exceeds VM limit）。
+也就是说一些JVM的实现可能会限制数组大小小于Integer.MAX_VALUE，因此检查是必要的。
+ */</span>
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="built_in">int</span> MAX_ARRAY_SIZE = Integer.MAX_VALUE - <span class="number">8</span>; 
+</code></pre><h3 id="2-2_不同版本的构造器">2.2 不同版本的构造器</h3><p>这里可以看到在创建ArrayList对象实例的时候：<br>（1）ArrayList()：默认状态，使用DEFAULTCAPACITY_EMPTY_ELEMENTDATA，这也是一个空数组，延迟加载，第一次插入时才分配内存；<br>（2）如果指定的初始化容量为0,拷贝构造器传入集合为空，使用EMPTY_ELEMENTDATA；</p>
+<pre><code><span class="comment">/*
+不同版本的构造器
+ */</span>
+<span class="comment">//如果指定初始化容量为“0”，使用EMPTY_ELEMENTDATA</span>
+<span class="function"><span class="keyword">public</span> <span class="title">ArrayList</span><span class="params">(<span class="keyword">int</span> initialCapacity)</span> </span>{
+    <span class="keyword">if</span> (initialCapacity &gt; <span class="number">0</span>) {
+        <span class="keyword">this</span>.elementData = <span class="keyword">new</span> Object[initialCapacity];
+    } <span class="keyword">else</span> <span class="keyword">if</span> (initialCapacity == <span class="number">0</span>) {
+        <span class="keyword">this</span>.elementData = EMPTY_ELEMENTDATA;
+    } <span class="keyword">else</span> {
+        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"Illegal Capacity: "</span>+
+                initialCapacity);
+    }
+}
+<span class="comment">//创建默认初始化容量列表，使用DEFAULTCAPACITY_EMPTY_ELEMENTDATA</span>
+<span class="function"><span class="keyword">public</span> <span class="title">ArrayList</span><span class="params">()</span> </span>{
+    <span class="keyword">this</span>.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
+}
+
+<span class="comment">//拷贝构造器，注意使用toArray获取要插入元素对象</span>
+<span class="function"><span class="keyword">public</span> <span class="title">ArrayList</span><span class="params">(Collection&lt;? extends E&gt; c)</span> </span>{
+    elementData = c.toArray();
+    <span class="keyword">if</span>((size = elementData.length) != <span class="number">0</span>) {
+        <span class="comment">/*
+        注意，toArray返回的Object[]引用，而Object[]可以作为超类引用子类对象比如A[]（假设A是E的子类）
+        如果toArray返回是A[]数组对象，那么如果类型B对象（B extends E）可能会引起后续的插入时的ArrayStoreException，读取元素时的ClassCheckException
+        因此如果返回的不是Object[]对象，要创建一个Object[]并复制元素引用
+         */</span>
+        <span class="keyword">if</span>(elementData.getClass() != Object[].<span class="keyword">class</span>) {
+            elementData = Arrays.copyOf(elementData, size, Objects[].<span class="keyword">class</span>);
+        }
+    } <span class="keyword">else</span> {
+        <span class="comment">//一个空数组列表，直接使用EMPTY_ELEMENTDATA</span>
+        elementData = EMPTY_ELEMENTDATA;
+    }
+}
+</code></pre><h3 id="2-3_核心操作">2.3 核心操作</h3><p>主要方法包括：trimToSize（压缩缓存数组），grow（扩展容量），ensure～（不同情况下调用的扩容方法），removeRange（范围删除），batchRemove（批量删除），fastRemove（基于复制的快速复制），这些方法供之后方法调用；</p>
+<pre><code><span class="comment">//压缩缓存区大小，最小化存储区域到size相同的大小</span>
+<span class="keyword">public</span> <span class="keyword">void</span> trimToSize() {
+    modCount++;
+    <span class="keyword">if</span>(<span class="built_in">size</span> &lt; elementData.length) {
+        elementData = (<span class="built_in">size</span> == <span class="number">0</span>)
+                ? EMPTY_ELEMENTDATA
+                : Arrays.copyOf(elementData, <span class="built_in">size</span>);
+    }
+}
+
+<span class="comment">//增加容量到指定大小（溢出会抛出OOM），通过这个方法可以打破MAX_ARRAY_SIZE限制</span>
+<span class="keyword">private</span> <span class="keyword">void</span> grow(<span class="built_in">int</span> minCapacity) {
+    <span class="comment">// overflow-conscious code</span>
+    <span class="built_in">int</span> oldCapacity = elementData.length;
+    <span class="comment">//首先尝试将新容量设置为原容量的（3/2）</span>
+    <span class="comment">//这样做可以避免频繁小幅度的扩张带来的开销，我联想到一个类似的做法是滑动窗口中修改窗口大小的机制</span>
+    <span class="built_in">int</span> newCapacity = oldCapacity + (oldCapacity &gt;&gt; <span class="number">1</span>);
+    <span class="comment">//如果尚未达到指定大小（这说明扩张幅度够大），设置为指定大小</span>
+    <span class="keyword">if</span> (newCapacity - minCapacity &lt; <span class="number">0</span>)
+        newCapacity = minCapacity;
+    <span class="keyword">if</span> (newCapacity - MAX_ARRAY_SIZE &gt; <span class="number">0</span>)
+        newCapacity = hugeCapacity(minCapacity);
+    <span class="comment">// minCapacity is usually close to size, so this is a win:</span>
+    elementData = Arrays.copyOf(elementData, newCapacity);
+}
+
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="built_in">int</span> hugeCapacity(<span class="built_in">int</span> minCapacity) {
+    <span class="keyword">if</span> (minCapacity &lt; <span class="number">0</span>) <span class="comment">// overflow</span>
+        <span class="keyword">throw</span> <span class="keyword">new</span> OutOfMemoryError();
+    <span class="keyword">return</span> (minCapacity &gt; MAX_ARRAY_SIZE) ?
+            Integer.MAX_VALUE :
+            MAX_ARRAY_SIZE;
+}
+
+<span class="comment">//当ArrayList不处于默认状态时，才可能扩展大小为小于DEFAULT_CAPACITY的容量；</span>
+<span class="comment">// 否则只有指定大小超过DEFAULT_CAPACITY时才进行扩展；</span>
+<span class="comment">//注意这个方法是public，区别于ensureCapacityInternal，这个方法是在外部使用的；</span>
+<span class="keyword">public</span> <span class="keyword">void</span> ensureCapacity(<span class="built_in">int</span> minCapacity) {
+    <span class="built_in">int</span> minExpand = (elementData != DEFAULTCAPACITY_EMPTY_ELEMENTDATA)
+            <span class="comment">// any size if not default element table</span>
+            ? <span class="number">0</span>
+            <span class="comment">// larger than default for default empty table. It's already</span>
+            <span class="comment">// supposed to be at default size.</span>
+            : DEFAULT_CAPACITY;
+
+    <span class="keyword">if</span> (minCapacity &gt; minExpand) {
+        ensureExplicitCapacity(minCapacity);
+    }
+}
+
+<span class="comment">//ArrayList内部扩展大小使用此方法，没有上个条件方法限制</span>
+<span class="comment">//但如果处于默认状态，扩展大小仍然不能小于DEFAULT_CAPACITY</span>
+<span class="keyword">private</span> <span class="keyword">void</span> ensureCapacityInternal(<span class="built_in">int</span> minCapacity) {
+    <span class="keyword">if</span> (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+        minCapacity = Math.<span class="built_in">max</span>(DEFAULT_CAPACITY, minCapacity);
+    }
+
+    ensureExplicitCapacity(minCapacity);
+}
+
+<span class="keyword">private</span> <span class="keyword">void</span> ensureExplicitCapacity(<span class="built_in">int</span> minCapacity) {
+    modCount++;
+
+    <span class="comment">// overflow-conscious code</span>
+    <span class="keyword">if</span> (minCapacity - elementData.length &gt; <span class="number">0</span>)
+        grow(minCapacity);
+}
+
+<span class="comment">//删除[fromIndex, toIndex)范围的元素</span>
+<span class="comment">//操作后将末尾newSize之后的元素置空，防止内存泄漏</span>
+<span class="keyword">protected</span> <span class="keyword">void</span> removeRange(<span class="built_in">int</span> fromIndex, <span class="built_in">int</span> toIndex) {
+    modCount++; <span class="comment">//fail-fast</span>
+    <span class="built_in">int</span> numMoved = <span class="built_in">size</span> - toIndex;
+    System.arraycopy(elementData, fromIndex, elementData, toIndex,
+            numMoved);
+
+    <span class="comment">//清空多余的元素引用</span>
+    <span class="built_in">int</span> newSize = <span class="built_in">size</span> - (toIndex - fromIndex);
+    <span class="keyword">for</span>(<span class="built_in">int</span> i = newSize; i &lt; <span class="built_in">size</span>; i++)
+        elementData[i] = <span class="keyword">null</span>;
+    <span class="built_in">size</span> = newSize;
+}
+
+<span class="comment">//批量删除，complement为false时删除数组缓冲区中集合c包含的元素，true，删除集合c中不包含的元素，可以用实现交，差等集合运算</span>
+<span class="comment">//使用复制的方法，而不是调用remove()的方式，减少了元素的重复复制</span>
+<span class="comment">//同样要将newSize之外的元素引用置空，防止内存泄漏</span>
+<span class="keyword">private</span> <span class="built_in">boolean</span> batchRemove(Collection&lt;?&gt; c, <span class="built_in">boolean</span> complement) {
+    <span class="keyword">final</span> <span class="keyword">Object</span>[] elementData = <span class="keyword">this</span>.elementData;
+    <span class="built_in">int</span> r = <span class="number">0</span>, w = <span class="number">0</span>; <span class="comment">//不变式，w &lt;= r</span>
+    <span class="built_in">boolean</span> modified = <span class="keyword">false</span>;
+    <span class="keyword">try</span> {
+        <span class="keyword">for</span> (; r &lt; <span class="built_in">size</span>; r++) {
+            <span class="keyword">if</span>(c.contains(elementData[r]) == complement) {
+                elementData[w++] = elementData[r];
+            }
+        }
+    } <span class="keyword">finally</span> {
+        <span class="comment">//如果有异常抛出，保存好还未处理的数组元素</span>
+        <span class="keyword">if</span> (r != <span class="built_in">size</span>) {
+            System.arraycopy(elementData, r,
+                    elementData, w,
+                    <span class="built_in">size</span> - r);
+            w += <span class="built_in">size</span> - r;
+        }
+        <span class="keyword">if</span>(w != <span class="built_in">size</span>) {
+            <span class="keyword">for</span>(<span class="built_in">int</span> i = w; i &lt; <span class="built_in">size</span>; i++)
+                elementData[i] = <span class="keyword">null</span>;
+            modCount += <span class="built_in">size</span> - w;
+            <span class="built_in">size</span> = w;
+            modified = <span class="keyword">true</span>;
+        }
+    }
+    <span class="keyword">return</span> modified;
+}
+
+<span class="comment">//由调用者检查index是否合法</span>
+<span class="keyword">private</span> <span class="keyword">void</span> fastRemove(<span class="built_in">int</span> index) {
+    modCount++;
+    <span class="built_in">int</span> numMoved = <span class="built_in">size</span> - index - <span class="number">1</span>;
+    <span class="keyword">if</span> (numMoved &gt; <span class="number">0</span>)
+        System.arraycopy(elementData, index+<span class="number">1</span>, elementData, index,
+                numMoved);
+    elementData[--<span class="built_in">size</span>] = <span class="keyword">null</span>; <span class="comment">// clear to let GC do its work</span>
+}
+</code></pre><h3 id="2-4_辅助方法">2.4 辅助方法</h3><p>（1）检查索引是否合法；<br>（2）返回指定位置的元素；</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">void</span> rangeCheck(<span class="keyword">int</span> <span class="keyword">index</span>) {
+    <span class="keyword">if</span> (<span class="keyword">index</span> &gt;= size)
+        <span class="keyword">throw</span> <span class="keyword">new</span> IndexOutOfBoundsException(outOfBoundsMsg(<span class="keyword">index</span>));
+}
+
+<span class="keyword">private</span> <span class="keyword">void</span> rangeCheckForAdd(<span class="keyword">int</span> <span class="keyword">index</span>) {
+    <span class="keyword">if</span> (<span class="keyword">index</span> &gt; size || <span class="keyword">index</span> &lt; <span class="number">0</span>)
+        <span class="keyword">throw</span> <span class="keyword">new</span> IndexOutOfBoundsException(outOfBoundsMsg(<span class="keyword">index</span>));
+}
+
+<span class="keyword">private</span> String outOfBoundsMsg(<span class="keyword">int</span> <span class="keyword">index</span>) {
+    <span class="keyword">return</span> <span class="string">"Index: "</span>+<span class="keyword">index</span>+<span class="string">", Size: "</span>+size;
+}
+
+<span class="comment">//复用</span>
+@SuppressWarnings(<span class="string">"unchecked"</span>)
+E elementData(<span class="keyword">int</span> <span class="keyword">index</span>) {
+    <span class="keyword">return</span> (E) elementData[<span class="keyword">index</span>];
+}
+</code></pre><h3 id="2-5_SubList与ArrayList的关系">2.5 SubList与ArrayList的关系</h3><p>该SubList是非静态内部类实现，基于同一个缓存数组，和Iterator一样维护一个modCount副本，防止并发修改；</p>
+<pre><code><span class="annotation">@Override</span>
+<span class="function"><span class="keyword">public</span> List&lt;E&gt; <span class="title">subList</span><span class="params">(<span class="keyword">int</span> fromIndex, <span class="keyword">int</span> toIndex)</span> </span>{
+    subListRangeCheck(fromIndex, toIndex, size);
+    <span class="keyword">return</span> <span class="keyword">new</span> SubList(<span class="keyword">this</span>, <span class="number">0</span>, fromIndex, toIndex);
+}
+</code></pre><h3 id="2-6_List实现要点">2.6 List实现要点</h3><p>toArray使用保护性拷贝；<br>总来的来说这一块比较简单；</p>
+<pre><code><span class="comment">//获取指定位置的元素对象引用</span>
+@Override
+<span class="keyword">public</span> E <span class="built_in">get</span>(<span class="built_in">int</span> index) {
+    rangeCheck(index);
+    <span class="keyword">return</span> elementData(index);
+}
+
+<span class="comment">//注意set方法不是结构性修改，因此并没有modCount++</span>
+@Override
+<span class="keyword">public</span> E <span class="built_in">set</span>(<span class="built_in">int</span> index, E element) {
+    rangeCheck(index);
+    E oldValue = elementData(index);
+    elementData[index] = element;
+    <span class="keyword">return</span> oldValue;
+}
+
+<span class="comment">//各种add方法实现</span>
+@Override
+<span class="keyword">public</span> <span class="built_in">boolean</span> <span class="built_in">add</span>(E e) {
+    <span class="comment">//检查并扩增大小，该方法会增加修改计数器，并且一次扩展(3/2)大小防止了频繁扩展带来的开销</span>
+    ensureCapacityInternal(<span class="built_in">size</span> + <span class="number">1</span>);
+    elementData[<span class="built_in">size</span>++] = e;
+    <span class="keyword">return</span> <span class="keyword">true</span>;
+}
+
+@Override
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="built_in">add</span>(<span class="built_in">int</span> index, E element) {
+    rangeCheckForAdd(index);
+
+    ensureCapacityInternal(<span class="built_in">size</span> + <span class="number">1</span>);
+    <span class="comment">//将数组缓冲区中，index及之后的结点后移</span>
+    System.arraycopy(elementData, index, elementData, index + <span class="number">1</span>,
+            <span class="built_in">size</span> - index);
+    elementData[index] = element;
+    <span class="built_in">size</span>++;
+}
+
+@Override
+<span class="keyword">public</span> <span class="built_in">boolean</span> addAll(Collection&lt;? extends E&gt; c) {
+    <span class="comment">//获取集合中的元素数组，这样做的好处在于可以自由操作这些元素，而不用影响集合c</span>
+    <span class="keyword">Object</span>[] a = c.toArray();
+    <span class="built_in">int</span> numNew = a.length;
+    ensureCapacityInternal(<span class="built_in">size</span> + numNew); <span class="comment">//增加modCount</span>
+    System.arraycopy(a, <span class="number">0</span>, elementData, <span class="built_in">size</span>, numNew);
+    <span class="built_in">size</span> += numNew;
+    <span class="keyword">return</span> <span class="keyword">true</span>;
+}
+
+@Override
+<span class="keyword">public</span> <span class="built_in">boolean</span> addAll(<span class="built_in">int</span> index, Collection&lt;? extends E&gt; c) {
+    rangeCheckForAdd(index);
+
+    <span class="keyword">Object</span>[] a = c.toArray();
+    <span class="built_in">int</span> numNew = a.length;
+    ensureCapacityInternal(<span class="built_in">size</span> + numNew); <span class="comment">//增加modCount</span>
+
+    <span class="comment">//如果是在尾部插入就不需要移动了</span>
+    <span class="built_in">int</span> numMoved = <span class="built_in">size</span> - index;
+    <span class="keyword">if</span>(numMoved &gt; <span class="number">0</span>)
+        System.arraycopy(elementData, index, elementData, index + numNew,
+                numMoved);
+
+    System.arraycopy(a, <span class="number">0</span>, elementData, index, numNew);
+    <span class="built_in">size</span> += numNew;
+    <span class="keyword">return</span> <span class="keyword">true</span>;
+}
+
+<span class="comment">//各种删除的实现</span>
+@Override
+<span class="keyword">public</span> E remove(<span class="built_in">int</span> index) {
+    rangeCheck(index);
+
+    modCount++; <span class="comment">//fail-fast</span>
+    E oldValue = elementData(index);
+
+    <span class="built_in">int</span> numMoved = <span class="built_in">size</span> - index - <span class="number">1</span>;
+    <span class="keyword">if</span>(numMoved &gt; <span class="number">0</span>)
+        System.arraycopy(elementData, index + <span class="number">1</span>, elementData, index,
+                numMoved);
+    elementData[--<span class="built_in">size</span>] = <span class="keyword">null</span>; <span class="comment">//防止内存泄漏</span>
+
+    <span class="keyword">return</span> oldValue;
+}
+
+@Override
+<span class="keyword">public</span> <span class="built_in">boolean</span> remove(<span class="keyword">Object</span> o) {
+    <span class="keyword">if</span> (o == <span class="keyword">null</span>) {
+        <span class="keyword">for</span> (<span class="built_in">int</span> index = <span class="number">0</span>; index &lt; <span class="built_in">size</span>; index++)
+            <span class="keyword">if</span> (elementData[index] == <span class="keyword">null</span>) {
+                fastRemove(index);
+                <span class="keyword">return</span> <span class="keyword">true</span>;
+            }
+    } <span class="keyword">else</span> {
+        <span class="keyword">for</span> (<span class="built_in">int</span> index = <span class="number">0</span>; index &lt; <span class="built_in">size</span>; index++)
+            <span class="keyword">if</span> (o.equals(elementData[index])) {
+                fastRemove(index);
+                <span class="keyword">return</span> <span class="keyword">true</span>;
+            }
+    }
+    <span class="keyword">return</span> <span class="keyword">false</span>;
+}
+
+<span class="comment">//保留差集</span>
+@Override
+<span class="keyword">public</span> <span class="built_in">boolean</span> removeAll(Collection&lt;?&gt; c) {
+    Objects.nonNull(c);
+    <span class="keyword">return</span> batchRemove(c, <span class="keyword">false</span>);
+}
+
+<span class="comment">//保留交集</span>
+@Override
+<span class="keyword">public</span> <span class="built_in">boolean</span> retainAll(Collection&lt;?&gt; c) {
+    Objects.nonNull(c);
+    <span class="keyword">return</span> batchRemove(c, <span class="keyword">true</span>);
+}
+
+<span class="comment">//置空防止内存泄漏</span>
+@Override
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="built_in">clear</span>() {
+    modCount++;
+
+    <span class="keyword">for</span>(<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; <span class="built_in">size</span>; i++)
+        elementData[i] = <span class="keyword">null</span>;
+
+    <span class="built_in">size</span> = <span class="number">0</span>;
+}
+
+<span class="comment">//正向查找，返回元素第一次出现的索引值</span>
+@Override
+<span class="keyword">public</span> <span class="built_in">int</span> indexOf(<span class="keyword">Object</span> o) {
+    <span class="keyword">if</span>(o == <span class="keyword">null</span>) {
+        <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; <span class="built_in">size</span>; i++)
+            <span class="keyword">if</span> (elementData[i] == <span class="keyword">null</span>)
+                <span class="keyword">return</span> i;
+    } <span class="keyword">else</span> {
+        <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; <span class="built_in">size</span>; i++)
+            <span class="keyword">if</span> (o.equals(elementData[i]))
+                <span class="keyword">return</span> i;
+    }
+    <span class="keyword">return</span> -<span class="number">1</span>;
+}
+
+<span class="comment">//反向查找，返回元素最后一次出现的索引值</span>
+@Override
+<span class="keyword">public</span> <span class="built_in">int</span> lastIndexOf(<span class="keyword">Object</span> o) {
+    <span class="keyword">if</span>(o == <span class="keyword">null</span>) {
+        <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="built_in">size</span> - <span class="number">1</span>; i &gt;= <span class="number">0</span>; --i)
+            <span class="keyword">if</span>(elementData[i] == <span class="keyword">null</span>)
+                <span class="keyword">return</span> i;
+    } <span class="keyword">else</span> {
+        <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="built_in">size</span> - <span class="number">1</span>; i &gt;= <span class="number">0</span>; --i)
+            <span class="keyword">if</span> (o.equals(elementData[i]))
+                <span class="keyword">return</span> i;
+    }
+    <span class="keyword">return</span> -<span class="number">1</span>;
+}
+
+@Override
+<span class="keyword">public</span> <span class="built_in">boolean</span> contains(<span class="keyword">Object</span> o) {
+    <span class="keyword">return</span> indexOf(o) &gt;= <span class="number">0</span>;
+}
+
+<span class="comment">//对数组进行排序</span>
+@Override
+@SuppressWarnings(<span class="string">"unchecked"</span>)
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="built_in">sort</span>(Comparator&lt;? <span class="keyword">super</span> E&gt; c) {
+    <span class="keyword">final</span> <span class="built_in">int</span> expectedModCount = modCount;
+    Arrays.<span class="built_in">sort</span>((E[]) elementData, <span class="number">0</span>, <span class="built_in">size</span>, c);
+    <span class="keyword">if</span> (modCount != expectedModCount) {
+        <span class="keyword">throw</span> <span class="keyword">new</span> ConcurrentModificationException();
+    }
+    modCount++;
+}
+
+
+<span class="comment">//保护性拷贝</span>
+@Override
+<span class="keyword">public</span> <span class="keyword">Object</span>[] toArray() {
+    <span class="keyword">return</span> Arrays.copyOf(elementData, <span class="built_in">size</span>);
+}
+
+@SuppressWarnings(<span class="string">"unchecked"</span>)
+@Override
+<span class="keyword">public</span> &lt;T&gt; T[] toArray(T[] a) {
+    <span class="keyword">if</span>(a.length &lt; <span class="built_in">size</span>)
+        <span class="comment">//必须创建一个与参数类型相同的数组</span>
+        <span class="keyword">return</span> (T[])Arrays.copyOf(elementData, <span class="built_in">size</span>, a.getClass());
+    System.arraycopy(elementData, <span class="number">0</span>, a, <span class="number">0</span>, <span class="built_in">size</span>);
+    <span class="keyword">if</span> (a.length &gt; <span class="built_in">size</span>)
+        a[<span class="built_in">size</span>] = <span class="keyword">null</span>; <span class="comment">//用来帮助调用者确定集合长度（只有在明确知道集合中没有null元素时才有用）</span>
+    <span class="keyword">return</span> a;
+} 
+</code></pre>
+      
+    </div>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2015/12/11/Java-8集合源码学习——ArrayList/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Java 8集合源码学习——ArrayList</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<div class="share">
+	<!-- JiaThis Button BEGIN -->
+	<div class="jiathis_style">
+		<span class="jiathis_txt">分享到：</span>
+		<a class="jiathis_button_tsina"></a>
+		<a class="jiathis_button_cqq"></a>
+		<a class="jiathis_button_douban"></a>
+		<a class="jiathis_button_weixin"></a>
+		<a class="jiathis_button_tumblr"></a>
+		<a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jtico jtico_jiathis" target="_blank"></a>
+	</div>
+	<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=1405949716054953" charset="utf-8"></script>
+	<!-- JiaThis Button END -->
+</div>
+
+
+
+<div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="Java 8集合源码学习——ArrayList" data-title="Java 8集合源码学习——ArrayList" data-url="http://blog.ssearch.cn/2015/12/11/Java 8集合源码学习——ArrayList/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"true"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+
+
+</div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info">
+    	<div class="footer-left">
+    		&copy; 2015 Zerohuan
+    	</div>
+      	<div class="footer-right">
+      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
+      	</div>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+
+<script>
+	var yiliaConfig = {
+		fancybox: true,
+		mathjax: true,
+		animate: true,
+		isHome: false,
+		isPost: true,
+		isArchive: false,
+		isTag: false,
+		isCategory: false,
+		open_in_new: true
+	}
+</script>
+<script src="http://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js" type="text/javascript"></script>
+<script src="/js/main.js" type="text/javascript"></script>
+
+
+
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  </div>
+</body>
+</html>
