@@ -196,6 +196,330 @@
 </nav>
       <div class="body-wrap">
   
+    <article id="post-Java基础知识总结（九）——集合" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/07/Java基础知识总结（九）——集合/" class="article-date">
+  	<time datetime="2015-12-07T03:48:55.000Z" itemprop="datePublished">2015-12-07</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/07/Java基础知识总结（九）——集合/">Java基础知识总结（九）——集合</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-Java基础知识总结（八）——反射" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/07/Java基础知识总结（八）——反射/" class="article-date">
+  	<time datetime="2015-12-07T03:48:24.000Z" itemprop="datePublished">2015-12-07</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/07/Java基础知识总结（八）——反射/">Java基础知识总结（八）——反射</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>心得：每个对象都对应自己类的Class对象，这个Class对象是这个类的类新信息的对外入口，通过这个Class对象我们可以从方法区知道这个类有哪些域，构造器，方法，结合具体的对象可以获得域在运行时的值，还可以基于Method调用（查找方法表调用？）。反射的意义在于<strong>运行时</strong>的扩展能力。</p>
+<p>PS：<br>（1）在HotSpot（JDK 1.7）中Class对象是放在方法区中的。<br>（2）自己动手写一个工具输入类名，将类的完整信息输出出来，结合类图，整个结构就清晰了。</p>
+<h2 id="1-_获取Class对象">1. 获取Class对象</h2><p>Class对象是类型信息的<strong>入口</strong>。</p>
+<p>获取Class对象的三个方法：<br>（1）obj.getClass()；<br>（2）Object.class；<br>（3）Class.forName(String)；</p>
+<h2 id="2-_反射的主要功能">2. 反射的主要功能</h2><h3 id="2-1_获取类信息">2.1 获取类信息</h3><p><strong>三个大块</strong>：<br>（1）Field；<br>（2）Method；<br>（3）Constructor；</p>
+<p><strong>核心结构类图：</strong><br><img src="http://blog.zerohuan.com/images/reflect_structure.png" alt="reflect类图"><br>（1）Member：修饰符，名称，是否为编译器生成等；<br>（2）AccessibleObject：获取修改访问控制权限等；<br>（3）Executale：可执行的（Constructor，Method的抽象父类），类型参数，参数列表，异常列表，注解，是否为可变参数列表等；<br>（4）Method：返回类型，是否为默认方法（JDK1.8新方法），是否为桥方法，注解，调用（invoke）；<br>（5）Constructor：方法的大部分功能（没有getReturnType方法），创建新对象（newInstance）；<br>（6）Class：获取方法，域，构造器，实现接口，getXXXs获取包括父类公有方法，域，getDeclaredXXXs包括private，protected等，创建对象（newInstance）；</p>
+<h3 id="2-2_反射创建对象">2.2 反射创建对象</h3><p>（1）通过Class对象（默认构造器创建）：</p>
+<pre><code><span class="class"><span class="keyword">class</span>.<span class="title">newInstance</span>();</span>
+</code></pre><p>（2）通过构造器创建：</p>
+<pre><code><span class="keyword">try</span> {
+        Constructor&lt;A&gt; <span class="constructor"><span class="keyword">constructor</span> = aClass.getConstructor(int.class);
+        <span class="keyword">constructor</span>.newInstance(1);
+    } catch (NoSuchMethodException | InvocationTargetException e) </span>{
+        e.printStackTrace();
+    }
+</code></pre><p>（3）反射创建数组：<br>这时Arrays中的泛型方法，很经典，注意数组的反射创建方法在Array类中。</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">static</span> &lt;T,U&gt; T[] copyOf(U[] original, <span class="built_in">int</span> newLength, Class&lt;? extends T[]&gt; newType) {
+    @SuppressWarnings(<span class="string">"unchecked"</span>)
+    T[] <span class="built_in">copy</span> = ((<span class="keyword">Object</span>)newType == (<span class="keyword">Object</span>)<span class="keyword">Object</span>[].class)
+            ? (T[]) <span class="keyword">new</span> <span class="keyword">Object</span>[newLength]
+            : (T[]) <span class="keyword">Array</span>.newInstance(newType.getComponentType(), newLength);
+    System.arraycopy(original, <span class="number">0</span>, <span class="built_in">copy</span>, <span class="number">0</span>,
+            Math.<span class="built_in">min</span>(original.length, newLength));
+    <span class="keyword">return</span> <span class="built_in">copy</span>;
+}
+</code></pre><h3 id="2-3_分析对象">2.3 分析对象</h3><p>主要是Field.get(obj)，注意Accessible的修改和返回类型：</p>
+<pre><code><span class="keyword">try</span> {
+        A a = <span class="keyword">new</span> A();
+        Field intField = aClass.getField(<span class="string">"publicSuperField"</span>);
+        Field stringField = aClass.getDeclaredField(<span class="string">"privateStringField"</span>);
+        stringField.setAccessible(<span class="keyword">true</span>); <span class="comment">//读写私有域</span>
+        Integer intaa = (Integer)intField.<span class="literal">get</span>(a);<span class="comment">//返回值自动装箱成Integer</span>
+        <span class="built_in">int</span> inta = intField.getInt(a);
+        intField.<span class="literal">set</span>(a, <span class="number">1</span>);
+        <span class="built_in">String</span> intStr = (<span class="built_in">String</span>)stringField.<span class="literal">get</span>(a);
+        stringField.<span class="literal">set</span>(a, <span class="string">"123"</span>);
+    } <span class="keyword">catch</span> (NoSuchFieldException e) {
+        e.printStackTrace();
+    }
+</code></pre><h3 id="2-4_反射调用方法">2.4 反射调用方法</h3><p>（1）一样有访问权限的问题，注意修改；<br>（2）返回值同样是Object；<br>（3）很多人吐槽反射效率低，但我觉得还是要结合具体需求，如果反射可以便于开发，性能开销相比业务开销又微不足道，该使用就用。</p>
+<h4 id="反射调用异常：InvocationTargetException">反射调用异常：InvocationTargetException</h4><p>调用目标方法/构造器中发生异常会导致该异常，通过getTargetException获取实际的异常。</p>
+<h3 id="2-5_反射读取泛型信息">2.5 反射读取泛型信息</h3><p>泛型信息几个重要类：<br>Class类：具体类型：<br>TypeVariable接口：类型变量，形如<code>T extends Comparable&lt;? super T&gt;</code>；<br>WildcardType接口：通配符，形如<code>? super T</code>；<br>ParameterizedType接口：泛型类或泛型接口，形如；<br>GenericArrayType接口：泛型数组；</p>
+<p><img src="http://blog.zerohuan.com/images/generic_type_structure.png" alt="泛型类型类图"></p>
+<p>这也采用了面向接口的思想：<br>（1）获取方法参数类型，域类型，接口列表，方法返回类型，都有得到擦除之后和带有泛型信息两个版本的方法可以用（比如field.getGenericType()和field.getType()，parameter.getType()和parameter.getParameterizedType()）；<br>（2）返回的Type可能有不同的实现，比如返回方法的参数类型： <code>public static &lt;T&gt; void gMethod(T t, Object o1, Comparable&lt;? super T&gt; o2)</code>，第一个是TypeVariable，第二个是Class，第三个是ParameterizedType；</p>
+<h2 id="3-_判断对象类型">3. 判断对象类型</h2><h2 id="3-1_几种基本方法">3.1 几种基本方法</h2><p>（1）instanceof关键字：<code>objectref instanceof 类/接口名（的符号引用）</code>；<br>（2）isInstance方法：<code>claz.isInstance(obj)</code>；<br>（3）通过“==”比较Class对象是否是同一实例；</p>
+<p>前两个只要对象是类或接口的派生（或者直接是类的实例）或实现就返回<code>true</code>，对象引用为null时都返回<code>false</code>；</p>
+<h3 id="3-2_instanceof的实现原理">3.2 instanceof的实现原理</h3><p>（1）从编译说起：</p>
+<p>（2）运行时，指令在执行引擎中的行为：<br>instanceof指令和checkcast指令很相似，但是区别在于</p>
+<h2 id="4-_动态代理">4. 动态代理</h2><p>实现原理：反射+InvocationHandler+生成字节码；</p>
+<p>动态代理的意义在于<strong>在具体原始类和接口还未知的时候就可以定义代理类的代理行为</strong>。这就是<strong>动态</strong>的体现，相对于我们编写代理类时需要实现被代理类的接口。</p>
+<p>一个动态代理的构建和使用包括3个部分：<br><strong>（1）方法调度器（核心）</strong>：InvocationHandler，核心方法<code>public Object invoke(Object proxy, Method method, Object[] args) throws Throwable</code>，在编写时不要涉及将被代理的类型，当我们在调用；<br><strong>（2）一组接口</strong>：在具体使用时，传给Proxy.newProxyInstance(类加载器, 要实现的接口, 方法调度器)；<br><strong>（3）实际的代理类实例</strong>：</p>
+<pre><code><span class="keyword">Interface</span> proxy = (<span class="keyword">Interface</span>)Proxy.newProxyInstance(<span class="keyword">Interface</span>.<span class="keyword">class</span>.getClassLoader(),
+            <span class="keyword">new</span> <span class="keyword">Class</span>&lt;?&gt;[]{<span class="keyword">Interface</span>.<span class="keyword">class</span>}, <span class="keyword">new</span> InvocationHandlerT(itf));
+</code></pre><p>这个代理类（注意是类）是运行时创建的，设置<code>System.getProperties().put(&quot;sun.misc.ProxyGenerator.saveGeneratedFiles&quot;, &quot;true&quot;);</code>可以在磁盘上保存这个代理类的class文件：<br>（1）这个代理类实现我们传入的接口类型，只能传入接口的类型，因为生成的代理类继承了Proxy（包含一个InvocationHandler）。<br>（2）通过反射获得包括接口方法在类的必要方法，通过<code>super.h.invoke(this, m3, (Object[])null);</code>调用；</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> $Proxy0 <span class="keyword">extends</span> Proxy <span class="keyword">implements</span> <span class="keyword">Interface</span> {
+    <span class="keyword">private</span> <span class="keyword">static</span> Method m1;
+    <span class="keyword">private</span> <span class="keyword">static</span> Method m2;
+    <span class="keyword">private</span> <span class="keyword">static</span> Method m3;
+    <span class="keyword">private</span> <span class="keyword">static</span> Method m0;
+
+    <span class="keyword">public</span> $Proxy0(InvocationHandler var1) <span class="keyword">throws</span>  {
+        <span class="keyword">super</span>(var1);
+    }
+
+    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> f() <span class="keyword">throws</span>  {
+        <span class="keyword">try</span> {
+            <span class="keyword">super</span>.h.invoke(<span class="keyword">this</span>, m3, (Object[])<span class="keyword">null</span>);
+        } <span class="keyword">catch</span> (RuntimeException | Error var2) {
+            <span class="keyword">throw</span> var2;
+        } <span class="keyword">catch</span> (Throwable var3) {
+            <span class="keyword">throw</span> <span class="keyword">new</span> UndeclaredThrowableException(var3);
+        }
+    }
+    <span class="comment">//...省略toString，hashCode，equals方法</span>
+    <span class="keyword">static</span> {
+        <span class="keyword">try</span> {
+            m1 = <span class="keyword">Class</span>.forName(<span class="string">"java.lang.Object"</span>).getMethod(<span class="string">"equals"</span>, <span class="keyword">new</span> <span class="keyword">Class</span>[]{<span class="keyword">Class</span>.forName(<span class="string">"java.lang.Object"</span>)});
+            m2 = <span class="keyword">Class</span>.forName(<span class="string">"java.lang.Object"</span>).getMethod(<span class="string">"toString"</span>, <span class="keyword">new</span> <span class="keyword">Class</span>[<span class="number">0</span>]);
+            m3 = <span class="keyword">Class</span>.forName(<span class="string">"com.yjh.reflect.InvocationHandlerTest$Interface"</span>).getMethod(<span class="string">"f"</span>, <span class="keyword">new</span> <span class="keyword">Class</span>[<span class="number">0</span>]);
+            m0 = <span class="keyword">Class</span>.forName(<span class="string">"java.lang.Object"</span>).getMethod(<span class="string">"hashCode"</span>, <span class="keyword">new</span> <span class="keyword">Class</span>[<span class="number">0</span>]);
+        } <span class="keyword">catch</span> (NoSuchMethodException var2) {
+            <span class="keyword">throw</span> <span class="keyword">new</span> NoSuchMethodError(var2.getMessage());
+        } <span class="keyword">catch</span> (ClassNotFoundException var3) {
+            <span class="keyword">throw</span> <span class="keyword">new</span> NoClassDefFoundError(var3.getMessage());
+        }
+    }
+}
+</code></pre>
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-Java基础知识总结（七）——泛型" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/06/Java基础知识总结（七）——泛型/" class="article-date">
+  	<time datetime="2015-12-06T05:18:28.000Z" itemprop="datePublished">2015-12-06</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/06/Java基础知识总结（七）——泛型/">Java基础知识总结（七）——泛型</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>心得：<br>我觉得Java泛型的意义在于在我们使用父类引用操作子类时（擦除），让编译器和JVM来代替我们进行必要的类型检查和转换（checkcast指令，桥方法，signature这些都是编译器和JVM提供的额外帮助）。</p>
+<p>问题的关键在于签名实在调用者的方法表属性中的；而描述符是在自己类型信息中的。</p>
+<p>对象本身不知道自己的泛型参数具体是什么。</p>
+<h2 id="1-_泛型方法">1. 泛型方法</h2><p>泛型方法可以定义在泛型类或者普通类中。</p>
+<p>定义：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">T <span class="title">getT</span><span class="params">(T...t)</span> </span>{
+    <span class="keyword">return</span> t[<span class="number">0</span>];
+}
+</code></pre><p>泛型方法与编译器类型推断：<br>尤其和可变参数列表结合使用，对于编译器的类型判断稍有一些问题，方法<code>getT</code>有两个条件可以用来推断类型：<strong>返回值</strong>和<strong>参数类型</strong>；<br>比如：</p>
+<pre><code><span class="keyword">String </span><span class="keyword">str </span>= getT(<span class="string">"x"</span>, <span class="number">123</span>.<span class="number">0</span>, <span class="number">1</span>)<span class="comment">;</span>
+</code></pre><h4 id="因此需要了解以下事实：">因此需要了解以下事实：</h4><p>（1）传入泛型方法实参必须是对象，因此基本类型会自动装箱（这里是String，Double，Integer）；<br>（2）编译器会分析出所有参数的<strong>共同基类</strong>（这里是Comparable，Serializable，Object）；<br>（3）如果返回是void，传入不同类型的参数给可变参数列表方法不会有编译问题；如果返回类型为泛型参数（T），会根据使用的情况而定；<br>（4）如果使用了<code>&lt;String&gt;</code>限定：</p>
+<pre><code><span class="keyword">String</span> <span class="built_in">str</span> = GenericShow.&lt;<span class="keyword">String</span>&gt;getT(<span class="string">"xx"</span>, <span class="string">"123"</span>);
+</code></pre><p>那么参数的参数只能为String；<br>如果省略了限定，根据参数<strong>共同基类</strong>和<strong>变量类型</strong>决定，如果变量类型属于共同基类则编译没有问题，否则将会抛出异常；</p>
+<p>综合来看，编译器是在检查所有<code>&lt;T&gt;</code>的实现能否找到一个合理的类型统一解释。</p>
+<p>PS：实际使用的时候显然应该避免这么复杂的情况，设计合理的类型和方法才是正道。</p>
+<h2 id="2-_类型变量的限定与“擦除”">2. 类型变量的限定与“擦除”</h2><p>Java的泛型在编译时使用了“擦除”，被替换成限定类型；</p>
+<h4 id="（1）对于&lt;T&gt;的方法，描述符是：">（1）对于<code>&lt;T&gt;</code>的方法，描述符是：</h4><pre><code><span class="string">descriptor:</span> ([Ljava<span class="regexp">/lang/</span>Object;)Ljava<span class="regexp">/lang/</span>Object;
+</code></pre><p>因此，我们使用T类型的变量时只能直接使用Object拥有的方法/属性，实际上<code>&lt;T&gt;</code>是<code>&lt;T extends Object&gt;</code>；</p>
+<h4 id="（2）多个限定：Object类是所有类型的超类，可以通过限定符来“缩小范围”：">（2）多个限定：Object类是所有类型的超类，可以通过限定符来“缩小范围”：</h4><p>（1）<code>&lt;T extends Comparable&gt;</code>；<br>（2）<code>&lt;T extends Comparable &amp;&amp; Seriablizable &amp;&amp; List&gt;</code>；<br>（3）限定中如果有类，只能有一个且必须是第一个；<br>它们的描述符是：</p>
+<pre><code><span class="string">descriptor:</span> (Ljava<span class="regexp">/lang/</span>Comparable;)V
+</code></pre><p>因此可以使用Comparable的方法；</p>
+<h4 id="擦除与替换类型">擦除与替换类型</h4><p>将会使用第一个限定类型进行替换，因此在调用其他限定类型的方法时，需要先进行checkcast指令的检查和转型（虽然在编译和加载时会根据signature进行检查，这一步还是需要的，这是语言设计上的问题）；<br>在调用者方法中这种强制类型转换在方法返回值，域访问赋值中（如果擦除替换的类型和实际泛型参数类型不匹配）都会出现；</p>
+<h2 id="3-_桥方法，泛型和多态">3. 桥方法，泛型和多态</h2><pre><code><span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Pair</span>&lt;<span class="title">T</span>&gt; </span>{
+    <span class="keyword">private</span> T first;
+    <span class="keyword">private</span> T second;
+    <span class="function"><span class="keyword">public</span> T <span class="title">getFirst</span><span class="params">()</span> </span>{<span class="keyword">return</span> first;}
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setFirst</span><span class="params">(T first)</span> </span>{<span class="keyword">this</span>.first = first;}
+    <span class="function"><span class="keyword">public</span> T <span class="title">getSecond</span><span class="params">()</span> </span>{<span class="keyword">return</span> second;}
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setSecond</span><span class="params">(T second)</span> </span>{<span class="keyword">this</span>.second = second;}
+}
+
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">DateInterval</span> <span class="keyword">extends</span> <span class="title">Pair</span>&lt;<span class="title">Date</span>&gt; </span>{
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setSecond</span><span class="params">(Date second)</span> </span>{
+    }
+}
+</code></pre><p>Pair类在擦除之后，实际上是基于Object的；<br>在子类DateInterval覆盖了setSecond使用的Date，如果是多态也就是使用Pair引用DateInterval调用实例方法setSecond方法（invokevirtual指令）也是查找setSecond(Object)的实现，因此这里需要一个桥方法：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">void</span> setSecond(java.lang.<span class="keyword">Object</span>);
+    descriptor: (Ljava/lang/<span class="keyword">Object</span>;)V
+</code></pre><p>实际上在桥方法中调用的是setSecond((Date)obj);</p>
+<p><strong>PS：协变返回类型也是需要桥方法，因此对于虚拟机来说返回值也是区别方法的一个重要特征</strong>；</p>
+<h2 id="4-_约束与局限性">4. 约束与局限性</h2><p>Java的泛型是基于擦除的，故而不能向C++的模板一样灵活，擦除之后类型参数在<strong>描述符中没有</strong>了，对于数组，instanceof，getClass来说它们不能识别原有的类型参数的区别，因此如果允许数组，instanceof等结合泛型使用，不能保证正确的类型，导致ClassCastException的风险大大增加，而泛型的意义在于可以自动进行类型的检查和转换（基于signature的），因此编译器禁止了这些做法。<br>（1）不能用基本类型实例化类型参数；<br>（2）运行时类型检查只适用于原始类型（instanceof，getClass，不管泛型参数如何它们都基于同一个Class对象）；<br>（3）不能创建参数化类型的数组（使用<code>ArraList&lt;Pair&lt;String&gt;&gt;</code>）：<br>数组类型没有能力（因为擦除）检查写入泛型类型对象的类型是否与签名（类型参数）一致，因此这样的写法<code>List&lt;Stirng&gt; lsa = new ArrayList&lt;String&gt;[10];</code>使得<code>new ArrayList&lt;String&gt;</code>的定义毫无意义，违反这句代码的本意；</p>
+<pre><code><span class="comment">//为什么不可以</span>
+<span class="built_in">List</span>&lt;Stirng&gt; lsa = <span class="keyword">new</span> ArrayList&lt;<span class="built_in">String</span>&gt;[<span class="number">10</span>]; <span class="comment">//假设可以</span>
+<span class="built_in">Object</span>[] oa = (<span class="built_in">Object</span>[])lsa;
+<span class="built_in">List</span>&lt;Integer&gt; li = <span class="keyword">new</span> ArrayLIst&lt;Integer&gt;();
+li.add(<span class="keyword">new</span> Integer(<span class="number">3</span>));
+oa[<span class="number">1</span>] = li; <span class="comment">//可以通过</span>
+<span class="built_in">String</span> s = lsa[<span class="number">1</span>].<span class="literal">get</span>(<span class="number">0</span>); <span class="comment">//ClassCastException</span>
+
+<span class="comment">//这两种是可以的，因为你你这样写编译器认为你</span>
+<span class="comment">//主动放弃了编译器和JVM提供的类型检查和转换，或者说，你本来就希望放入O比较恶臭它</span>
+<span class="literal">static</span> <span class="built_in">List</span>&lt;<span class="built_in">String</span>&gt;[] ls = <span class="keyword">new</span> ArrayList[<span class="number">10</span>];
+<span class="literal">static</span> <span class="built_in">List</span>&lt;?&gt;[] ls1 = <span class="keyword">new</span> ArrayList&lt;?&gt;[<span class="number">10</span>];
+</code></pre><p>（4）带泛型参数的类和可变参数列表，可变参数列表本质是数组实现的，这里是可行的，使用@SafeVarargs可以消除警告，但这样做，数组只会检查擦除之后的类型，因此实际使用有ClassCastException的风险；<br>（5）不能实例化类型变量（要想结合泛型创建实例或者数组只能通过反射创建）；<br>（6）泛型类的静态上下文中类型变量无效；<br>（7）不能抛出或捕获泛型类的实例：<br><code>class Problem&lt;T&gt; extends Throwable</code>和<code>catch(T e)</code>是不允许的，因为异常表需要具体的类型描述；<br><code>throw T</code>是允许的，擦除之后实际上声明的是        </p>
+<pre><code>Exceptions:
+  throws java<span class="class">.lang</span><span class="class">.Throwable</span>
+</code></pre><p>利用<code>throw T</code>可以消除对checked异常的检查：</p>
+<pre><code>  <span class="keyword">public</span> <span class="keyword">static</span> <span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
+    GenericLimit.&lt;RuntimeException&gt;doWork();
+}
+</code></pre><p>通过这个方法我们可以在实现类似Runnable接口run方法没有异常声明的接口方法中，以RuntimeException的方式抛出，不过我还是觉得这个没什么意义，通过<code>throw new RuntimeException(t);</code>的形式一样可以，或者使用Callable来代替Runnable；<br>（8）擦除后的冲突：</p>
+<pre><code>public boolean equals(T t) <span class="decorator">{...}</span>
+</code></pre><p>这样的方法在擦除后会和equals(Object)冲突；</p>
+<p>不同同时实现/继承两个带有不同类型参数的同一类型接口，比如</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">abstract</span> static <span class="class"><span class="keyword">class</span> <span class="title">P</span> <span class="title">implements</span> <span class="title">Comparable&lt;String&gt;</span> {</span>
+}
+<span class="keyword">private</span> static <span class="class"><span class="keyword">class</span> <span class="title">PA</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">P</span> <span class="title">implements</span> <span class="title">Comparable&lt;Integer&gt;</span></span>
+</code></pre><p>因为继承/实现带有类型参数的类/接口，会生成对应的桥方法，如果同时实现带不同类型惨数的两个同类型接口，必须要生成各自的桥方法，而桥方法的方法签名是完全相同的（包括返回值类型）；</p>
+<h2 id="5-_泛型类型的继承规则">5. 泛型类型的继承规则</h2><p>数组和泛型的区别：<br>（1）数组对象的描述符中是带有原始类型是啥的，因此它可以检查赋值的类型是否正确（错误抛出ArrayStoreException），同时数组SubClass[]和SuperClass[]是有继承关系的；<br>（2）<code>Pair&lt;SuperClass&gt;</code>和<code>Pair&lt;SubClass&gt;</code>之间没有关系，<strong>它们类型检查和变量的签名有关</strong>，实际上在堆中这两个类型的实例对象数据并没有什么性质上的差别，它们也同样基于同一个Class对象，因此它们是平行的，因此编译器会禁止不同类型参数的变量之间的赋值（因为泛型的本意就是让编译器和JVM来保证类型的检查和转换），它认为这种行为破坏了泛型的本意；<br>（3）<code>Pair p = new Pair&lt;SubClass&gt;();</code>是合法的，这意味着你放弃了编译器为你提供的额外帮助；<br>（4）真正具有继承关系的是形如：</p>
+<pre><code><span class="built_in">List</span>&lt;<span class="built_in">String</span>&gt; s = <span class="keyword">new</span> ArrayList&lt;<span class="built_in">String</span>&gt;();
+</code></pre><p>心得：问题的关键在于签名实在调用者的方法表属性中的；而描述符是在自己类型信息中的；</p>
+<h2 id="6-_通配符类型：">6. 通配符类型：</h2><p>我觉得通配符的运用可以参考离散数学中的集合，根据限定和extends（+），super（-）来确定范围；<br>范围大小（== 表示平行关系）：</p>
+<pre><code>Pair &gt; Pair<span class="variable">&lt;?&gt;</span> &gt; Pair<span class="variable">&lt;? super SubClass&gt;</span> &gt; Pair<span class="variable">&lt;SubClass&gt;</span> == Pair<span class="variable">&lt;Object&gt;</span> == Pair<span class="variable">&lt;SuperClass&gt;</span>
+Pair &gt; Pair<span class="variable">&lt;?&gt;</span> &gt; Pair<span class="variable">&lt;? extends SuperClass&gt;</span> &gt; Pair<span class="variable">&lt;SuperClass&gt;</span> == Pair<span class="variable">&lt;SubClass&gt;</span>
+</code></pre><p>（1）<code>&lt;? extends SuperClass&gt;</code>：包含SuperClass自身，对应的签名是<code>Lcom/yjh/generic/GenericAndWildcard$Pair&lt;+Lcom/yjh/generic/GenericAndWildcard$SuperClass;&gt;;</code>，带有子类限定的通配符可以用于从泛型对象中读取；<br>（2）<code>&lt;? super SubClass&gt;</code>：包含SubClass自身，对应的签名是<code>Lcom/yjh/generic/GenericAndWildcard$Pair&lt;-Lcom/yjh/generic/GenericAndWildcard$SubClass;&gt;;</code>，带有超类限定的通配符可以用于向泛型对象中写入；<br>一个典型的super关键字用法：</p>
+<pre><code><span class="keyword">static</span> &lt;T extends <span class="type">Comparable</span>&lt;? super T&gt;&gt; T min(T[] ts) <span class="decorator">{...}</span>
+</code></pre><p>（3）无限定通配符：签名<code>Lcom/yjh/generic/GenericAndWildcard$Pair&lt;*&gt;;</code>；<br>（4）如果方法内需要使用泛型参数声明变量，使用泛型方法要比<code>void swap(Pair&lt;?&gt; pair)</code>要方便；<br>（5）通配符捕获，只有在编译器能够确信通配符表达的是<strong>单个、确定</strong>的类型时才可以。<code>ArrayList&lt;Pair&lt;T&gt;&gt;</code>不能捕获<code>ArrayList&lt;Pair&lt;?&gt;&gt;</code>中的通配符；</p>
+<h2 id="附：C++中template和Java的泛型">附：C++中template和Java的泛型</h2><p>Java的泛型似乎是一种模拟的方式，本质还是基于向上转型（子类的引用可以赋值给父类引用）；</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
     <article id="post-TCP-IP总结（一）——基本概念" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
@@ -847,6 +1171,131 @@
 
 
   
+    <article id="post-Java基础知识总结（五）——安全" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/02/Java基础知识总结（五）——安全/" class="article-date">
+  	<time datetime="2015-12-02T05:19:32.000Z" itemprop="datePublished">2015-12-02</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/02/Java基础知识总结（五）——安全/">Java基础知识总结（五）——安全</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h5 id="小结：">小结：</h5><p>一直说Java安全性比较好，系统的整理了下有关的Java的安全的三个方面：语言特性，安全管理器（保护域），签名和加密算法的应用。</p>
+<h1 id="1-_概括">1. 概括</h1><p>Java语言的安全由三个方面共同进行保证：</p>
+<h3 id="（1）语言特性：">（1）语言特性：</h3><p>类，域，方法的访问控制；<br>运行时的检查：指针操作的封装，数组的越界检查，类型转换的检查；<br>编译时检查：字节码加载，比如语义分析时会对变量是否初始化，运算符两边的类型是否匹配等等；<br>类加载：双亲委托加载模型/线程上下文类加载器，验证（文件格式验证，元数据验证，字节码验证（是否初始化，类型是否匹配等），符号验证（访问权限））；</p>
+<p><strong>类加载器的安全性在于</strong>：<br>（1）双亲委托的模型中核心类，扩展类，应用类有各自层次的类加载器；<br>（2）Java中每个类型有全限定名和类加载实例两者决定，每个类加载器实例提供一个类型的命名空间；<br>（3）类加载器会检查不能由非BootStrap类加载器加载JDK核心类；<br>（4）验证环节；</p>
+<h3 id="（2）访问控制：安全管理器">（2）访问控制：安全管理器</h3><h3 id="（3）代码签名，加密算法验证创建者；">（3）代码签名，加密算法验证创建者；</h3><h1 id="2-_安全管理器">2. 安全管理器</h1><p>Java平台安全性的演进：<br>（1）JDK1.0：本地代码具有所有的权限，远程代码在沙盒中运行，只能打印到屏幕和与用户交互；<br>（2）JDK1.1：远程代码带有可信赖的签名，具有与本地代码资源的所有权限；<br>（3）JDK2.0：基于<strong>保护域</strong>的安全体系，保护域包括<strong>代码来源</strong>和<strong>权限集合</strong>的映射，SecurityManager检查<strong>调用堆栈上所有方法的类</strong>的保护域，其权限集合是否允许执行当前的操作,如果所有域都通过检查则通过，否则抛出SecurityException异常；</p>
+<h2 id="2-1_重要的类和方法（体系结构）：">2.1 重要的类和方法（体系结构）：</h2><p>（1）SecurityManager：checkPermission等验证方法，抛出SecurityException；<br>（2）java.Security.ProtectionDomain：保护域，包含代码来源（CodeSource）和权限集合（PermissionCollection）；<br>（3）Class：getProtectionDomain获取该类的保护域；<br>（4）java.Security.CodeSource：代码来源，包含代码位置和相关联的证书链（用于类文件签名）；<br>（5）Permission：包含implies方法（条件间的依赖关系），通过name属性是关键，equals和hashcode主要由它决定，和Principal一样可以自定义；</p>
+<p>安全策略文件：<br>位置：<br>（1）Java平台主目录（java.policy文件）；<br>（2）用户主目录（.java.policy）；<br>（3）通过jvm参数指定，<br>（4）System.setProperty(“java.security.plicy”,)设置；</p>
+<h2 id="2-2_用户认证（JAAS_API规范）：">2.2 用户认证（JAAS API规范）：</h2><p>（1）通过LoginContext登录，可以传入CallbackHandler（handler中可以携带一些登录信息），使用在config文件中定义的LoginModule（也可以自定义）将callbackHandler中的登录信息传递到回调对象，从而获得登录信息；<br>（2）根据用户信息库（可以是目录文件，数据库等等）。通过验证后可以获得一个Subject；<br>（3）LoginModule会给这个用Subject添加一些Principal（特征），通过Subject.doAsPrivileged（一个新的上下文，与登录环境权限分离）中执行受检查的action；<br>（4）如果policy中subject带有的principal有对应权限的话这可以执行，否则抛出AccessControlException；</p>
+<p>LoginModule是检查登录权限的关键，向它传入CallbackHandler（登录信息），Subject（认证对象），options（config中对应的键值对信息），sharedState（登录模块间通信）；</p>
+<h1 id="3-_数字签名">3. 数字签名</h1><h2 id="3-1_消息摘要">3.1 消息摘要</h2><p>消息摘要（message digest）：是数据块的数字指纹。<br>基本属性：<br>（1）如果数据的1位或几位改变了，那么消息摘要也将要改变。<br>（2）拥有给定消息的伪造者不能创建与原消息具有相同的假消息；</p>
+<p>Java中的MessageDigest和Charset的体系很像，作为消息摘要算法子类的超类的同时也是工厂类；</p>
+<p>消息摘要意义在于检查文件（消息）是否被修改过，这就要求消息摘要和消息分开传递，否则一同截获再被修改（很容易）就无法起作用了。比如，保存文件是常常可以通过MD5验证的方式检查文件是否是同一文件。</p>
+<h2 id="3-2_消息签名">3.2 消息签名</h2><p>由于消息摘要的局限性，在需要认证用户身份的时候就需要数字签名同时能够校验消息有无被修改，中途被篡改。</p>
+<p>数字签名算法（DSA）；</p>
+<h3 id="重要概念：">重要概念：</h3><p>（1）公共密钥：可以公开，数字签名中，对方通过公共密钥校验消息的来源可信性（原始信息未修改，验证对方身份）；在非对称加密算法中，可以用来加密给对方的消息；<br>（2）私有密钥：非公开，在数字签名中，可以用生成签名；在非对加密中，可以通过私有密钥解密对方发来的加密消息；<br>（3）公共密钥和私有密钥的设计在于通过一个密钥推算出另一个密钥是实际不可性的，在数字签名中，私有密钥相当于个人的凭证。</p>
+<h3 id="数字签名原理：">数字签名原理：</h3><p>（1）发送方，生成自己的密钥库，包含私有密钥和公有密钥，将公有密钥包含导出成证书将这个证书发送给接受方；<br>（2）接收方，验证证书的真实性，接受到带有签名的消息后，利用证书验证<strong>是否为发送方的签名</strong>和<strong>消息有无被修改</strong>；</p>
+<h3 id="基于第三方认证机构的认证">基于第三方认证机构的认证</h3><p>我觉得这种模式类似于中介者设计模式/迪米特法则，类似的还有集群架构中中心式的拓扑结构，将多对多的联系变成一对多，复杂性集中在中介者身上，将认证的步骤分离出来。<br>（1）第三方将自己的<strong>根证书（公有密钥）</strong>导出，可以利用pem格式（隐私增强型邮件格式）；<br>（2）用户将<strong>根证书</strong>导入密钥库中，这时用户的密钥库能够信任这个第三方平台发来的信息；<br>（3）将发送方的证书同样导出成pem格式，基于openssl和第三方的CA对该证书签名生成pem，这是第三方平台对发送方的认证；<br>（4）将这个带有第三方签名的证书由接收方导入密钥库（因为已有了第三方的证书），最后接收方就拥有了发送方的证书；</p>
+<h3 id="keytool，jarsign：JDK数字证书，签名生成工具">keytool，jarsign：JDK数字证书，签名生成工具</h3><p>生成密钥库：keytool -genkeypair -keystore xxx.certs -alias xxx；<br>导出证书：keytool -exportcert -keystore xxx.certs -alias acmeroot -file acmeroot.cer；<br>导入证书到密钥库：keytool -importcert -keystore xxx.certs -alias yyy -file yyy.cer（yyy发送方别名）；<br>打印证书：keytool -printcert -file xxx.cer；<br>列出密钥库证书：keytool -list -v -keystore xxx</p>
+<p>使用证书签名jar：jarsigner -keystore xxx.certs document.jar xxx<br>验证jar签名：jarsigner -verify -keystore xxx.certs document.jar</p>
+<h2 id="4-_加密：">4. 加密：</h2><p>消息签名可以认证代码的来源，并且校验是否被修改，但是消息本身是可见的，对于重要的信息需要加密。</p>
+<p>Cipher类：与Charset和MessageDigest一样，超类+工厂类。</p>
+<h3 id="4-1_加密算法：">4.1 加密算法：</h3><p>对称密码：DES（穷举法可破解），AES等；<br>非对称密码：RSA等</p>
+<h4 id="非对称加密算法的应用方式">非对称加密算法的应用方式</h4><p><strong>公有密钥算法比对称密钥算法慢的多</strong>，因此不能用来加密大量的信息。使用对称密钥算法加密正文，公有密钥加密对称密钥是一种可行的方式。<br>（1）发送方生成对称密钥，对明文进行加密，并使用接收方的公有密钥对对称密钥进行加密；<br>（2）将加密后的明文和对称密钥一同发送给接收方；<br>（3）接收方使用自己的私有密钥将对称密钥解密，再用对称密钥解密得到明文；</p>
+<p>使用公有密钥算法的方式和下面对称加密算法的方式类似：主要要使用WARP_MODE和UNWARP_MODE对对称加密的<code>key</code>进行加解密。</p>
+<h4 id="生成密钥">生成密钥</h4><p>生成密钥可以用<strong>SecureRandom</strong>或者<strong>随机序列（随机敲键盘）</strong>的得到随机种子。密钥可以用序列化的方式输出到磁盘等地方保存。<br>方式一：</p>
+<pre><code><span class="constant">KeyGenerator keyGenerator</span> = KeyGenerator.getInstance(<span class="string">"AES"</span>);
+<span class="comment">//"真正的随机数"，加密的随机数，需要额外性能</span>
+<span class="comment">//Random以日期和时间为种子并不安全</span>
+<span class="constant">SecureRandom secureRandom</span> = new SecureRandom();
+keyGenerator.init(secureRandom);
+<span class="constant">Key key</span> = keyGenerator.generateKey();
+</code></pre><p>方式二：</p>
+<pre><code><span class="built_in">byte</span>[] seq = <span class="string">"sdlkfjiuqoenrgiuerds,msfd"</span>.getBytes();
+SecretKey <span class="variable">key</span> = <span class="keyword">new</span> SecretKeySpec(seq, <span class="string">"AES"</span>);
+</code></pre><h4 id="加密">加密</h4><p>选择加密算法：</p>
+<pre><code>Cipher aes = Cipher.getInstance(<span class="string">"AES"</span>);
+<span class="comment">/* 
+    模式有4种：
+    ENCRYPT_MODE
+    DECRYPT_MODE
+    UNWARP_MODE
+    WARP_MODE
+*/</span>
+<span class="built_in">int</span> mode = Cipher.ENCRYPT_MODE;
+aes.init(mode, <span class="variable">key</span>);
+</code></pre><p>将输入流中的数据加密写入输出流。注意如果数据不能以blockSize对齐，应该使用doFinal写入深入部分，该方法可以补齐。</p>
+<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">crypt</span>(<span class="params">InputStream <span class="keyword">in</span>, OutputStream <span class="keyword">out</span>, Cipher cipher</span>) throws IOException, GeneralSecurityException </span>{
+        <span class="keyword">int</span> blockSize = cipher.getBlockSize();
+        <span class="keyword">int</span> outputSize = cipher.getOutputSize(blockSize);
+        <span class="keyword">byte</span>[] inBytes = <span class="keyword">new</span> <span class="keyword">byte</span>[blockSize];
+        <span class="keyword">byte</span>[] outBytes = <span class="keyword">new</span> <span class="keyword">byte</span>[outputSize];
+
+        boolean more = <span class="keyword">true</span>;
+        <span class="keyword">int</span> inLen = <span class="number">0</span>;
+        <span class="keyword">while</span>(more) {
+            inLen = <span class="keyword">in</span>.read(inBytes);
+            <span class="keyword">if</span>(inLen == blockSize) {
+                <span class="keyword">int</span> outputLen = cipher.update(inBytes, <span class="number">0</span>, blockSize, outBytes);
+                <span class="keyword">out</span>.write(outBytes, <span class="number">0</span>, outputLen);
+            } <span class="keyword">else</span> {
+                more = <span class="keyword">false</span>;
+            }
+        }
+        <span class="keyword">if</span>(inLen &gt; <span class="number">0</span>) outBytes = cipher.doFinal(inBytes, <span class="number">0</span>, inLen);
+        <span class="keyword">else</span> outBytes = cipher.doFinal();
+        <span class="keyword">out</span>.write(outBytes);
+        <span class="keyword">out</span>.flush();
+    }
+</code></pre><h4 id="密码流">密码流</h4><p>使用CiperInputStream和CiperOutputStream可以屏蔽<code>update</code>和<code>doFinal</code>等细节；</p>
+<hr>
+<h3 id="附：policy，config语法小记：">附：policy，config语法小记：</h3><p>grant：codeBase，principal，signedBy（加alias）；<br>Login1 {LoginModule}：登录上下文定义；</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
     <article id="post-Java基础知识总结（四）——异常与异常处理表" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
@@ -1024,131 +1473,6 @@ throws java<span class="class">.io</span><span class="class">.IOException</span>
 <h2 id="4-_异常使用技巧">4. 异常使用技巧</h2><p>（1）不能用异常处理代替逻辑判断，因为异常处理的性能开销较大；<br>（2）不要过分细化异常及处理；<br>（3）不要压制异常，异常要么声明，要么正确在该方法内处理；<br>（4）设计具有意义的自定义异常体系；</p>
 <p>PS：其他一些好的做法向《Efftive Java》中说的很详细。</p>
 <h2 id="5-_关于Java中的断言和日志">5. 关于Java中的断言和日志</h2><p>就我的经验来看，还是使用开源的框架中的断言（比如Spring Framework中的断言）和日志（比如Log4j）比较合适。</p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
-    <article id="post-Java基础知识总结（五）——安全" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/12/02/Java基础知识总结（五）——安全/" class="article-date">
-  	<time datetime="2015-12-02T05:19:32.000Z" itemprop="datePublished">2015-12-02</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/02/Java基础知识总结（五）——安全/">Java基础知识总结（五）——安全</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h5 id="小结：">小结：</h5><p>一直说Java安全性比较好，系统的整理了下有关的Java的安全的三个方面：语言特性，安全管理器（保护域），签名和加密算法的应用。</p>
-<h1 id="1-_概括">1. 概括</h1><p>Java语言的安全由三个方面共同进行保证：</p>
-<h3 id="（1）语言特性：">（1）语言特性：</h3><p>类，域，方法的访问控制；<br>运行时的检查：指针操作的封装，数组的越界检查，类型转换的检查；<br>编译时检查：字节码加载，比如语义分析时会对变量是否初始化，运算符两边的类型是否匹配等等；<br>类加载：双亲委托加载模型/线程上下文类加载器，验证（文件格式验证，元数据验证，字节码验证（是否初始化，类型是否匹配等），符号验证（访问权限））；</p>
-<p><strong>类加载器的安全性在于</strong>：<br>（1）双亲委托的模型中核心类，扩展类，应用类有各自层次的类加载器；<br>（2）Java中每个类型有全限定名和类加载实例两者决定，每个类加载器实例提供一个类型的命名空间；<br>（3）类加载器会检查不能由非BootStrap类加载器加载JDK核心类；<br>（4）验证环节；</p>
-<h3 id="（2）访问控制：安全管理器">（2）访问控制：安全管理器</h3><h3 id="（3）代码签名，加密算法验证创建者；">（3）代码签名，加密算法验证创建者；</h3><h1 id="2-_安全管理器">2. 安全管理器</h1><p>Java平台安全性的演进：<br>（1）JDK1.0：本地代码具有所有的权限，远程代码在沙盒中运行，只能打印到屏幕和与用户交互；<br>（2）JDK1.1：远程代码带有可信赖的签名，具有与本地代码资源的所有权限；<br>（3）JDK2.0：基于<strong>保护域</strong>的安全体系，保护域包括<strong>代码来源</strong>和<strong>权限集合</strong>的映射，SecurityManager检查<strong>调用堆栈上所有方法的类</strong>的保护域，其权限集合是否允许执行当前的操作,如果所有域都通过检查则通过，否则抛出SecurityException异常；</p>
-<h2 id="2-1_重要的类和方法（体系结构）：">2.1 重要的类和方法（体系结构）：</h2><p>（1）SecurityManager：checkPermission等验证方法，抛出SecurityException；<br>（2）java.Security.ProtectionDomain：保护域，包含代码来源（CodeSource）和权限集合（PermissionCollection）；<br>（3）Class：getProtectionDomain获取该类的保护域；<br>（4）java.Security.CodeSource：代码来源，包含代码位置和相关联的证书链（用于类文件签名）；<br>（5）Permission：包含implies方法（条件间的依赖关系），通过name属性是关键，equals和hashcode主要由它决定，和Principal一样可以自定义；</p>
-<p>安全策略文件：<br>位置：<br>（1）Java平台主目录（java.policy文件）；<br>（2）用户主目录（.java.policy）；<br>（3）通过jvm参数指定，<br>（4）System.setProperty(“java.security.plicy”,)设置；</p>
-<h2 id="2-2_用户认证（JAAS_API规范）：">2.2 用户认证（JAAS API规范）：</h2><p>（1）通过LoginContext登录，可以传入CallbackHandler（handler中可以携带一些登录信息），使用在config文件中定义的LoginModule（也可以自定义）将callbackHandler中的登录信息传递到回调对象，从而获得登录信息；<br>（2）根据用户信息库（可以是目录文件，数据库等等）。通过验证后可以获得一个Subject；<br>（3）LoginModule会给这个用Subject添加一些Principal（特征），通过Subject.doAsPrivileged（一个新的上下文，与登录环境权限分离）中执行受检查的action；<br>（4）如果policy中subject带有的principal有对应权限的话这可以执行，否则抛出AccessControlException；</p>
-<p>LoginModule是检查登录权限的关键，向它传入CallbackHandler（登录信息），Subject（认证对象），options（config中对应的键值对信息），sharedState（登录模块间通信）；</p>
-<h1 id="3-_数字签名">3. 数字签名</h1><h2 id="3-1_消息摘要">3.1 消息摘要</h2><p>消息摘要（message digest）：是数据块的数字指纹。<br>基本属性：<br>（1）如果数据的1位或几位改变了，那么消息摘要也将要改变。<br>（2）拥有给定消息的伪造者不能创建与原消息具有相同的假消息；</p>
-<p>Java中的MessageDigest和Charset的体系很像，作为消息摘要算法子类的超类的同时也是工厂类；</p>
-<p>消息摘要意义在于检查文件（消息）是否被修改过，这就要求消息摘要和消息分开传递，否则一同截获再被修改（很容易）就无法起作用了。比如，保存文件是常常可以通过MD5验证的方式检查文件是否是同一文件。</p>
-<h2 id="3-2_消息签名">3.2 消息签名</h2><p>由于消息摘要的局限性，在需要认证用户身份的时候就需要数字签名同时能够校验消息有无被修改，中途被篡改。</p>
-<p>数字签名算法（DSA）；</p>
-<h3 id="重要概念：">重要概念：</h3><p>（1）公共密钥：可以公开，数字签名中，对方通过公共密钥校验消息的来源可信性（原始信息未修改，验证对方身份）；在非对称加密算法中，可以用来加密给对方的消息；<br>（2）私有密钥：非公开，在数字签名中，可以用生成签名；在非对加密中，可以通过私有密钥解密对方发来的加密消息；<br>（3）公共密钥和私有密钥的设计在于通过一个密钥推算出另一个密钥是实际不可性的，在数字签名中，私有密钥相当于个人的凭证。</p>
-<h3 id="数字签名原理：">数字签名原理：</h3><p>（1）发送方，生成自己的密钥库，包含私有密钥和公有密钥，将公有密钥包含导出成证书将这个证书发送给接受方；<br>（2）接收方，验证证书的真实性，接受到带有签名的消息后，利用证书验证<strong>是否为发送方的签名</strong>和<strong>消息有无被修改</strong>；</p>
-<h3 id="基于第三方认证机构的认证">基于第三方认证机构的认证</h3><p>我觉得这种模式类似于中介者设计模式/迪米特法则，类似的还有集群架构中中心式的拓扑结构，将多对多的联系变成一对多，复杂性集中在中介者身上，将认证的步骤分离出来。<br>（1）第三方将自己的<strong>根证书（公有密钥）</strong>导出，可以利用pem格式（隐私增强型邮件格式）；<br>（2）用户将<strong>根证书</strong>导入密钥库中，这时用户的密钥库能够信任这个第三方平台发来的信息；<br>（3）将发送方的证书同样导出成pem格式，基于openssl和第三方的CA对该证书签名生成pem，这是第三方平台对发送方的认证；<br>（4）将这个带有第三方签名的证书由接收方导入密钥库（因为已有了第三方的证书），最后接收方就拥有了发送方的证书；</p>
-<h3 id="keytool，jarsign：JDK数字证书，签名生成工具">keytool，jarsign：JDK数字证书，签名生成工具</h3><p>生成密钥库：keytool -genkeypair -keystore xxx.certs -alias xxx；<br>导出证书：keytool -exportcert -keystore xxx.certs -alias acmeroot -file acmeroot.cer；<br>导入证书到密钥库：keytool -importcert -keystore xxx.certs -alias yyy -file yyy.cer（yyy发送方别名）；<br>打印证书：keytool -printcert -file xxx.cer；<br>列出密钥库证书：keytool -list -v -keystore xxx</p>
-<p>使用证书签名jar：jarsigner -keystore xxx.certs document.jar xxx<br>验证jar签名：jarsigner -verify -keystore xxx.certs document.jar</p>
-<h2 id="4-_加密：">4. 加密：</h2><p>消息签名可以认证代码的来源，并且校验是否被修改，但是消息本身是可见的，对于重要的信息需要加密。</p>
-<p>Cipher类：与Charset和MessageDigest一样，超类+工厂类。</p>
-<h3 id="4-1_加密算法：">4.1 加密算法：</h3><p>对称密码：DES（穷举法可破解），AES等；<br>非对称密码：RSA等</p>
-<h4 id="非对称加密算法的应用方式">非对称加密算法的应用方式</h4><p><strong>公有密钥算法比对称密钥算法慢的多</strong>，因此不能用来加密大量的信息。使用对称密钥算法加密正文，公有密钥加密对称密钥是一种可行的方式。<br>（1）发送方生成对称密钥，对明文进行加密，并使用接收方的公有密钥对对称密钥进行加密；<br>（2）将加密后的明文和对称密钥一同发送给接收方；<br>（3）接收方使用自己的私有密钥将对称密钥解密，再用对称密钥解密得到明文；</p>
-<p>使用公有密钥算法的方式和下面对称加密算法的方式类似：主要要使用WARP_MODE和UNWARP_MODE对对称加密的<code>key</code>进行加解密。</p>
-<h4 id="生成密钥">生成密钥</h4><p>生成密钥可以用<strong>SecureRandom</strong>或者<strong>随机序列（随机敲键盘）</strong>的得到随机种子。密钥可以用序列化的方式输出到磁盘等地方保存。<br>方式一：</p>
-<pre><code><span class="constant">KeyGenerator keyGenerator</span> = KeyGenerator.getInstance(<span class="string">"AES"</span>);
-<span class="comment">//"真正的随机数"，加密的随机数，需要额外性能</span>
-<span class="comment">//Random以日期和时间为种子并不安全</span>
-<span class="constant">SecureRandom secureRandom</span> = new SecureRandom();
-keyGenerator.init(secureRandom);
-<span class="constant">Key key</span> = keyGenerator.generateKey();
-</code></pre><p>方式二：</p>
-<pre><code><span class="built_in">byte</span>[] seq = <span class="string">"sdlkfjiuqoenrgiuerds,msfd"</span>.getBytes();
-SecretKey <span class="variable">key</span> = <span class="keyword">new</span> SecretKeySpec(seq, <span class="string">"AES"</span>);
-</code></pre><h4 id="加密">加密</h4><p>选择加密算法：</p>
-<pre><code>Cipher aes = Cipher.getInstance(<span class="string">"AES"</span>);
-<span class="comment">/* 
-    模式有4种：
-    ENCRYPT_MODE
-    DECRYPT_MODE
-    UNWARP_MODE
-    WARP_MODE
-*/</span>
-<span class="built_in">int</span> mode = Cipher.ENCRYPT_MODE;
-aes.init(mode, <span class="variable">key</span>);
-</code></pre><p>将输入流中的数据加密写入输出流。注意如果数据不能以blockSize对齐，应该使用doFinal写入深入部分，该方法可以补齐。</p>
-<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">crypt</span>(<span class="params">InputStream <span class="keyword">in</span>, OutputStream <span class="keyword">out</span>, Cipher cipher</span>) throws IOException, GeneralSecurityException </span>{
-        <span class="keyword">int</span> blockSize = cipher.getBlockSize();
-        <span class="keyword">int</span> outputSize = cipher.getOutputSize(blockSize);
-        <span class="keyword">byte</span>[] inBytes = <span class="keyword">new</span> <span class="keyword">byte</span>[blockSize];
-        <span class="keyword">byte</span>[] outBytes = <span class="keyword">new</span> <span class="keyword">byte</span>[outputSize];
-
-        boolean more = <span class="keyword">true</span>;
-        <span class="keyword">int</span> inLen = <span class="number">0</span>;
-        <span class="keyword">while</span>(more) {
-            inLen = <span class="keyword">in</span>.read(inBytes);
-            <span class="keyword">if</span>(inLen == blockSize) {
-                <span class="keyword">int</span> outputLen = cipher.update(inBytes, <span class="number">0</span>, blockSize, outBytes);
-                <span class="keyword">out</span>.write(outBytes, <span class="number">0</span>, outputLen);
-            } <span class="keyword">else</span> {
-                more = <span class="keyword">false</span>;
-            }
-        }
-        <span class="keyword">if</span>(inLen &gt; <span class="number">0</span>) outBytes = cipher.doFinal(inBytes, <span class="number">0</span>, inLen);
-        <span class="keyword">else</span> outBytes = cipher.doFinal();
-        <span class="keyword">out</span>.write(outBytes);
-        <span class="keyword">out</span>.flush();
-    }
-</code></pre><h4 id="密码流">密码流</h4><p>使用CiperInputStream和CiperOutputStream可以屏蔽<code>update</code>和<code>doFinal</code>等细节；</p>
-<hr>
-<h3 id="附：policy，config语法小记：">附：policy，config语法小记：</h3><p>grant：codeBase，principal，signedBy（加alias）；<br>Login1 {LoginModule}：登录上下文定义；</p>
 
       
     </div>
@@ -1519,411 +1843,6 @@ HttpURLConnection connection = (HttpURLConnection)url.openConnection();
       
 	<div class="article-tag tagcloud">
 		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
-    <article id="post-Java-Servlet-4-0-Specification解读" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/11/30/Java-Servlet-4-0-Specification解读/" class="article-date">
-  	<time datetime="2015-11-30T09:34:47.000Z" itemprop="datePublished">2015-11-30</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/11/30/Java-Servlet-4-0-Specification解读/">Java Servlet 4.0 Specification解读</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/技术更新/">技术更新</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
-    <article id="post-学习JVM的一点感想" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/11/30/学习JVM的一点感想/" class="article-date">
-  	<time datetime="2015-11-30T06:05:27.000Z" itemprop="datePublished">2015-11-30</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/11/30/学习JVM的一点感想/">学习JVM的一点感想</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="契子">契子</h1><p>最近一段时间，系统的学习整理了JVM的知识，很多在学习Java时在语言层面的困惑突然显得并没有复杂，在理解了JVM相关原理后这些困惑背后的原因显得很清晰，很简单。因此，我不由得想那些向JVM一样的基础知识，向操作系统，网络，甚至编码等等。在实际工作和学习中到底起着什么重要的作用呢，毕竟大多数人在学习这些知识的时候并没有那么的实际经验去结合起来考虑它们的实际作用。</p>
-<h1 id="思考">思考</h1><p>由计算机组成的这个庞大系统性结构一个重要性质就是分层的，我们大多数人的大多数时间都是在一个抽象的层次上工作（比如用Java，Js，C++这样的高级语言），虽然层与层之间很多设计都做到是“透明”的，屏蔽了底层的细节，但是难免有一些耦合，由于“透明”的特性，我们难免会有一些困惑。很多前辈都强调建立“系统的知识体系”的重要，我想我在学习中也渐渐明白了这一点。</p>
-<h2 id="说说我在实际中的一些困惑或者思考：">说说我在实际中的一些困惑或者思考：</h2><ol>
-<li><p>在没有很好的掌握设计模式的时候，我觉得Java里的东西太多了，就拿字符串操作来说，光有String还不行，必须有StringBuffer和StringBuilder，在循环里使用+操作String会产生很多StringBuilder对象，为什么要这么麻烦。后来在看了一些东西后我明白字符串为了避免重复创建，它们是不可变的，故而可以共享，因此操作的时候会产生大量的字符串组合，所有需要StirngBuilder这个可变辅助类保存中间状态，并且它使用了生成器模式来接受大量的参数。正是因为理解了设计模式，我在去看Java和像Spirng这样复杂系统就可以发现其中的规律和设计思想，学会理解组件/类之间的关联和意义。</p>
-</li>
-<li><p>学习编码的时候，我知道了字顺，高位和低位，并且也知道了Java的字节码是以8字节为最小单位的Big-endian的字顺保存。因此，写一个将字节码int类型转换成byte数组的函数时我想到了这一点，我当时在想，如果我不知道Big-endian和Java字节码的字顺我是不是又得产生困惑了，然后搜一通了。</p>
-</li>
-<li><p>还有一个Java语言层面的例子，内部类中使用外围类方法的局部变量要加final，当时我觉得这个理解起来很抽象，去网上搜了一搜，很多人从作用域、生命周期等等角度分析，当时觉得很有道理，但是随着学习的深入，我觉得好像不是这么回事，看了JVM相关知识后，我动手查看了下外围类和内部类的字节码，清楚的看到了内部类实际上时间局部变量的值通过&lt;init&gt;方法传给了由Java编译器生成的final成员变量（它是局部变量的副本），在局部变量前加final是Java设计团队为了保证一致性的设计方案。</p>
-</li>
-</ol>
-<p>例子很多。回头来说说自己的情况，本科的时候虽然也上了C++，计算机网络，数据结构等课，但是因为处在“计算机相关专业”课业的要求本身不高，一直主要靠自己，大一时接触HTML/CSS一系列东西，觉得很有趣，不停的自己动手做一些东西，到后来学习Java，Java Web，随着接触的东西越多，想的东西越多，越觉得基础的重要性。很多做东西产生的困惑，其实都是对基础概念的理解不深，不熟。很多相对底层的东西很简单，反映到高层就显得不那么明显。</p>
-<p>所以我现在觉得，以前学数据结构，计算机网络等基础知识，一方面是知识本身，一方面是对整个由计算机构建起来的系统的理解，培养和训练自己学习和思考的方式。就像分析数据库性能瓶颈，应当使用“漏斗原则”，从IO效率最低磁盘处入手，这显然建立在对硬件系统的理解上。还有理解了编译的流程和动态类型语言和静态类型语言的差别，在学习一门语言时在宏观上就有了正确思路。</p>
-<h2 id="小结">小结</h2><p>不知不觉写了很多，留在学校的日子算一算也没有多少了，剩下的时间很宝贵，我想工作后也难有这么多时间去做自己想做的事了。结合以前做的东西，写一写有些深度的代码，结合实际系统地好好巩固那些相对底层的知识是我紧迫要做的事情了。</p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/杂谈-感悟/">杂谈/感悟</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
-    <article id="post-Spring容器的启动和IoC容器原理" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/11/30/Spring容器的启动和IoC容器原理/" class="article-date">
-  	<time datetime="2015-11-29T16:30:52.000Z" itemprop="datePublished">2015-11-30</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/11/30/Spring容器的启动和IoC容器原理/">Spring容器的启动和IoC容器原理</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="1-_Spring配置的几种方式：">1. Spring配置的几种方式：</h1><p>目前最新的Spring一般有3种配置方式：<br>基于XML配置；<br>混合配置（XML配置+注解+XML配置扫描路径）；<br>基于代码配置（Spring3.1后，可以完全使用注解+WebApplicationInitializer）；<br>通过XML配置Spring的基本做法：</p>
-<pre><code><span class="variable">&lt;!---①从类路径下加载spring配置文件-&gt;</span>
-<span class="variable">&lt;context-param&gt;</span>
-    <span class="variable">&lt;param-name&gt;</span>contextConfigLocation<span class="variable">&lt;/param-name&gt;</span>
-    <span class="variable">&lt;param-value&gt;</span>
-        classpath<span class="keyword">*</span>:config/spring/common/appcontext-<span class="keyword">*</span>.xml,
-        classpath<span class="keyword">*</span>:config/spring/local/appcontext-<span class="keyword">*</span>.xml,
-        classpath<span class="keyword">*</span>:/config/spring/abtest/appcontext-<span class="keyword">*</span>.xml,
-        classpath<span class="keyword">*</span>:/config/spring/pagelet/appcontext-pagelet-core.xml
-    <span class="variable">&lt;/param-value&gt;</span>
-<span class="variable">&lt;/context-param&gt;</span>
-
-<span class="variable">&lt;!--②负责启动spring容器的监听器，它将使用①处的上下文参数获得spring配置文件地址--&gt;</span>
-<span class="variable">&lt;listener&gt;</span>
-    <span class="variable">&lt;listener-class&gt;</span><span class="variable">&lt;span style="color:#ff0000;"&gt;</span>org.springframework.web.context.ContextLoaderListener<span class="variable">&lt;/span&gt;</span><span class="variable">&lt;/listener-class&gt;</span>
-<span class="variable">&lt;/listener&gt;</span>
-</code></pre><p>通过<strong>WebApplicationInitializer</strong>的基本做法：</p>
-<pre><code>@Override
-<span class="keyword">public</span> <span class="keyword">void</span> onStartup(ServletContext <span class="keyword">container</span>) throws ServletException {
-    logger.info(<span class="string">"Initializer startUp..."</span>);
-    <span class="keyword">container</span>.getServletRegistration(<span class="string">"default"</span>).addMapping(<span class="string">"/resource/*"</span>);
-
-    <span class="comment">//Use ContextLoaderListener to create a root context, it is father of contexts used in dispatcherServlet</span>
-    AnnotationConfigWebApplicationContext rootContext = <span class="keyword">new</span> AnnotationConfigWebApplicationContext();
-    rootContext.register(RootContextConfiguration.class);
-    &lt;span style=<span class="string">"color:#ff0000;"</span>&gt;<span class="keyword">container</span>.addListener(<span class="keyword">new</span> ContextLoaderListener(rootContext));&lt;/span&gt;
-}
-</code></pre><p>这里使用初始化器启动Spring，初始化器ServletContainerInitializer是Java EE6中一个新接口，它会在所有监听器启动之前调用它们的的onStartUp方法，并且它不需要通过web.xml部署描述符来定义，需要在/META-INF/services/javax.servlet.ServletContainerInitializer中列出具体的实现，Servlet容器在启动时会自动加载它们并调用onStartUp方法。</p>
-<p>但是文件不能放在WAR文件的/META-INF/services中，而是需要放在JAR文件的/META-INF/services中，这样就很不方便。Spring Framework提供了一个桥接口，在Spring中SpringServletContainerInitializer类实现了ServletContainerInitializer接口，Spring的JAR中列出了SpringServletContainerInitializer，如下。在SpringServletContainerInitializer中会扫描所有WebApplicationInitializer的实现，调用它们的onStartUp方法，因此我们不必在劳神费心了。</p>
-<p>通过XML和Java代码两种方式我们可以看到实际上Spring是通过ContextLoaderListener来启动的。基于Servlet容器启动的顺序应该有：Initializer—&gt;listener-&gt;filter-&gt;servlet。<br>因此我们来看看ContextLoaderListener作为ServletContextListener到底是如何启动Spring的。</p>
-<p>#2. Spring的初始化和启动：</p>
-<p>ContextLoaderListener的contextInitialized方法委托ContextLoader的initWebApplicationContext方法进行上文初始化，我们来看看一些关键步骤：<br>步骤一：创建上文对象实例：</p>
-<pre><code><span class="keyword">if</span> (<span class="keyword">this</span>.context == <span class="literal">null</span>) {
-    <span class="keyword">this</span>.context = createWebApplicationContext(servletContext);
-}
-</code></pre><p>在基于代码的配置中由于手动创建了AnnotationConfigWebApplication实例，因此此时context已经创建，如果通过XML配置，createWebApplicaitonContext方法会首先检查Servlet定义中有没有定义参数contextClass指明Context的类型，如果没有通过反射创建默认类型org.springframework.web.context.support.XmlWebApplicationContext的实例。</p>
-<p>步骤二：开始配置刷新Spring上下文：</p>
-<pre><code><span class="keyword">if</span> (<span class="keyword">this</span>.context <span class="keyword">instanceof</span> ConfigurableWebApplicationContext) {
-                ConfigurableWebApplicationContext cwac = (ConfigurableWebApplicationContext) <span class="keyword">this</span>.context;
-                <span class="keyword">if</span> (!cwac.isActive()) {
-                    <span class="comment">// The context has not yet been refreshed -&gt; provide services such as</span>
-                    <span class="comment">// setting the parent context, setting the application context id, etc</span>
-                    <span class="keyword">if</span> (cwac.getParent() == <span class="literal">null</span>) {
-                        <span class="comment">// The context instance was injected without an explicit parent -&gt;</span>
-                        <span class="comment">// determine parent for root web application context, if any.</span>
-                        ApplicationContext parent = loadParentContext(servletContext);
-                        cwac.setParent(parent);
-                    }
-                    configureAndRefreshWebApplicationContext(cwac, servletContext);
-                }
-            }
-</code></pre><p>因为AnnotationConfigWebApplication和XmlWebApplicationContext都是ConfigurableWebApplicationContext实现（实际的web项目中Context一般都是继承于AbstractRefreshableWebApplicationContext的），所以对上下文进行配置和刷新，关键在于configureAndRefreshWebApplicationContext方法，下面我们同样看看该方法的关键部分。</p>
-<p>步骤三：加载重要初始化参数：</p>
-<pre><code><span class="keyword">if</span> (ObjectUtils.identityToString(wac).equals(wac.getId())) {
-            <span class="comment">// The application context id is still set to its original default value</span>
-            <span class="comment">// -&gt; assign a more useful id based on available information</span>
-            <span class="built_in">String</span> idParam = sc.getInitParameter(CONTEXT_ID_PARAM);
-            <span class="keyword">if</span> (idParam != <span class="literal">null</span>) {
-                wac.setId(idParam);
-            }
-            <span class="keyword">else</span> {
-                <span class="comment">// Generate default id...</span>
-                wac.setId(ConfigurableWebApplicationContext.APPLICATION_CONTEXT_ID_PREFIX +
-                        ObjectUtils.getDisplayString(sc.getContextPath()));
-            }
-        }
-
-        wac.setServletContext(sc);
-        <span class="built_in">String</span> configLocationParam = sc.getInitParameter(CONFIG_LOCATION_PARAM);
-        <span class="keyword">if</span> (configLocationParam != <span class="literal">null</span>) {
-            wac.setConfigLocation(configLocationParam);
-        }
-
-        <span class="comment">// The wac environment's #initPropertySources will be called in any case when the context</span>
-        <span class="comment">// is refreshed; do it eagerly here to ensure servlet property sources are in place for</span>
-        <span class="comment">// use in any post-processing or initialization that occurs below prior to #refresh</span>
-        ConfigurableEnvironment env = wac.getEnvironment();
-        <span class="keyword">if</span> (env <span class="keyword">instanceof</span> ConfigurableWebEnvironment) {
-            ((ConfigurableWebEnvironment) env).initPropertySources(sc, <span class="literal">null</span>);
-        }
-</code></pre><p>（1）首先加载contextId，同样检查有无配置，否则使用默认的；<br>（2）绑定ServletContext；<br>（3）绑定config文件的位置，这一步将我们在部署描述符中设置上下文参数contextConfigLocation指定的配置文件位置载入；<br>（4）绑定环境和profile；</p>
-<p>步骤四：加载自定义上下文初始化器并按指定顺序执行初始化方法：</p>
-<pre><code>customizeContext<span class="list">(<span class="keyword">sc</span>, wac)</span><span class="comment">;</span>
-</code></pre><p>Spring提供了一个ApplicationContextInitializer接口，可以通过context-param和init-param指定类名，这里同样是通过反射创建实例，并根据Order注解大小排序，按序执行初始化方法；进行context一些值的设置比如说setAllowBeanDefinitionOverriding(false)；<br>步骤五：开始刷新Bean工厂构建Bean关系网：</p>
-<p>configureAndRefreshWebApplication方法的最后一行也是最核心的一行：<br>wac.refresh();<br>这个方法完成了：<br>（1）构建BeanFactory；<br>（2）注册可能感兴趣的事件；<br>（3）创建Bean实例对象；<br>（4）触发被监听的事件；<br>“这个方法就是构建整个IoC容器过程的完整代码，了解了里面的每一行代码，基本上就了解大部分Spring的原理和功能”（摘自《深入理解Java Web技术内幕》）。这个方法的实现在AbstractApplicationContext中，让我们来看看它是如何工作：</p>
-<pre><code><span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">refresh</span><span class="params">()</span> <span class="keyword">throws</span> BeansException, IllegalStateException </span>{
-    <span class="keyword">synchronized</span> (<span class="keyword">this</span>.startupShutdownMonitor) {
-        <span class="comment">// Prepare this context for refreshing.</span>
-        prepareRefresh();
-
-        <span class="comment">// Tell the subclass to refresh the internal bean factory.</span>
-        ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
-
-        <span class="comment">// Prepare the bean factory for use in this context.</span>
-        prepareBeanFactory(beanFactory);
-
-        <span class="keyword">try</span> {
-            <span class="comment">// Allows post-processing of the bean factory in context subclasses.</span>
-            postProcessBeanFactory(beanFactory);
-
-            <span class="comment">// Invoke factory processors registered as beans in the context.</span>
-            invokeBeanFactoryPostProcessors(beanFactory);
-
-            <span class="comment">// Register bean processors that intercept bean creation.</span>
-            registerBeanPostProcessors(beanFactory);
-
-            <span class="comment">// Initialize message source for this context.</span>
-            initMessageSource();
-
-            <span class="comment">// Initialize event multicaster for this context.</span>
-            initApplicationEventMulticaster();
-
-            <span class="comment">// Initialize other special beans in specific context subclasses.</span>
-            onRefresh();
-
-            <span class="comment">// Check for listener beans and register them.</span>
-            registerListeners();
-
-            <span class="comment">// Instantiate all remaining (non-lazy-init) singletons.</span>
-            finishBeanFactoryInitialization(beanFactory);
-
-            <span class="comment">// Last step: publish corresponding event.</span>
-            finishRefresh();
-        }
-
-        <span class="keyword">catch</span> (BeansException ex) {
-            logger.warn(<span class="string">"Exception encountered during context initialization - cancelling refresh attempt"</span>, ex);
-
-            <span class="comment">// Destroy already created singletons to avoid dangling resources.</span>
-            destroyBeans();
-
-            <span class="comment">// Reset 'active' flag.</span>
-            cancelRefresh(ex);
-
-            <span class="comment">// Propagate exception to caller.</span>
-            <span class="keyword">throw</span> ex;
-        }
-
-        <span class="keyword">finally</span> {
-            <span class="comment">// Reset common introspection caches in Spring's core, since we</span>
-            <span class="comment">// might not ever need metadata for singleton beans anymore...</span>
-            resetCommonCaches();
-        }
-    }
-}
-</code></pre><p>接下来详细说明Spring是如何创建BeanFactory并构建包含事件监听的Bean关系网的：</p>
-<p>步骤五-1：创建并准备BeanFactory：</p>
-<p>核心的三行代码：</p>
-<pre><code>// <span class="operator"><span class="keyword">Prepare</span> this <span class="keyword">context</span> <span class="keyword">for</span> refreshing.包括设置开始时间，活跃标志，初始化并验证environment属性集，初始化earlyApplicationEvents；
-prepareRefresh();</span>
-
-// Tell the subclass to refresh the internal bean factory.关键在于refreshBeanFactory
-ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
-
-// <span class="operator"><span class="keyword">Prepare</span> the bean factory <span class="keyword">for</span> <span class="keyword">use</span> <span class="keyword">in</span> this <span class="keyword">context</span>.
-prepareBeanFactory(beanFactory);</span>
-</code></pre><p>刷新并创建BeanFactory的关键方法：</p>
-<pre><code><span class="annotation">@Override</span>
-<span class="keyword">protected</span> <span class="keyword">final</span> <span class="function"><span class="keyword">void</span> <span class="title">refreshBeanFactory</span><span class="params">()</span> <span class="keyword">throws</span> BeansException </span>{
-    <span class="keyword">if</span> (hasBeanFactory()) {
-        destroyBeans();
-        closeBeanFactory();
-    }
-    <span class="keyword">try</span> {
-        DefaultListableBeanFactory beanFactory = createBeanFactory();
-        beanFactory.setSerializationId(getId());
-        customizeBeanFactory(beanFactory);
-        loadBeanDefinitions(beanFactory);
-        <span class="keyword">synchronized</span> (<span class="keyword">this</span>.beanFactoryMonitor) {
-            <span class="keyword">this</span>.beanFactory = beanFactory;
-        }
-    }
-    <span class="keyword">catch</span> (IOException ex) {
-        <span class="keyword">throw</span> <span class="keyword">new</span> ApplicationContextException(<span class="string">"I/O error parsing bean definition source for "</span> + getDisplayName(), ex);
-    }
-}
-</code></pre><p>（1）首先，如果当前上下文中如果已经存在BeanFactory，先删除所有缓存的Bean（使用LinkedHashSet缓存的单例，prototype的bean是不会缓存的），并将this.beanFactory置为null；<br>（2）创建DefaultListableBeanFactory，它继承了ConfigurableListableBeanFactory和AbstractAutowireCapableBeanFactory；因此它具有完整的BeanFactory功能；<br>（3）customizeBeanFactory将Context的两个配置项：allowBeanDefinitionOverriding和allowCircularReference传入BeanFactory中；<br>（4）loadBeanDefinition：查看类图可以看到还包括Bean的registry相关的类，在loadBeanDefinitions中很清除的展示了Registry接口的作用：读取用户对Bean定义，将其加载为BeanDefinition也就是IoC容器特定的数据结构；loadBeanDefinitions方法因此和读取方式有关，AnnotationWebApplicationContext和XmlWebApplicationContext有具体的实现；</p>
-<p>执行完refreshBeanFactory之后，在refresh方法中的下一步是<strong>prepareBeanFactory</strong>，这一步对刚刚建立的BeanFactory设置了重要的属性：<br>（1）设置加载类的加载器，默认为当前线程上下文加载器；<br>（2）注册ApplicaitonContextAwareProcessor，并在BeanFactory中忽略ApplicationContextAwareProcessor已经处理的一些Aware接口：EnvironmentAware，MessageSourceAware，ApplicationContextAware，ApplicationEventPublisherAware，ResourceLoaderAware，这些接口通常由Bean实现，这些类型不应该使用自动装配注入，它们用于获取对应的实例，而实例对象我们已经看到是Bean的上下文，因此，ApplicationContextAwareProcessor会在postProcessorBeforeInitialization中调用这些接口的回调方法，将当前上下文对象注入；<br>（3）注册一些特殊的类型：BeanFactory，ApplicationContext，ApplicationEventPublisher，ResourceLoader，实例对象仍然是当前Context对象；<br>（4）织入处理器和特定的类加载器，Environment相关Bean注册；</p>
-<p>AbstractApplicationContext的refresh方法接下来三行代码对Spring的扩展性起到了至关重要的作用，前两行是对已经创建的BeanFactory的配置做修改，扩展方式仍然是通过回调接口，这里是BeanFactoryPostProcessor，值得注意的是回调接口中使用的是onfigurableLIstableBeanFactory，通过这一“视图”可以防止一些不当的修改；；</p>
-<pre><code><span class="comment">// Allows post-processing of the bean factory in context subclasses.</span>
-                <span class="function">postProcessBeanFactory</span>(beanFactory);
-
-                <span class="comment">// Invoke factory processors registered as beans in the context.</span>
-                <span class="function">invokeBeanFactoryPostProcessors</span>(beanFactory);
-
-                <span class="comment">// Register bean processors that intercept bean creation.</span>
-                <span class="function">registerBeanPostProcessors</span>(beanFactory);
-</code></pre><p>步骤五-2：初始化事件多播器，注册事件监听：</p>
-<pre><code><span class="comment">// Initialize message source for this context.</span>
-<span class="function">initMessageSource</span>();
-
-<span class="comment">// Initialize event multicaster for this context.</span>
-<span class="function">initApplicationEventMulticaster</span>();
-
-<span class="comment">// Initialize other special beans in specific context subclasses.</span>
-<span class="function">onRefresh</span>();
-
-<span class="comment">// Check for listener beans and register them.</span>
-<span class="function">registerListeners</span>();
-步骤五-3：创建Bean实例对象：
-
-<span class="comment">// Instantiate all remaining (non-lazy-init) singletons.</span>
-<span class="function">finishBeanFactoryInitialization</span>(beanFactory);
-</code></pre><p>在finishBeanFactoryInitialization方法将完成Bean的初始化工作：</p>
-<pre><code>protected <span class="keyword">void</span> finishBeanFactoryInitialization(ConfigurableListableBeanFactory beanFactory) {
-    <span class="comment">// Initialize conversion service for this context.</span>
-    <span class="keyword">if</span> (beanFactory.containsBean(CONVERSION_SERVICE_BEAN_NAME) &amp;&amp;
-            beanFactory.isTypeMatch(CONVERSION_SERVICE_BEAN_NAME, ConversionService.<span class="keyword">class</span>)) {
-        beanFactory.setConversionService(
-                beanFactory.getBean(CONVERSION_SERVICE_BEAN_NAME, ConversionService.<span class="keyword">class</span>));
-    }
-
-    <span class="comment">// Initialize LoadTimeWeaverAware beans early to allow for registering their transformers early.</span>
-    <span class="built_in">String</span>[] weaverAwareNames = beanFactory.getBeanNamesForType(LoadTimeWeaverAware.<span class="keyword">class</span>, <span class="keyword">false</span>, <span class="keyword">false</span>);
-    <span class="keyword">for</span> (<span class="built_in">String</span> weaverAwareName : weaverAwareNames) {
-        getBean(weaverAwareName);
-    }
-
-    <span class="comment">// Stop using the temporary ClassLoader for type matching.</span>
-    beanFactory.setTempClassLoader(<span class="keyword">null</span>);
-
-    <span class="comment">// Allow for caching all bean definition metadata, not expecting further changes.</span>
-    beanFactory.freezeConfiguration();
-
-    <span class="comment">// Instantiate all remaining (non-lazy-init) singletons.</span>
-    beanFactory.preInstantiateSingletons();
-}
-</code></pre><p>这里首先初始化了使用织入的Bean，之后就停止使用暂时的Classloader了，并锁定了BeanFactory不允许修改；在preInstantiateSingletons方法中，将开始创建Bean实例的工作。</p>
-<p><strong>Mark：</strong>未完待续</p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Spring/">Spring</a></li></ul>
 	</div>
 
       
