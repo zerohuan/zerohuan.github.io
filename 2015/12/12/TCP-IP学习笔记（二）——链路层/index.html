@@ -5,16 +5,16 @@
   
   <title>TCP/IP学习笔记（二）——链路层 | Zerohuan的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="从CSDN迁徙而来">
+  <meta name="description" content="1. 3种封装格式（以太网封装，SLIP，PPP）1.1 以太网封装格式以太网一般基于CSMA/CD，但是有两种常用的封装格式（RFC894和RFC1024），我总结了下这两种格式的异同：相同：（1）都具有48位地址，包括目的地址和源地址，也就是MAC地址，ARP和RARP就是用来解析MAC地址和IP地址映射的；（2）都具有类型标识，以太网可能包含IP数据报，ARP请求应答，RARP应答；（3）C">
 <meta property="og:type" content="article">
 <meta property="og:title" content="TCP/IP学习笔记（二）——链路层">
 <meta property="og:url" content="http://blog.ssearch.cn/2015/12/12/TCP-IP学习笔记（二）——链路层/index.html">
 <meta property="og:site_name" content="Zerohuan的博客">
-<meta property="og:description" content="从CSDN迁徙而来">
-<meta property="og:updated_time" content="2015-12-11T17:20:19.000Z">
+<meta property="og:description" content="1. 3种封装格式（以太网封装，SLIP，PPP）1.1 以太网封装格式以太网一般基于CSMA/CD，但是有两种常用的封装格式（RFC894和RFC1024），我总结了下这两种格式的异同：相同：（1）都具有48位地址，包括目的地址和源地址，也就是MAC地址，ARP和RARP就是用来解析MAC地址和IP地址映射的；（2）都具有类型标识，以太网可能包含IP数据报，ARP请求应答，RARP应答；（3）C">
+<meta property="og:updated_time" content="2015-12-16T19:38:18.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="TCP/IP学习笔记（二）——链路层">
-<meta name="twitter:description" content="从CSDN迁徙而来">
+<meta name="twitter:description" content="1. 3种封装格式（以太网封装，SLIP，PPP）1.1 以太网封装格式以太网一般基于CSMA/CD，但是有两种常用的封装格式（RFC894和RFC1024），我总结了下这两种格式的异同：相同：（1）都具有48位地址，包括目的地址和源地址，也就是MAC地址，ARP和RARP就是用来解析MAC地址和IP地址映射的；（2）都具有类型标识，以太网可能包含IP数据报，ARP请求应答，RARP应答；（3）C">
   
     <link rel="alternative" href="/atom.xml" title="Zerohuan的博客" type="application/atom+xml">
   
@@ -115,7 +115,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java小工具/" style="font-size: 10px;">Java小工具</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 10px;">TCP/IP</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a>
+						<a href="/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java小工具/" style="font-size: 10px;">Java小工具</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 15px;">TCP/IP</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a>
 					</div>
 				</section>
 				
@@ -220,6 +220,10 @@
       
       <div class="article-info article-info-post">
         
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/TCP-IP/">TCP/IP</a></li></ul>
+	</div>
+
         
 
         <div class="clearfix"></div>
@@ -228,7 +232,19 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        
+        <h2 id="1-_3种封装格式（以太网封装，SLIP，PPP）">1. 3种封装格式（以太网封装，SLIP，PPP）</h2><h3 id="1-1_以太网封装格式">1.1 以太网封装格式</h3><p>以太网一般基于CSMA/CD，但是有两种常用的封装格式（RFC894和RFC1024），我总结了下这两种格式的异同：<br><strong>相同：</strong><br>（1）都具有48位地址，包括目的地址和源地址，也就是MAC地址，ARP和RARP就是用来解析MAC地址和IP地址映射的；<br>（2）都具有类型标识，<strong>以太网可能包含IP数据报，ARP请求应答，RARP应答</strong>；<br>（3）CRC尾部校验；<br>（4）它们整个帧的长度最少为64位，这是CSMA/CD的机制决定的；<br><strong>不同：</strong><br>（1）RFC1024的头更为详细，包括LLC（逻辑链路控制）等内容；</p>
+<h3 id="1-2_SLIP和压缩的SLIP">1.2 SLIP和压缩的SLIP</h3><p>Serial Line IP，一种简单的对IP数据报的封装形式，需要注意End字符的转义；</p>
+<p><strong>SLIP的缺陷：</strong><br>（1）每一个端必须知道对方的IP地址；<br>（2）数据帧中没有字段类型字段（而以太网有），如果一条串行线路用于SLIP，就不能同时使用其他协议。<br>（3）没有校验和，依赖上层协议发现错误；</p>
+<p>串行线路的速率很低，通信经常是交互式的，因此数据的<strong>传输效率很重要</strong>；</p>
+<p>使用CSLIP（压缩的SLIP）可以将40个字节压缩到3,5字节；</p>
+<h3 id="1-3_PPP，点对点协议">1.3 PPP，点对点协议</h3><p>修改了SLIP的所有缺陷：<br>（1）提供了校验机制；<br>（2）提供了网络控制协议，因此可以支持多种类型的协议；<br>（3）提供了链路控制协议，允许双方进行通信协商，因此传输自己的IP给对方；</p>
+<h2 id="2-_其他重要概念">2. 其他重要概念</h2><h3 id="2-1_MTU和路径MTU">2.1 MTU和路径MTU</h3><p>MTU的存在主要是为了有足够快的响应速度；<br>两台主机进行通信，最重要的事通信路径的最小MTU，（我想起了计算最大流量的最小割定理，短板效应嘛）；</p>
+<h3 id="2-2_串行线路吞吐量计算">2.2 串行线路吞吐量计算</h3><p>线路速率（带宽，单位：字节/秒）；<br>等待发送时间：如果使用一个SLIP和一个其他协议应用混用，需要有等待时间，SLIP没有类型标识，因此，其他协议使用时和SLIP之间要相互等待，这里的等待时间是<strong>平均时间</strong>。</p>
+<p><strong>问题一：为什么以太网帧最小64字节（数据长度最少46字节）？</strong><br>分析：以太网是基于CSMA/CD（带冲突检测的载波侦听多路接入），这是一种争用型的介质访问控制，而不是可靠的，有连接的，主要是为了效率。</p>
+<p>一台主机发送数据前要先监听网络是空闲的才能发送，那么A主机发送后，数据还未达到B主机，B主机监听网络是空闲的，它也开始发送数据，这就产生了碰撞，因此B就会发送碰撞信号告诉A发送了错误，如果A的数据收到碰撞信号后，发送错误的数据帧已经发送完就无法知道要重传哪一帧。因此必须要保证在一帧发送完之前发送主机能够收到碰撞信号。</p>
+<p>IEEE规定一个碰撞域内，最远的两台机器之间的round-trip time 要小于512bit time.(来回时间小于512位时，所谓位时就是传输一个比特需要的时间）。这也是我们常说的一个碰撞域的直径。因此以太网帧最小为64字节。</p>
+<p>重传的开销：以太网的重传是微秒级，而传输层的重传，如TCP的重传达到毫秒级，应用层的重传更达到秒级，我们可以看到越底层的重传，速度越快，所以对于以太网错误，以太网必须有重传机制。</p>
+
       
     </div>
     
