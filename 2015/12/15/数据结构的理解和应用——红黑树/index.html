@@ -5,16 +5,21 @@
   
   <title>数据结构的理解和应用——红黑树 | Zerohuan的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="从CSDN迁徙而来">
+  <meta name="description" content="心得：看了《数据结构和算法分析》，《算法导论》以及《算法》上关于红黑树的章节，总算把红黑树的实现和操作给理解了一边。虽然插入和删除的情况有些复杂，因为1,2年前看过一次，后来就忘了，感觉还是当时没有真正理解。
+因此记住插入和删除的形式是不行的，关键是结合红黑树的5个特点，理解插入和删除中循环不变式的以及终止条件。这样才能知道为什么要弄一个“一重额外的黑色”才能知道为什么红黑树一次更新可以在O(1)">
 <meta property="og:type" content="article">
 <meta property="og:title" content="数据结构的理解和应用——红黑树">
 <meta property="og:url" content="http://blog.ssearch.cn/2015/12/15/数据结构的理解和应用——红黑树/index.html">
 <meta property="og:site_name" content="Zerohuan的博客">
-<meta property="og:description" content="从CSDN迁徙而来">
-<meta property="og:updated_time" content="2015-12-14T18:31:50.000Z">
+<meta property="og:description" content="心得：看了《数据结构和算法分析》，《算法导论》以及《算法》上关于红黑树的章节，总算把红黑树的实现和操作给理解了一边。虽然插入和删除的情况有些复杂，因为1,2年前看过一次，后来就忘了，感觉还是当时没有真正理解。
+因此记住插入和删除的形式是不行的，关键是结合红黑树的5个特点，理解插入和删除中循环不变式的以及终止条件。这样才能知道为什么要弄一个“一重额外的黑色”才能知道为什么红黑树一次更新可以在O(1)">
+<meta property="og:image" content="http://blog.zerohuan.com/images/rbt-insertion.png">
+<meta property="og:image" content="http://blog.zerohuan.com/images/red-black-tree.png">
+<meta property="og:updated_time" content="2015-12-17T05:34:07.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="数据结构的理解和应用——红黑树">
-<meta name="twitter:description" content="从CSDN迁徙而来">
+<meta name="twitter:description" content="心得：看了《数据结构和算法分析》，《算法导论》以及《算法》上关于红黑树的章节，总算把红黑树的实现和操作给理解了一边。虽然插入和删除的情况有些复杂，因为1,2年前看过一次，后来就忘了，感觉还是当时没有真正理解。
+因此记住插入和删除的形式是不行的，关键是结合红黑树的5个特点，理解插入和删除中循环不变式的以及终止条件。这样才能知道为什么要弄一个“一重额外的黑色”才能知道为什么红黑树一次更新可以在O(1)">
   
     <link rel="alternative" href="/atom.xml" title="Zerohuan的博客" type="application/atom+xml">
   
@@ -115,7 +120,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java小工具/" style="font-size: 10px;">Java小工具</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 15px;">TCP/IP</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a>
+						<a href="/tags/JVM/" style="font-size: 13.33px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 16.67px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java小工具/" style="font-size: 10px;">Java小工具</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 13.33px;">TCP/IP</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
 					</div>
 				</section>
 				
@@ -220,6 +225,10 @@
       
       <div class="article-info article-info-post">
         
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/算法和数据结构/">算法和数据结构</a></li></ul>
+	</div>
+
         
 
         <div class="clearfix"></div>
@@ -228,7 +237,37 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        
+        <p>心得：看了《数据结构和算法分析》，《算法导论》以及《算法》上关于红黑树的章节，总算把红黑树的实现和操作给理解了一边。虽然插入和删除的情况有些复杂，因为1,2年前看过一次，后来就忘了，感觉还是当时没有真正理解。</p>
+<p>因此记住插入和删除的形式是不行的，关键是结合红黑树的5个特点，<strong>理解插入和删除中循环不变式的以及终止条件</strong>。这样才能知道为什么要弄一个“一重额外的黑色”才能知道为什么红黑树一次更新可以在O(1)中完成调整等等。</p>
+<p>之后能够在脑海中演练，画画图，理解和AVL的异同要比把代码背下来有价值多了。</p>
+<p>PS：《数据结构和算法分析》着重讲解了递归实现，但迭代应该更好一些，Java集合框架中采用的是parent引用+迭代的实现方式。</p>
+<h2 id="背景">背景</h2><h3 id="2-3树和2-3-4树">2-3树和2-3-4树</h3><p>B树具有<strong>有序性</strong>和<strong>完美平衡性</strong>，但是插入和删除判断的情况太多了，还且需要额外的开销。通过将2-3树转换成左偏红黑树，2-3-4树转换成完全红黑树，可以用一点代价用更简单的方式处理：<br>以2-3树的转变为例：<br>2-3树中每个键值变为一个独立节点，一个3节点变为两个节点，中间中红色链接相连；<br>条件：<br>（1）红色链接均为左链接；<br>（2）没有任何节点同时和两个红色链接相连，很显然红色节点是一个3-节点分裂的；<br>（3）完美黑平衡（性质5）；<br>相对的2-3-4树红色连接可以左右链接，但是同样不能有上下相邻的两个红色链接。将链接颜色转变为节点的属性，因此可以也就不能有相邻的红色节点（性质4），这条性质很重要，可以保持2-3-4树中4的阶数限制，这是便于操作和O(lgn)操作的保证；</p>
+<h2 id="1-_红黑树的基本条件">1. 红黑树的基本条件</h2><p>（1）节点不是黑的就是红的；<br>（2）根节点是黑色的；<br>（3）每个叶节点NIL是黑色的；<br>（4）红色节点的儿子必须是黑色的；<br>（5）每个节点到后代叶节点的简单路径上，均包含相同数目的黑色节点；</p>
+<h2 id="2-_红黑树的性能">2. 红黑树的性能</h2><p>一棵有n个内部节点的红黑树的高度至多为2lg(n+1)；</p>
+<p>（1）在查找，插入，删除操作的性能都是稳定O(log n)的，插入和删除操作中的上滤会执行O(lgn)次；<br>（2）任何不平衡都会在O(1)次（插入最多2次，删除最多三次）旋转之内解决；</p>
+<h2 id="3-_与AVL树的比较">3. 与AVL树的比较</h2><p>（1）时间复杂度与AVL树相同，但统计性能比AVL树更高；<br>（2）如果插入和删除操作比较多，应当选用红黑树，AVL表现较差；<br>（3）如果数据分布较好可以采用AVL树；<br>（4）红黑树每次更新操作的旋转次数为O(1)（不超过3次），适合实现持久化的搜索树；</p>
+<h2 id="5-_结构和操作">5. 结构和操作</h2><h3 id="5-1_结构">5.1 结构</h3><p>（1）使用一个共同的NIL叶节点，不过也可以直接直接使用NULL，Java中的实现就没有使用空对象，而是直接的null；<br>（2）5条特性；<br>（3）包含：parent引用，red（boolean），left，right，四个核心域；</p>
+<h3 id="5-2_旋转操作">5.2 旋转操作</h3><p>基于p节点的左旋或右旋，主要是3组节点之间指针的调整（以左旋为例）：<br>（1）p节点和其右儿子之间；<br>（2）p的右儿子的左儿子和p之间；<br>（3）p的右儿子和p的父节点之间；</p>
+<h3 id="5-3_插入操作（关键在于叔父节点的颜色和x的位置，变色+旋转）">5.3 插入操作（关键在于叔父节点的颜色和x的位置，变色+旋转）</h3><p>插入操作和二叉搜索树一样在叶节点处插入新的节点x，但这个插入节点一开始是红色的，因此可能破坏性质（2）或性质（4）；</p>
+<p><strong>被破坏的性质：</strong><br>破坏性质（2）时，x是根节点，直接变为黑色，到所有路径黑高+1，就ok了；<br>破坏性质（4）时，x的父节点xp也是红色的，因此要想办法通过旋转“将一个多余的红色节点转过去”，那么x的叔父节点的颜色就很关键：</p>
+<p><strong>修复红黑树平衡条件</strong>：<br><strong>从2-3-4树角度分析，叔父节点是黑色，保证上面是一个3节点，情形一正是因为这时一个4节点，因此要继续上滤；</strong><br>之所以要修复是因为x所在路径上有两个相邻的红色节点（x和xp），那么要想办法通过将一个红色节点（xp）变成黑色。<br>多出来一个黑色怎么办，这样就破坏性质（5）了，需要一次旋转，将祖父节点变成红色（祖父节点原来肯定是黑色，因为父节点是红色），父节点变为黑色旋转成为新的子树根，这样性质（5）保持，x和xp的颜色也正常了。但有个问题，祖父点变为了红色，因此只有在叔父节点是黑色时这样做才可行（否则又多一组相邻的红色节点）。<br>因此要分3种情况来处理，以<strong>xp为祖父节点的左儿子情形</strong>为例（还有一组对称的情形）：<br>PS：x为“新插入节点”，xp为x的父节点，xpp为祖父节点，xppr为x的叔父节点；<br><img src="http://blog.zerohuan.com/images/rbt-insertion.png" alt="插入"></p>
+<p><strong>情形1：叔父节点是红色：</strong><br>正如前面说的，这里无法解决问题，只好上滤，将xp和叔父节点变化黑色，祖父节点变成新的x；<br>实际上，可以对应2-3-4树中，xp，xpp，xppr是一个4节点，这时要分裂这个4节点，中键节点（xp节点）上移，xp变为黑色也就是分裂出来和x节点组成一个3节点，xppr变为黑色，变为一个2节点；</p>
+<p><strong>情形2：叔父节点是黑色，x是xp的右儿子：</strong><br>前面说了，解决相邻的两个红色节点在于“变色+旋转”，关键是旋转之后，x变成了xpp的左儿子，x是红色，xpp也被变成了红色，因此x是xp右儿子时，也不能直接旋转。</p>
+<p>通过一次左旋，将xp变成x的左儿子，这时x指向xp，那么就转化成了情形3；<br>对应一个2-3-4树，2和11节点对应一个3节点，7节点上滤要插入这个3节点，但是颜色分布不对，因此要通过一个左旋，变成情形3，再通过一次右旋更改颜色，这样2,7,11就组成了一个4节点；</p>
+<p><strong>情形3：叔父节点是黑色，x是xp的左儿子：</strong><br>xp变为黑色，xpp变为红色，基于xpp一次右旋，这样两个相邻红色节点就隔开了，同时也没破坏别的性质。</p>
+<p><strong>因此情形1和情形2都是为了转换为情形3才最终解决问题。</strong></p>
+<h3 id="5-4_删除操作">5.4 删除操作</h3><p><strong>删除逻辑（删除节点p）：</strong><br>（1）如果p没有儿子节点，为红色，直接删掉，为黑色，需要调整，x就是p节点，调整完再删除p，删除一个红色节点相当于删除3-节点和4-节点中的非中间元素，不会破坏平衡性；<br>（2）如果p只有一个儿子节点，儿子节点代替p的位置，p不论颜色直接删掉，如果p为黑色，x就是儿子节点，进行调整；<br>（3）如果p有两个儿子节点，可以查找右子树中最左的节点或者左子树中最右节点（设为s），s的值和p的值交换，这个s就成了要删除的节点，而它最多只可能有一个儿子节点，适用于上面两种情况之一。</p>
+<h4 id="5-4-1_删除调整">5.4.1 删除调整</h4><p>本质上来说就是2-3-4树，分裂3-节点或4-节点，补充减少的黑高。<br><strong>循环不变式：</strong><br>按照算法导论上的设计，x所在路径少一个黑色，我们可以假设给它增加一重额外的黑色，这样在删除中同样保持一个性质就是<strong>黑高</strong>不变。这是一种概念上的设计。<br>如果x不是叶节点，以x为根的子树始终满足性质（5）；</p>
+<p><strong>终止条件：</strong><br>（1）x为红色节点，赋值为黑色，黑高将保持；<br>（2）x指向根节点，x都是根节点了剩下的黑高肯定一样了；<br>（3）满足情形4的条件，通过变色+旋转，””补上了””x所在路径的黑高；</p>
+<p><img src="http://blog.zerohuan.com/images/red-black-tree.png" alt="删除的四种情形"></p>
+<p>这张图是算法导论中的，算法导论中使用NIL一个共享的单例哨兵，但这里还是使用null而不是哨兵，因此这里图中<strong>x不为null</strong>。<br>PS：在算法导论中这个x可以是NIL节点，结合书中的删除算法，x节点不为NIL就是红色节点。实际上如果删除一个没有儿子节点的元素，这里的x就是这个元素（可以为黑色）。</p>
+<p>PS：xp为父节点，w为兄弟节点，wr为兄弟的右儿子，wl为兄弟的左儿子，count(x)表示x的黑高。</p>
+<p><strong>以x是xp的左儿子为例</strong>：<br><strong>情形四：兄弟节点为黑色，它的右儿子是红色的：</strong><br>首先分析情形四是因为我觉得另外三种情形只是在向情形四转变。通过一次左旋+变色，x这边路径终于增加了一个黑色节点，而wr从红色变成黑色，因此黑高也没有减少，故而解决了问题，对应B树的操作就是分裂了兄弟节点，兄弟节点的中键节点（D节点），上移，B下移成为独立节点。而图中B和C节点原来的颜色是什么，无关紧要，不影响结果，这大大简化了2-3-4树删除操作。</p>
+<p><strong>情形一：兄弟节点是红色：</strong><br>兄弟节点w是红色，首先它一定会有两个黑色儿子节点。因为红黑树是完美黑平衡，因此有count(w) = count(x) + 1，而w是红色，那它必有两个黑色的儿子。这时通过一次在xp父亲节点上的左旋，x就可以得到一个黑色的兄弟节点。</p>
+<p><strong>情形二：兄弟节点为黑色，它的两个儿子是黑色：</strong><br>如果C和E都是黑色或者为null，那么兄弟节点没有红色可以分裂出来，就继续上滤；兄弟节点w变成红色（黑高减一），x指向xp，因为x添加了额外一重黑色，因此实际路径黑高未减少；</p>
+<p><strong>情形三：兄弟节点为黑色，右儿子是黑色，左儿子是红色：</strong><br>这种情况可以直接转化为情形四，通过一次在w节点上的右旋，C变为黑色，D变为红色，黑高保持不变，此时x的兄弟节点为黑色并且有红色的右儿子了。</p>
+<h1 id="6-_应用">6. 应用</h1><p>（1）在Java中， TreeMap，Java 8中HashMap中TreeNode节点都采用了红黑树实现。<br>（2）C++中，STL的map和set也应用了红黑树；<br>（3）Linux进程调度Completely Fair Scheduler；<br>（4）用红黑树管理进程控制块epoll在内核中的实现，用红黑树管理事件块；<br>（5）Nginx中，用红黑树管理timer等；</p>
+
       
     </div>
     
