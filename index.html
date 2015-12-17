@@ -114,7 +114,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/JVM/" style="font-size: 13.33px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 16.67px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java小工具/" style="font-size: 10px;">Java小工具</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 13.33px;">TCP/IP</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
+						<a href="/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java小工具/" style="font-size: 10px;">Java小工具</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 15px;">TCP/IP</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
 					</div>
 				</section>
 				
@@ -280,10 +280,10 @@
 
 
   
-    <article id="post-Java-8集合框架源码学习——HashMap" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-Java 8集合框架源码学习——HashMap" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2015/12/12/Java-8集合框架源码学习——HashMap/" class="article-date">
+      <a href="/2015/12/12/Java 8集合框架源码学习——HashMap/" class="article-date">
   	<time datetime="2015-12-12T06:06:52.000Z" itemprop="datePublished">2015-12-12</time>
 </a>
     </div>
@@ -297,7 +297,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/12/Java-8集合框架源码学习——HashMap/">Java 8集合框架源码学习</a>
+      <a class="article-title" href="/2015/12/12/Java 8集合框架源码学习——HashMap/">Java 8集合框架源码学习——HashMap</a>
     </h1>
   
 
@@ -306,7 +306,266 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        
+        <p><strong>心得</strong>：相较于JDK 1.7，Java 8中的HashMap有了较大的性能提升。修改了hash和resize方式，增加了红黑树的支持。</p>
+<p><strong>学习参考资料</strong>：<br>（1）<a href="http://coolshell.cn/articles/9606.html" target="_blank" rel="external">疫苗：Java HashMap的死循环</a>；</p>
+<h1 id="1-_HashMap要点">1. HashMap要点</h1><p><strong>（1）结构特点</strong>：Java中的HashMap是基于“数组+链表”的方式（链表法解决冲突），到了Java 8，应该是“数组+链表/红黑树”的方式。<br><strong>（2）线程安全</strong>：HashMap是不安全，Collections Framework中有两种线程安全的实现：Collections.synchronizedMap(new java.util.HashMap&lt;&gt;());和ConcurrentHashMap，前者是锁整个表，后者是16个分段锁：<br>学习参考资料（1），展示了Java 7中，并发出现“死循环”的一种情形，就是在resize过程中，迁移Entry到新桶中是产生了一个有环的链表造成的，Java 7中resize的transfer是在链表头部插入新节点，Java 8中的新节点的插入是尾部；<br>对于Java 8中resize一个桶中的如果是链表的话，会被分两个链表一个保留在原来索引位置上，一个在（oldCap + oldIndex）位置，因为是在尾部插入，所以它们相对位置不变，但HashMap还是线程不安全的；<br><strong>（3）性能特点</strong>：HashMap可以在常数时间内增加，删除，查找元素，但这也是一种平均情况，使用load factor装载因子计算阈值就是为了减少冲突过多，带来的性能退化；<br><strong>（4）Java 8相对于Java 7中HashMap的区别和优化</strong>：；<br>（1）计算hash值的方法：Java 7中会基于一个随机种子计算hash值，这样每次resize如果得到不同的随机种子，那么原来一个桶中的元素，会被“随机”散列到桶数组中，Java 8放弃了这种做法，基于key的hashCode（通过异或计算综合高位和地位），旧桶的元素如上面所说只可能散列到两个确定位置的桶中，基于好的hashCode计算，这也是随机分布的，这样可以简化了计算并且省去了随机种子的计算；<br>（2）红黑树的应用：当桶的数量超过MIN_TREEIFY_CAPACITY时，向一个元素数达到TREEIFY_THRESHOLD的桶中插入节点时会将桶中的链表转化为红黑树实现，也就是变O(n)的查找转变为O(log n)；<br><strong>（5）HashMap中优化性能的设计</strong>：<br>（1）何时进行resize：和ArrayList一次扩展为原大小的3/2类似，HashMap的桶数组一次扩展为原数组的2倍，控制扩展和移动的次数；<br>（2）桶数组的容量是2的幂次方，这样设计有三个好处，一是2的幂次方减1正好可以得到一个计算index的掩码，二是扩展大小时一次位运算（&lt;&lt;）既可以计算出新的容量同时有保持了2的幂次方这一特点，三是进行迁移旧桶元素时，可以方便计算出元素新桶数组中两个位置；<br><strong>（6）HashMap的应用</strong>：<br>根据HashMap特点，可以知道它可以实现常数时间的精确查找，插入和删除，可以通过它建立在内存中一些简单的运行时缓存数据；<br>但是显然哈希表不支持很好的范围查找，另外的对于过多的数据在Java 7中可能造成退化成链表的情形，因此一个好的hashCode实现是十分重要的，当然过大的数据也不太可能到放在内存里（内存泄漏，HashMap中有大量过期数据是个需要注意的问题，当然我们可以使用WeakHashMap）；</p>
+<p>PS：覆盖了equals，一定要覆盖hashCode函数，否则equals相等，hashCode不相等就扯淡了。</p>
+<h1 id="2-_结构">2. 结构</h1><h2 id="2-1_重要的值">2.1 重要的值</h2><h3 id="容量：">容量：</h3><pre><code><span class="comment">//默认初始化容量，HashMap容量必须是2的幂次方</span>
+<span class="keyword">static</span> final <span class="keyword">int</span> DEFAULT_INITIAL_CAPACITY = <span class="number">1</span> &lt;&lt; <span class="number">4</span>; <span class="comment">// 16</span>
+<span class="comment">//最大容量不得超过1&lt;&lt;30</span>
+<span class="keyword">static</span> final <span class="keyword">int</span> MAXIMUM_CAPACITY = <span class="number">1</span> &lt;&lt; <span class="number">30</span>;
+</code></pre><h3 id="扩展：">扩展：</h3><p>（1）容量 × 装载因子：超过这个阈值，将进行resize扩展为原来大小的2倍；<br>（2）桶中元素树结构化（用红黑树代替链表）：桶中元素数超过TREEIFY_THRESHOLD并且桶的数量超过MIN_TREEIFY_CAPACITY会进行树结构化，否则超过TREEIFY_THRESHOLD使用resize扩展桶容量；</p>
+<pre><code><span class="comment">//默认装载因子，0.75是权衡空间和时间开销之后的综合考虑</span>
+<span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">float</span> DEFAULT_LOAD_FACTOR = <span class="number">0.75</span>f;
+<span class="comment">//超过这个阈值将使用红黑树组织桶中的结点，而不是链表</span>
+<span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TREEIFY_THRESHOLD = <span class="number">8</span>;
+<span class="comment">//只有表的大小超过这个阈值，桶才可以被转换成树而不是链表（为超过这个值时，应该使用resize）</span>
+<span class="comment">//这个值是TREEIFY_THRESHOLD的4倍，以便resizing和treeification之间产生冲突</span>
+<span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> MIN_TREEIFY_CAPACITY = <span class="number">64</span>;
+</code></pre><h2 id="2-2_重要的属性">2.2 重要的属性</h2><p>（1）桶数组（table）：延迟加载，第一次插入数据前分配内存，<strong>桶的大小是2的幂次方</strong>，好处是便于快速计算hash值和扩展；<br>（2）阈值和装载因子（threshold，loadFactor）：有capacity × load factor，用一个变量保存它是因为每次put新键值对都要检查它，显然不能每次都计算；<br>（3）键值对数量（size）；<br>（4）修改计数器：fail-fast机制，这个机制不能用于维护正确性，只能用于调试bug；<br>（5）视图（entrySet，keySet，values）：键值对的保存方式使用“数组+链表/红黑树”，这三个视图基于这个实现采用集合方式返回数据，主要用于遍历；</p>
+<pre><code><span class="comment">//延迟加载，长度总为2的幂次方</span>
+<span class="keyword">transient</span> Node&lt;K,V&gt;[] table;
+<span class="comment">//键值对数量</span>
+<span class="keyword">transient</span> <span class="keyword">int</span> <span class="keyword">size</span>;
+
+<span class="comment">//fail-fast</span>
+<span class="keyword">transient</span> <span class="keyword">int</span> modCount;
+
+<span class="comment">//下一次resize的阈值 (capacity * load factor)</span>
+<span class="keyword">int</span> threshold;
+<span class="comment">//装载因子</span>
+<span class="keyword">final</span> <span class="keyword">float</span> loadFactor;
+
+<span class="comment">//视图</span>
+<span class="comment">//键值对缓存，它们的映射关系集合保存在entrySet中，即使Key在外部修改导致hashCode变化，缓存中还可以找到映射关系</span>
+<span class="keyword">transient</span> Set&lt;Map.Entry&lt;K,V&gt;&gt; entrySet;
+<span class="keyword">transient</span> <span class="keyword">volatile</span> Set&lt;K&gt;        keySet;
+<span class="keyword">transient</span> <span class="keyword">volatile</span> Collection&lt;V&gt; values;
+</code></pre><h2 id="2-3_构造器">2.3 构造器</h2><p>构造器重载版本：<br>（1）指定初始容量和装载因子：不指定是使用默认的值，延迟初始化到第一次添加键值对；<br>（2）拷贝构造器：使用默认装载因子，容量大小是<strong>不小于DEFAULT_INITIAL_CAPACITY的</strong>，<strong>最小的</strong>，<strong>超过传入键值对数量的</strong>的<strong>2的幂次方；</strong></p>
+<pre><code><span class="comment">//传入指定初始化容量，将计算好threshold的值，第一次放入元素时分配threshold大小的数组</span>
+<span class="function"><span class="keyword">public</span> <span class="title">HashMap</span><span class="params">(<span class="keyword">int</span> initialCapacity, <span class="keyword">float</span> loadFactor)</span> </span>{
+    <span class="keyword">if</span> (initialCapacity &lt; <span class="number">0</span>)
+        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"Illegal initial capacity: "</span> +
+                initialCapacity);
+    <span class="keyword">if</span> (initialCapacity &gt; MAXIMUM_CAPACITY)
+        initialCapacity = MAXIMUM_CAPACITY;
+    <span class="keyword">if</span> (loadFactor &lt;= <span class="number">0</span> || Float.isNaN(loadFactor))
+        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"Illegal load factor: "</span> +
+                loadFactor);
+    <span class="keyword">this</span>.loadFactor = loadFactor;
+    <span class="comment">//此时table还未分配到内存，threshold就是将要分配的数组大小</span>
+    <span class="keyword">this</span>.threshold = tableSizeFor(initialCapacity);
+}
+<span class="function"><span class="keyword">public</span> <span class="title">HashMap</span><span class="params">(<span class="keyword">int</span> initialCapacity)</span> </span>{
+    <span class="keyword">this</span>(initialCapacity, DEFAULT_LOAD_FACTOR);
+}
+<span class="function"><span class="keyword">public</span> <span class="title">HashMap</span><span class="params">()</span> </span>{
+    <span class="keyword">this</span>.loadFactor = DEFAULT_LOAD_FACTOR; <span class="comment">// all other fields defaulted</span>
+}
+<span class="function"><span class="keyword">public</span> <span class="title">HashMap</span><span class="params">(Map&lt;? <span class="keyword">extends</span> K, ? <span class="keyword">extends</span> V&gt; m)</span> </span>{
+    <span class="keyword">this</span>.loadFactor = DEFAULT_LOAD_FACTOR;
+    putMapEntries(m, <span class="keyword">false</span>);
+}
+</code></pre><h2 id="3-_操作">3. 操作</h2><h2 id="3-1_核心内部操作">3.1 核心内部操作</h2><h4 id="计算容量，hash值，索引值：">计算容量，hash值，索引值：</h4><p>（1）计算容量：<code>tableSizeFor()</code>方法，使用位运算快速计算；<br>（2）hash值的计算：因为容量最小是16，而计算索引值的时候用（容量-1）作为掩码的，<strong>那可能因为hash值的高位不会被计算而导致冲突的概率增加</strong>；<br>（3）计算索引值：JDK 7中有一个indexFor方法计算索引值，Java 8中去掉了，但是逻辑没有变，比如在putVal方法中<code>p = tab[i = (n - 1) &amp; hash]</code>；</p>
+<pre><code><span class="comment">//找到最小的大于等于cap的2的幂次方，二进制位运算</span>
+<span class="function"><span class="keyword">static</span> final <span class="keyword">int</span> <span class="title">tableSizeFor</span><span class="params">(<span class="keyword">int</span> cap)</span> </span>{
+    <span class="keyword">int</span> n = cap - <span class="number">1</span>; <span class="comment">//减1是为了排除“100000”这种情况</span>
+    n |= n &gt;&gt;&gt; <span class="number">1</span>; <span class="comment">//这里位运算就是在用最高位的1“铺满所有位”</span>
+    n |= n &gt;&gt;&gt; <span class="number">2</span>;
+    n |= n &gt;&gt;&gt; <span class="number">4</span>;
+    n |= n &gt;&gt;&gt; <span class="number">8</span>;
+    n |= n &gt;&gt;&gt; <span class="number">16</span>;
+    <span class="keyword">return</span> (n &lt; <span class="number">0</span>) ? <span class="number">1</span> : (n &gt;= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + <span class="number">1</span>;
+}
+
+<span class="comment">//计算key的hash值，这里在hashCode基础上做了一次“高位向低位传播”</span>
+<span class="comment">//因为计算索引值是(cap - 1) &amp; hash，当cap小于等于16时高位将无法起作用</span>
+<span class="function"><span class="keyword">static</span> final <span class="keyword">int</span> <span class="title">hash</span><span class="params">(Object key)</span> </span>{
+    <span class="keyword">int</span> h;
+    <span class="keyword">return</span> (key == null) ? <span class="number">0</span> : (h = key.hashCode()) ^ (h &gt;&gt;&gt; <span class="number">16</span>);
+}
+</code></pre><h4 id="重新分配桶数组（resize方法，三步：先确定桶的大小，再创建数组对象，最后给旧桶中元素搬家）">重新分配桶数组（resize方法，三步：先确定桶的大小，再创建数组对象，最后给旧桶中元素搬家）</h4><p>（1）桶数组不为空，扩展为原大小两倍<code>(newCap = oldCap &lt;&lt; 1)</code>，<strong>2倍扩展+阈值是一个重要的分配优化策略，这样可以大大减少分配数组对象并复制元素的次数</strong>：</p>
+<pre><code><span class="comment">//一，原数组不为空</span>
+<span class="keyword">if</span>(oldCap &gt; <span class="number">0</span>) {
+    <span class="comment">//如果oldCap已经为最大容量</span>
+    <span class="keyword">if</span>(oldCap &gt;= MAXIMUM_<span class="built_in">CAPACITY</span>) {
+        threshold = MAXIMUM_<span class="built_in">CAPACITY</span>;
+        <span class="keyword">return</span> oldTab;
+    } <span class="keyword">else</span> <span class="keyword">if</span>((newCap = oldCap &lt;&lt; <span class="number">1</span>) &lt;= MAXIMUM_<span class="built_in">CAPACITY</span> &amp;&amp;
+            oldCap &gt; DEFAULT_INITIAL_<span class="built_in">CAPACITY</span>)
+        threshold = oldThr &lt;&lt; <span class="number">1</span>; <span class="comment">//增加阈值</span>
+}
+</code></pre><p>（2）桶数组为空，第一次分配，结合不同构造器的情况细节稍有不同：</p>
+<pre><code><span class="comment">//重新创建table数组</span>
+<span class="comment">//原数组为空，oldThr不为空，扩展为oldThr大小</span>
+<span class="keyword">else</span> <span class="keyword">if</span>(oldThr &gt; <span class="number">0</span>)
+    newCap = oldThr;
+<span class="comment">//原数组为空，oldThr为空，全部使用默认值</span>
+<span class="keyword">else</span> {
+    <span class="comment">//全部使用默认值</span>
+    newCap = DEFAULT_INITIAL_<span class="built_in">CAPACITY</span>;
+    newThr = (<span class="keyword">int</span>)(DEFAULT_INITIAL_<span class="built_in">CAPACITY</span> * loadFactor);
+}
+</code></pre><p>（3）分配新内存：</p>
+<pre><code>//<span class="keyword">Node</span><span class="identifier"></span><span class="title">[]不具备类型检查的能力，因此要通过强制类型转换
+//另外，不能创建参数化类型的数组
+@SuppressWarnings</span>({<span class="string">"rawtypes"</span>,<span class="string">"unchecked"</span>})
+<span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;K</span>,V&gt;[] newTab = (<span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;K</span>,V&gt;[])new <span class="keyword">Node</span><span class="identifier"></span><span class="title">[newCap</span>];
+table = newTab;
+</code></pre><p>将元素“移动”到新桶中也分几种情况：<br>（4）桶中只有一个元素：</p>
+<pre><code><span class="keyword">if</span>(<span class="keyword">e</span>.next == null)
+    <span class="comment">//桶中只有一个元素，不可能是TreeNode直接放入新表的指定位置</span>
+    newTab[<span class="keyword">e</span>.hash &amp; (newCap - 1)] = <span class="keyword">e</span>;
+</code></pre><p> （5）第一个元素是红黑树节点：</p>
+<pre><code><span class="keyword">else</span> <span class="keyword">if</span>(e <span class="keyword">instanceof</span> TreeNode) {
+   e = ((TreeNode&lt;K,V&gt;)p).putTreeVal(<span class="keyword">this</span>, tab, hash, <span class="variable">key</span>, value);
+}
+</code></pre><p> （6）桶中存放的是链表：<br> 相对与Java 7这里也有优化：<br> 不存在rehash重新计算的可能，由于hash值不变，容量是直接×2的，因此旧桶中的一个链表实际上最多会被分成两个链表一个在原来的索引位置（oldIndex）上，另一个就在oldIndex+oldCap位置上。</p>
+<pre><code><span class="comment">/*
+桶中存在一个链表，需要将链表重新整理到新表当中，因为newCap是oldCap的两倍所以原节点的索引值要么和原来一样，要么就是原(索引+oldCap)和JDK 1.7中实现不同这里不存在rehash，直接使用原hash值JDK 1.7中resize过程是在链表头插入，这里是在链表尾插入
+*/</span>
+Node&lt;K,V&gt; loHead = <span class="keyword">null</span>, loTail = <span class="keyword">null</span>;
+Node&lt;K,V&gt; hiHead = <span class="keyword">null</span>, hiTail = <span class="keyword">null</span>;
+<span class="keyword">do</span> {
+    <span class="keyword">if</span>((e.hash &amp; oldCap) == <span class="number">0</span>) {
+        <span class="comment">//和原索引值一样</span>
+        <span class="keyword">if</span>(loTail == <span class="keyword">null</span>)
+            loHead = e;
+        <span class="keyword">else</span>
+            loTail.<span class="keyword">next</span> = e;
+        loTail = e;
+    } <span class="keyword">else</span> {
+        <span class="keyword">if</span>(hiTail == <span class="keyword">null</span>)
+            hiHead = e;
+        <span class="keyword">else</span>
+            hiTail.<span class="keyword">next</span> = e;
+        hiTail = e;
+    }
+} <span class="keyword">while</span> ((e = e.<span class="keyword">next</span>) != <span class="keyword">null</span>);
+<span class="keyword">if</span>(loTail != <span class="keyword">null</span>) {
+    loTail.<span class="keyword">next</span> = <span class="keyword">null</span>;
+    newTab[j] = loHead;
+}
+<span class="keyword">if</span>(hiTail != <span class="keyword">null</span>) {
+    hiTail.<span class="keyword">next</span> = <span class="keyword">null</span>;
+    newTab[j + oldCap] = hiHead;
+}
+</code></pre><h3 id="添加键值对">添加键值对</h3><p>（1）第一次插入或桶是空的：</p>
+<pre><code><span class="comment">//如果是第一次添加元素</span>
+<span class="keyword">if</span>((<span class="keyword">tab</span> = <span class="keyword">table</span>) == null || (<span class="keyword">n</span> = <span class="keyword">tab</span>.length) == 0)
+    <span class="keyword">n</span> = (<span class="keyword">tab</span> = resize()).length;
+<span class="comment">//对应索引位置的桶是空的，直接创建新节点填入</span>
+<span class="keyword">if</span>((p = <span class="keyword">tab</span>[(i = (<span class="keyword">n</span> - 1) &amp; hash)]) == null)
+    <span class="keyword">tab</span>[i] = newNode(hash, key, value, null);
+</code></pre><p>（2）桶中有元素，首先检查第一个元素，因为树结构必须大于2个节点，再分类型检查；</p>
+<pre><code><span class="comment">//首先检查第一个节点</span>
+<span class="keyword">if</span>(p.hash == hash &amp;&amp;
+    ((k = p.<span class="variable">key</span>) == <span class="variable">key</span> || (<span class="variable">key</span> != <span class="keyword">null</span> &amp;&amp; <span class="variable">key</span>.equals(k))))
+    e = p;
+</code></pre><p>（3）桶中是红黑树：</p>
+<pre><code><span class="keyword">else</span> <span class="keyword">if</span> (p <span class="keyword">instanceof</span> TreeNode)
+    e = ((TreeNode&lt;K,V&gt;)p).putTreeVal(<span class="keyword">this</span>, tab, hash, <span class="variable">key</span>, value);
+</code></pre><p>（4）桶中是链表，添加新节点，如果达到了TREEIFY_THRESHOLD，需要检查是否要转换为红黑树结构，<code>treeifyBin()</code>会检查桶数组的大小是否超过MIN_TREEIFY_CAPACITY（64），不超过只是进行resize扩展，否则才转换树：</p>
+<pre><code>for <span class="list">(<span class="keyword">int</span> binCount = <span class="number">0</span><span class="comment">; ; ++binCount) {</span>
+    if <span class="list">(<span class="list">(<span class="keyword">e</span> = p.next)</span> == null)</span> {
+        p.next = newNode<span class="list">(<span class="keyword">hash</span>, key, value, null)</span><span class="comment">;</span>
+        if <span class="list">(<span class="keyword">binCount</span> &gt;= TREEIFY_THRESHOLD - <span class="number">1</span>)</span> // <span class="number">-1</span> for <span class="number">1</span>st
+            treeifyBin<span class="list">(<span class="keyword">tab</span>, hash)</span><span class="comment">;</span>
+        break<span class="comment">;</span>
+    }
+    if <span class="list">(<span class="keyword">e</span>.hash == hash <span class="keyword">&amp;&amp;</span>
+        <span class="list">(<span class="list">(<span class="keyword">k</span> = e.key)</span> == key || <span class="list">(<span class="keyword">key</span> != null <span class="keyword">&amp;&amp;</span> key.equals<span class="list">(<span class="keyword">k</span>)</span>)</span>)</span>)</span>
+        break<span class="comment">;</span>
+    p = e<span class="comment">;</span>
+}</span>
+</code></pre><h3 id="查找键值对（根据hash值和key查找）">查找键值对（根据hash值和key查找）</h3><p>这里hash值有两个作用：<br>一是根据hash确定桶的位置，基于良好的hashCode实现，这一步正式HashMap常数操作时间的保证。<br>（2）hash和key本质上是key的hashCode和equals方法的应用，hashCode不相等，equals必然不相等，hashCode相等再检查equals是否相等。反映到程序上就是一个短路优化。</p>
+<p>如果桶数组不为空，而且对应的桶（hash &amp; (table.length - 1)）中有节点：<br>（1）首先检查桶中第一个节点：</p>
+<pre><code><span class="comment">//总是检查第一个节点的原因：无论是树结构还是链表，都可以方便的检查第一个节点，树结构的节点数必然大于1</span>
+<span class="comment">//先检查hash，利用好短路特性</span>
+if(<span class="built_in">first</span>.hash == hash &amp;&amp;
+    ((k = <span class="built_in">first</span>.<span class="built_in">key</span>) == <span class="built_in">key</span> || (<span class="built_in">key</span> != <span class="built_in">null</span> &amp;&amp; <span class="built_in">key</span>.equals(k))))
+    return <span class="built_in">first</span>;
+</code></pre><p>（2）多于一个节点，检查类型，分别处理：</p>
+<pre><code><span class="comment">//多于一个节点，继续检查</span>
+    <span class="keyword">if</span>((e = first.next) != <span class="keyword">null</span>) {
+        <span class="keyword">if</span>(first <span class="keyword">instanceof</span> TreeNode)
+            <span class="keyword">return</span> (TreeNode)first.getTreeNode(hast, <span class="variable">key</span>);
+        do {
+            <span class="keyword">if</span>(e.hash == hash &amp;&amp;
+                    ((k = e.<span class="variable">key</span>) == <span class="variable">key</span> || (<span class="variable">key</span> != <span class="keyword">null</span> &amp;&amp; <span class="variable">key</span>.equals(k))))
+                <span class="keyword">return</span> e;
+        } <span class="keyword">while</span> ((e = e.next) != <span class="keyword">null</span>);
+    }
+</code></pre><h3 id="删除键值对">删除键值对</h3><p>基本的操作和添加大致相同，另外</p>
+<p>如果桶数组不为空，而且对应的桶（hash &amp; (table.length - 1)）中有节点：<br>（1）检查桶中第一个节点：</p>
+<pre><code>if <span class="list">(<span class="keyword">p</span>.hash == hash <span class="keyword">&amp;&amp;</span>
+            <span class="list">(<span class="list">(<span class="keyword">k</span> = p.key)</span> == key || <span class="list">(<span class="keyword">key</span> != null <span class="keyword">&amp;&amp;</span> key.equals<span class="list">(<span class="keyword">k</span>)</span>)</span>)</span>)</span>
+            node = p<span class="comment">;</span>
+</code></pre><p>（2）多于一个节点，检查类型，分别处理：</p>
+<pre><code><span class="keyword">else</span> <span class="keyword">if</span> ((e = p.next) != <span class="keyword">null</span>) {
+    <span class="comment">//桶中是红黑树</span>
+    <span class="keyword">if</span> (p <span class="keyword">instanceof</span> TreeNode)
+        node = ((TreeNode&lt;K,V&gt;)p).getTreeNode(hash, <span class="variable">key</span>);
+    <span class="keyword">else</span> {
+    <span class="comment">//桶中是链表</span>
+        do {
+            <span class="keyword">if</span> (e.hash == hash &amp;&amp;
+                ((k = e.<span class="variable">key</span>) == <span class="variable">key</span> ||
+                 (<span class="variable">key</span> != <span class="keyword">null</span> &amp;&amp; <span class="variable">key</span>.equals(k)))) {
+                node = e;
+                <span class="keyword">break</span>;
+            }
+            p = e;
+        } <span class="keyword">while</span> ((e = e.next) != <span class="keyword">null</span>);
+    }
+}
+</code></pre><p>（3）找了要删除的节点之后，：</p>
+<pre><code>if (<span class="keyword">node</span><span class="identifier"> </span><span class="title">!= null</span> &amp;&amp; (!matchValue || (v = <span class="keyword">node</span>.<span class="identifier"></span><span class="title">value</span>) == value || (value != null &amp;&amp; value.equals(v)))) {
+    //如果是红黑树，删除要保持完美黑平衡
+    if (<span class="keyword">node</span><span class="identifier"> </span><span class="title">instanceof</span> TreeNode)
+        ((TreeNode<span class="tag">&lt;K,V&gt;</span>)<span class="keyword">node</span><span class="identifier"></span><span class="title">).removeTreeNode</span>(this, tab, movable);
+    //如果删除的是链表第一个节点
+    else if (<span class="keyword">node</span><span class="identifier"> </span><span class="title">== p</span>)
+        tab[index] = <span class="keyword">node</span>.<span class="identifier"></span><span class="title">next</span>;
+    //删除非表头节点
+    else
+        p.next = <span class="keyword">node</span>.<span class="identifier"></span><span class="title">next</span>;
+    ++modCount;
+    --size;
+    afterNodeRemoval(<span class="keyword">node</span><span class="identifier"></span><span class="title">);
+    return</span> <span class="keyword">node</span><span class="identifier"></span><span class="title">;
+}</span>
+</code></pre><h3 id="清除（clear方法）">清除（clear方法）</h3><p>清除所有节点，这里只是将“桶给清空了”，链表或者红黑树本身并没有置空操作；</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">void</span> <span class="built_in">clear</span>() {
+    Node&lt;K,V&gt;[] tab;
+    modCount++;
+    <span class="keyword">if</span> ((tab = table) != <span class="keyword">null</span> &amp;&amp; <span class="built_in">size</span> &gt; <span class="number">0</span>) {
+        <span class="built_in">size</span> = <span class="number">0</span>;
+        <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; tab.length; ++i)
+            tab[i] = <span class="keyword">null</span>;
+    }
+}
+</code></pre><h3 id="视图操作">视图操作</h3><p>HashMap本身是数组加链表的关系，但如果需要遍历的话以Set接口来遍历显然是一种很统一的设计。</p>
+<p>因此Map接口提供了Set视图，基于HashMap的存储方式，实现了对<strong>键值对集合</strong>，<strong>键集合</strong>，<strong>值集合</strong>视图访问。</p>
+<p>Set的遍历关键一点是Iterator的实现：</p>
+<h4 id="HashIterator">HashIterator</h4><p>依据HashMap“数组+链表/红黑树”的存储特点，HashMap包含一个骨架类：<strong>HashIterator</strong><br>PS：HashMap中红黑树的实现，TreeNode维护了next节点，可以通过next以类似链表的方式遍历；<br>HashIterator的迭代方式，是沿着桶数组找到一个非空的，迭代这个链表/红黑树，迭代完之后，找到下一个非空的桶继续遍历；</p>
+<h4 id="视图迭代器的实现：">视图迭代器的实现：</h4><pre><code><span class="comment">//键集合迭代器</span>
+<span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">KeyIterator</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">HashIterator</span>
+</span>    implements <span class="type">Iterator</span>&lt;<span class="type">K</span>&gt; {
+    public <span class="keyword">final</span> <span class="type">K</span> next() { <span class="keyword">return</span> nextNode().key; }
+}
+
+<span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">ValueIterator</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">HashIterator</span>
+</span>    implements <span class="type">Iterator</span>&lt;<span class="type">V</span>&gt; {
+    public <span class="keyword">final</span> <span class="type">V</span> next() { <span class="keyword">return</span> nextNode().value; }
+}
+
+<span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">EntryIterator</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">HashIterator</span>
+</span>    implements <span class="type">Iterator</span>&lt;<span class="type">Map</span>.<span class="type">Entry</span>&lt;<span class="type">K</span>,<span class="type">V</span>&gt;&gt; {
+    public <span class="keyword">final</span> <span class="type">Map</span>.<span class="type">Entry</span>&lt;<span class="type">K</span>,<span class="type">V</span>&gt; next() { <span class="keyword">return</span> nextNode(); }
+}
+</code></pre><h4 id="视图集合实现：">视图集合实现：</h4><p>首先一个共同的特点是不能基于视图Set以及它们的迭代器执行添加操作；<br>remove，clear，contains基于HashMap对应方法实现的。</p>
+
       
     </div>
     
@@ -377,478 +636,6 @@
       
 	<div class="article-tag tagcloud">
 		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/TCP-IP/">TCP/IP</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
-    <article id="post-Java-8集合源码学习——ArrayList" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/12/11/Java-8集合源码学习——ArrayList/" class="article-date">
-  	<time datetime="2015-12-11T06:48:41.000Z" itemprop="datePublished">2015-12-11</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/11/Java-8集合源码学习——ArrayList/">Java 8集合源码学习——ArrayList</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>心得：<br>学习、实践的时候如果能够触类旁通是一件很爽的事，学习源码能很学到很多优秀思想和设计，而优秀的思想总是相通的。比如ArrayList中扩展数组大小时，最少扩展为原数组的3/2，这种做法避免了频繁小幅度的扩展造成频繁的复制动作（让我想到了TCP拥塞控制的滑动窗口的大小控制），集合框架中有很多精妙的思想和技巧，深入学习，仔细思考真的可以受益颇多。</p>
-<h2 id="1-_ArrayList要点">1. ArrayList要点</h2><p><strong>（1）基于数组实现</strong>：内部表示通过控制对象数组的访问，数组是不能动态修改大小的，因此根据元素数量/指定容量大小，通过创建新数组，复制元素对象是ArrayList的核心原理之一；<br><strong>（2）性能特点</strong>：因为基于数组的，因此可以实现快速随机访问，比LinkedList效率高；但是增加/删除等需要通过复制数组元素（部分或全部）来实现，效率比LinkedList低；<br><strong>（3）线程不安全</strong>：同样使用modCount修改计数，类似乐观锁的fail-fast来防止并发修改带来的不一致，ArrayList的每个Iterator，ListIterator，SubList实例都独立维护一个基于ArrayList实例modCount的expectedModCount；<br><strong>（4）优化手段</strong>：<br><strong>单例模式应用</strong>：EMPTY_ELEMENTDATA和DEFAULTCAPACITY_EMPTY_ELEMENTDATA这两个单例的空数组对象，分别被“空状态”和“默认状态”的ArrayList共享；<br><strong>grow方法的增长机制</strong>：每次扩展数组的大小至少扩展到原数据的3/2大小，减少了创建新数组和复制动作的次数；<br><strong>（5）克隆和序列化</strong>：实现了Serializable和Cloneable接口，支持序列化和克隆，其中序列化使用writeObject和readObject不采用默认的序列化机制，只保存size和元素对象，一方面是隐藏内部表示信息，一方面节省了开销；<br><strong>（6）防止内存泄漏的置空动作</strong>：维护一个数组也是自己维护内存管理，因为数组也持有这引用，删除时要及时置空不能影响GC活动，虽然LinkedList已经说了，再强调下；</p>
-<h2 id="2-_基本结构和操作">2. 基本结构和操作</h2><h3 id="2-1_重要属性">2.1 重要属性</h3><pre><code><span class="comment">//默认初始化容量</span>
-<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="built_in">int</span> DEFAULT_CAPACITY = <span class="number">10</span>;
-<span class="comment">/*
- 所有Empty数组列表共享一个空数组对象，不仅可以减少重复对象的创建（单例模式应用），还可以标识空列表状态
- 单例模式（区别于享元模式）：
- 一是这里只有一个对象；
- 二是不仅仅是节省内存，更重要的是起到共享并标识“空数组列表”的作用；
- EMPTY_ELEMENTDATA标识“空”状态，DEFAULTCAPACITY_EMPTY_ELEMENTDATA标识默认状态
- */</span>
-<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">Object</span>[] EMPTY_ELEMENTDATA = {};
-<span class="comment">/*
- 默认状态创建数组列表实例使用该数组，使用一个单例空数组并且不直接使用EMPTY_ELEMENTDATA而是新键一个空数组的原因是：
- 一是用于标识不同的状态，区别于“空数组列表”，DEFAULTCAPACITY_EMPTY_ELEMENTDATA表示数组列表还未插入元素；
- 二是等到实际有元素再分配合适大小的数组内存空间，起到延迟加载的作用；
- 三是同样单例可以让所有默认状态列表使用一个空数组对象，节省内存；
-*/</span>
-<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">Object</span>[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
-<span class="comment">/*
-使用transient的目的是为了隐藏内部表示
-使用Object的原因：
-（1）Object可以引用所有具体类型的数组对象；
-（2）实际的ArrayList的类型参数对于ArrayList对象本身是不可知的，泛型的本质是擦除，并借助变量，方法，类的签名来进行类型检查和转换;
-    因此可以用Object数组存放元素对象，依赖方法和类型参数让编译器和JVM进行类型检查和转换（比如插入checkcast指令等等）；
- */</span>
-<span class="keyword">transient</span> <span class="keyword">Object</span>[] elementData;
-<span class="comment">//元素个数</span>
-<span class="keyword">private</span> <span class="built_in">int</span> <span class="built_in">size</span>;
-
-<span class="comment">/*
-翻译：
-一些实现可能会保存一些首部信息在数组对象中。
-试图分配一个比MAX_ARRAY_SIZE大的数组可能会造成OOM（Requested array size exceeds VM limit）。
-也就是说一些JVM的实现可能会限制数组大小小于Integer.MAX_VALUE，因此检查是必要的。
- */</span>
-<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="built_in">int</span> MAX_ARRAY_SIZE = Integer.MAX_VALUE - <span class="number">8</span>; 
-</code></pre><h3 id="2-2_不同版本的构造器">2.2 不同版本的构造器</h3><p>这里可以看到在创建ArrayList对象实例的时候：<br>（1）ArrayList()：默认状态，使用DEFAULTCAPACITY_EMPTY_ELEMENTDATA，这也是一个空数组，延迟加载，第一次插入时才分配内存；<br>（2）如果指定的初始化容量为0,拷贝构造器传入集合为空，使用EMPTY_ELEMENTDATA；</p>
-<pre><code><span class="comment">/*
-不同版本的构造器
- */</span>
-<span class="comment">//如果指定初始化容量为“0”，使用EMPTY_ELEMENTDATA</span>
-<span class="function"><span class="keyword">public</span> <span class="title">ArrayList</span><span class="params">(<span class="keyword">int</span> initialCapacity)</span> </span>{
-    <span class="keyword">if</span> (initialCapacity &gt; <span class="number">0</span>) {
-        <span class="keyword">this</span>.elementData = <span class="keyword">new</span> Object[initialCapacity];
-    } <span class="keyword">else</span> <span class="keyword">if</span> (initialCapacity == <span class="number">0</span>) {
-        <span class="keyword">this</span>.elementData = EMPTY_ELEMENTDATA;
-    } <span class="keyword">else</span> {
-        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"Illegal Capacity: "</span>+
-                initialCapacity);
-    }
-}
-<span class="comment">//创建默认初始化容量列表，使用DEFAULTCAPACITY_EMPTY_ELEMENTDATA</span>
-<span class="function"><span class="keyword">public</span> <span class="title">ArrayList</span><span class="params">()</span> </span>{
-    <span class="keyword">this</span>.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
-}
-
-<span class="comment">//拷贝构造器，注意使用toArray获取要插入元素对象</span>
-<span class="function"><span class="keyword">public</span> <span class="title">ArrayList</span><span class="params">(Collection&lt;? extends E&gt; c)</span> </span>{
-    elementData = c.toArray();
-    <span class="keyword">if</span>((size = elementData.length) != <span class="number">0</span>) {
-        <span class="comment">/*
-        注意，toArray返回的Object[]引用，而Object[]可以作为超类引用子类对象比如A[]（假设A是E的子类）
-        如果toArray返回是A[]数组对象，那么如果类型B对象（B extends E）可能会引起后续的插入时的ArrayStoreException，读取元素时的ClassCheckException
-        因此如果返回的不是Object[]对象，要创建一个Object[]并复制元素引用
-         */</span>
-        <span class="keyword">if</span>(elementData.getClass() != Object[].<span class="keyword">class</span>) {
-            elementData = Arrays.copyOf(elementData, size, Objects[].<span class="keyword">class</span>);
-        }
-    } <span class="keyword">else</span> {
-        <span class="comment">//一个空数组列表，直接使用EMPTY_ELEMENTDATA</span>
-        elementData = EMPTY_ELEMENTDATA;
-    }
-}
-</code></pre><h3 id="2-3_核心操作">2.3 核心操作</h3><p>主要方法包括：trimToSize（压缩缓存数组），grow（扩展容量），ensure～（不同情况下调用的扩容方法），removeRange（范围删除），batchRemove（批量删除），fastRemove（基于复制的快速复制），这些方法供之后方法调用；</p>
-<pre><code><span class="comment">//压缩缓存区大小，最小化存储区域到size相同的大小</span>
-<span class="keyword">public</span> <span class="keyword">void</span> trimToSize() {
-    modCount++;
-    <span class="keyword">if</span>(<span class="built_in">size</span> &lt; elementData.length) {
-        elementData = (<span class="built_in">size</span> == <span class="number">0</span>)
-                ? EMPTY_ELEMENTDATA
-                : Arrays.copyOf(elementData, <span class="built_in">size</span>);
-    }
-}
-
-<span class="comment">//增加容量到指定大小（溢出会抛出OOM），通过这个方法可以打破MAX_ARRAY_SIZE限制</span>
-<span class="keyword">private</span> <span class="keyword">void</span> grow(<span class="built_in">int</span> minCapacity) {
-    <span class="comment">// overflow-conscious code</span>
-    <span class="built_in">int</span> oldCapacity = elementData.length;
-    <span class="comment">//首先尝试将新容量设置为原容量的（3/2）</span>
-    <span class="comment">//这样做可以避免频繁小幅度的扩张带来的开销，我联想到一个类似的做法是滑动窗口中修改窗口大小的机制</span>
-    <span class="built_in">int</span> newCapacity = oldCapacity + (oldCapacity &gt;&gt; <span class="number">1</span>);
-    <span class="comment">//如果尚未达到指定大小（这说明扩张幅度够大），设置为指定大小</span>
-    <span class="keyword">if</span> (newCapacity - minCapacity &lt; <span class="number">0</span>)
-        newCapacity = minCapacity;
-    <span class="keyword">if</span> (newCapacity - MAX_ARRAY_SIZE &gt; <span class="number">0</span>)
-        newCapacity = hugeCapacity(minCapacity);
-    <span class="comment">// minCapacity is usually close to size, so this is a win:</span>
-    elementData = Arrays.copyOf(elementData, newCapacity);
-}
-
-<span class="keyword">private</span> <span class="keyword">static</span> <span class="built_in">int</span> hugeCapacity(<span class="built_in">int</span> minCapacity) {
-    <span class="keyword">if</span> (minCapacity &lt; <span class="number">0</span>) <span class="comment">// overflow</span>
-        <span class="keyword">throw</span> <span class="keyword">new</span> OutOfMemoryError();
-    <span class="keyword">return</span> (minCapacity &gt; MAX_ARRAY_SIZE) ?
-            Integer.MAX_VALUE :
-            MAX_ARRAY_SIZE;
-}
-
-<span class="comment">//当ArrayList不处于默认状态时，才可能扩展大小为小于DEFAULT_CAPACITY的容量；</span>
-<span class="comment">// 否则只有指定大小超过DEFAULT_CAPACITY时才进行扩展；</span>
-<span class="comment">//注意这个方法是public，区别于ensureCapacityInternal，这个方法是在外部使用的；</span>
-<span class="keyword">public</span> <span class="keyword">void</span> ensureCapacity(<span class="built_in">int</span> minCapacity) {
-    <span class="built_in">int</span> minExpand = (elementData != DEFAULTCAPACITY_EMPTY_ELEMENTDATA)
-            <span class="comment">// any size if not default element table</span>
-            ? <span class="number">0</span>
-            <span class="comment">// larger than default for default empty table. It's already</span>
-            <span class="comment">// supposed to be at default size.</span>
-            : DEFAULT_CAPACITY;
-
-    <span class="keyword">if</span> (minCapacity &gt; minExpand) {
-        ensureExplicitCapacity(minCapacity);
-    }
-}
-
-<span class="comment">//ArrayList内部扩展大小使用此方法，没有上个条件方法限制</span>
-<span class="comment">//但如果处于默认状态，扩展大小仍然不能小于DEFAULT_CAPACITY</span>
-<span class="keyword">private</span> <span class="keyword">void</span> ensureCapacityInternal(<span class="built_in">int</span> minCapacity) {
-    <span class="keyword">if</span> (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
-        minCapacity = Math.<span class="built_in">max</span>(DEFAULT_CAPACITY, minCapacity);
-    }
-
-    ensureExplicitCapacity(minCapacity);
-}
-
-<span class="keyword">private</span> <span class="keyword">void</span> ensureExplicitCapacity(<span class="built_in">int</span> minCapacity) {
-    modCount++;
-
-    <span class="comment">// overflow-conscious code</span>
-    <span class="keyword">if</span> (minCapacity - elementData.length &gt; <span class="number">0</span>)
-        grow(minCapacity);
-}
-
-<span class="comment">//删除[fromIndex, toIndex)范围的元素</span>
-<span class="comment">//操作后将末尾newSize之后的元素置空，防止内存泄漏</span>
-<span class="keyword">protected</span> <span class="keyword">void</span> removeRange(<span class="built_in">int</span> fromIndex, <span class="built_in">int</span> toIndex) {
-    modCount++; <span class="comment">//fail-fast</span>
-    <span class="built_in">int</span> numMoved = <span class="built_in">size</span> - toIndex;
-    System.arraycopy(elementData, fromIndex, elementData, toIndex,
-            numMoved);
-
-    <span class="comment">//清空多余的元素引用</span>
-    <span class="built_in">int</span> newSize = <span class="built_in">size</span> - (toIndex - fromIndex);
-    <span class="keyword">for</span>(<span class="built_in">int</span> i = newSize; i &lt; <span class="built_in">size</span>; i++)
-        elementData[i] = <span class="keyword">null</span>;
-    <span class="built_in">size</span> = newSize;
-}
-
-<span class="comment">//批量删除，complement为false时删除数组缓冲区中集合c包含的元素，true，删除集合c中不包含的元素，可以用实现交，差等集合运算</span>
-<span class="comment">//使用复制的方法，而不是调用remove()的方式，减少了元素的重复复制</span>
-<span class="comment">//同样要将newSize之外的元素引用置空，防止内存泄漏</span>
-<span class="keyword">private</span> <span class="built_in">boolean</span> batchRemove(Collection&lt;?&gt; c, <span class="built_in">boolean</span> complement) {
-    <span class="keyword">final</span> <span class="keyword">Object</span>[] elementData = <span class="keyword">this</span>.elementData;
-    <span class="built_in">int</span> r = <span class="number">0</span>, w = <span class="number">0</span>; <span class="comment">//不变式，w &lt;= r</span>
-    <span class="built_in">boolean</span> modified = <span class="keyword">false</span>;
-    <span class="keyword">try</span> {
-        <span class="keyword">for</span> (; r &lt; <span class="built_in">size</span>; r++) {
-            <span class="keyword">if</span>(c.contains(elementData[r]) == complement) {
-                elementData[w++] = elementData[r];
-            }
-        }
-    } <span class="keyword">finally</span> {
-        <span class="comment">//如果有异常抛出，保存好还未处理的数组元素</span>
-        <span class="keyword">if</span> (r != <span class="built_in">size</span>) {
-            System.arraycopy(elementData, r,
-                    elementData, w,
-                    <span class="built_in">size</span> - r);
-            w += <span class="built_in">size</span> - r;
-        }
-        <span class="keyword">if</span>(w != <span class="built_in">size</span>) {
-            <span class="keyword">for</span>(<span class="built_in">int</span> i = w; i &lt; <span class="built_in">size</span>; i++)
-                elementData[i] = <span class="keyword">null</span>;
-            modCount += <span class="built_in">size</span> - w;
-            <span class="built_in">size</span> = w;
-            modified = <span class="keyword">true</span>;
-        }
-    }
-    <span class="keyword">return</span> modified;
-}
-
-<span class="comment">//由调用者检查index是否合法</span>
-<span class="keyword">private</span> <span class="keyword">void</span> fastRemove(<span class="built_in">int</span> index) {
-    modCount++;
-    <span class="built_in">int</span> numMoved = <span class="built_in">size</span> - index - <span class="number">1</span>;
-    <span class="keyword">if</span> (numMoved &gt; <span class="number">0</span>)
-        System.arraycopy(elementData, index+<span class="number">1</span>, elementData, index,
-                numMoved);
-    elementData[--<span class="built_in">size</span>] = <span class="keyword">null</span>; <span class="comment">// clear to let GC do its work</span>
-}
-</code></pre><h3 id="2-4_辅助方法">2.4 辅助方法</h3><p>（1）检查索引是否合法；<br>（2）返回指定位置的元素；</p>
-<pre><code><span class="keyword">private</span> <span class="keyword">void</span> rangeCheck(<span class="keyword">int</span> <span class="keyword">index</span>) {
-    <span class="keyword">if</span> (<span class="keyword">index</span> &gt;= size)
-        <span class="keyword">throw</span> <span class="keyword">new</span> IndexOutOfBoundsException(outOfBoundsMsg(<span class="keyword">index</span>));
-}
-
-<span class="keyword">private</span> <span class="keyword">void</span> rangeCheckForAdd(<span class="keyword">int</span> <span class="keyword">index</span>) {
-    <span class="keyword">if</span> (<span class="keyword">index</span> &gt; size || <span class="keyword">index</span> &lt; <span class="number">0</span>)
-        <span class="keyword">throw</span> <span class="keyword">new</span> IndexOutOfBoundsException(outOfBoundsMsg(<span class="keyword">index</span>));
-}
-
-<span class="keyword">private</span> String outOfBoundsMsg(<span class="keyword">int</span> <span class="keyword">index</span>) {
-    <span class="keyword">return</span> <span class="string">"Index: "</span>+<span class="keyword">index</span>+<span class="string">", Size: "</span>+size;
-}
-
-<span class="comment">//复用</span>
-@SuppressWarnings(<span class="string">"unchecked"</span>)
-E elementData(<span class="keyword">int</span> <span class="keyword">index</span>) {
-    <span class="keyword">return</span> (E) elementData[<span class="keyword">index</span>];
-}
-</code></pre><h3 id="2-5_SubList与ArrayList的关系">2.5 SubList与ArrayList的关系</h3><p>该SubList是非静态内部类实现，基于同一个缓存数组，和Iterator一样维护一个modCount副本，防止并发修改；</p>
-<pre><code><span class="annotation">@Override</span>
-<span class="function"><span class="keyword">public</span> List&lt;E&gt; <span class="title">subList</span><span class="params">(<span class="keyword">int</span> fromIndex, <span class="keyword">int</span> toIndex)</span> </span>{
-    subListRangeCheck(fromIndex, toIndex, size);
-    <span class="keyword">return</span> <span class="keyword">new</span> SubList(<span class="keyword">this</span>, <span class="number">0</span>, fromIndex, toIndex);
-}
-</code></pre><h3 id="2-6_List实现要点">2.6 List实现要点</h3><p>toArray使用保护性拷贝；<br>总来的来说这一块比较简单；</p>
-<pre><code><span class="comment">//获取指定位置的元素对象引用</span>
-@Override
-<span class="keyword">public</span> E <span class="built_in">get</span>(<span class="built_in">int</span> index) {
-    rangeCheck(index);
-    <span class="keyword">return</span> elementData(index);
-}
-
-<span class="comment">//注意set方法不是结构性修改，因此并没有modCount++</span>
-@Override
-<span class="keyword">public</span> E <span class="built_in">set</span>(<span class="built_in">int</span> index, E element) {
-    rangeCheck(index);
-    E oldValue = elementData(index);
-    elementData[index] = element;
-    <span class="keyword">return</span> oldValue;
-}
-
-<span class="comment">//各种add方法实现</span>
-@Override
-<span class="keyword">public</span> <span class="built_in">boolean</span> <span class="built_in">add</span>(E e) {
-    <span class="comment">//检查并扩增大小，该方法会增加修改计数器，并且一次扩展(3/2)大小防止了频繁扩展带来的开销</span>
-    ensureCapacityInternal(<span class="built_in">size</span> + <span class="number">1</span>);
-    elementData[<span class="built_in">size</span>++] = e;
-    <span class="keyword">return</span> <span class="keyword">true</span>;
-}
-
-@Override
-<span class="keyword">public</span> <span class="keyword">void</span> <span class="built_in">add</span>(<span class="built_in">int</span> index, E element) {
-    rangeCheckForAdd(index);
-
-    ensureCapacityInternal(<span class="built_in">size</span> + <span class="number">1</span>);
-    <span class="comment">//将数组缓冲区中，index及之后的结点后移</span>
-    System.arraycopy(elementData, index, elementData, index + <span class="number">1</span>,
-            <span class="built_in">size</span> - index);
-    elementData[index] = element;
-    <span class="built_in">size</span>++;
-}
-
-@Override
-<span class="keyword">public</span> <span class="built_in">boolean</span> addAll(Collection&lt;? extends E&gt; c) {
-    <span class="comment">//获取集合中的元素数组，这样做的好处在于可以自由操作这些元素，而不用影响集合c</span>
-    <span class="keyword">Object</span>[] a = c.toArray();
-    <span class="built_in">int</span> numNew = a.length;
-    ensureCapacityInternal(<span class="built_in">size</span> + numNew); <span class="comment">//增加modCount</span>
-    System.arraycopy(a, <span class="number">0</span>, elementData, <span class="built_in">size</span>, numNew);
-    <span class="built_in">size</span> += numNew;
-    <span class="keyword">return</span> <span class="keyword">true</span>;
-}
-
-@Override
-<span class="keyword">public</span> <span class="built_in">boolean</span> addAll(<span class="built_in">int</span> index, Collection&lt;? extends E&gt; c) {
-    rangeCheckForAdd(index);
-
-    <span class="keyword">Object</span>[] a = c.toArray();
-    <span class="built_in">int</span> numNew = a.length;
-    ensureCapacityInternal(<span class="built_in">size</span> + numNew); <span class="comment">//增加modCount</span>
-
-    <span class="comment">//如果是在尾部插入就不需要移动了</span>
-    <span class="built_in">int</span> numMoved = <span class="built_in">size</span> - index;
-    <span class="keyword">if</span>(numMoved &gt; <span class="number">0</span>)
-        System.arraycopy(elementData, index, elementData, index + numNew,
-                numMoved);
-
-    System.arraycopy(a, <span class="number">0</span>, elementData, index, numNew);
-    <span class="built_in">size</span> += numNew;
-    <span class="keyword">return</span> <span class="keyword">true</span>;
-}
-
-<span class="comment">//各种删除的实现</span>
-@Override
-<span class="keyword">public</span> E remove(<span class="built_in">int</span> index) {
-    rangeCheck(index);
-
-    modCount++; <span class="comment">//fail-fast</span>
-    E oldValue = elementData(index);
-
-    <span class="built_in">int</span> numMoved = <span class="built_in">size</span> - index - <span class="number">1</span>;
-    <span class="keyword">if</span>(numMoved &gt; <span class="number">0</span>)
-        System.arraycopy(elementData, index + <span class="number">1</span>, elementData, index,
-                numMoved);
-    elementData[--<span class="built_in">size</span>] = <span class="keyword">null</span>; <span class="comment">//防止内存泄漏</span>
-
-    <span class="keyword">return</span> oldValue;
-}
-
-@Override
-<span class="keyword">public</span> <span class="built_in">boolean</span> remove(<span class="keyword">Object</span> o) {
-    <span class="keyword">if</span> (o == <span class="keyword">null</span>) {
-        <span class="keyword">for</span> (<span class="built_in">int</span> index = <span class="number">0</span>; index &lt; <span class="built_in">size</span>; index++)
-            <span class="keyword">if</span> (elementData[index] == <span class="keyword">null</span>) {
-                fastRemove(index);
-                <span class="keyword">return</span> <span class="keyword">true</span>;
-            }
-    } <span class="keyword">else</span> {
-        <span class="keyword">for</span> (<span class="built_in">int</span> index = <span class="number">0</span>; index &lt; <span class="built_in">size</span>; index++)
-            <span class="keyword">if</span> (o.equals(elementData[index])) {
-                fastRemove(index);
-                <span class="keyword">return</span> <span class="keyword">true</span>;
-            }
-    }
-    <span class="keyword">return</span> <span class="keyword">false</span>;
-}
-
-<span class="comment">//保留差集</span>
-@Override
-<span class="keyword">public</span> <span class="built_in">boolean</span> removeAll(Collection&lt;?&gt; c) {
-    Objects.nonNull(c);
-    <span class="keyword">return</span> batchRemove(c, <span class="keyword">false</span>);
-}
-
-<span class="comment">//保留交集</span>
-@Override
-<span class="keyword">public</span> <span class="built_in">boolean</span> retainAll(Collection&lt;?&gt; c) {
-    Objects.nonNull(c);
-    <span class="keyword">return</span> batchRemove(c, <span class="keyword">true</span>);
-}
-
-<span class="comment">//置空防止内存泄漏</span>
-@Override
-<span class="keyword">public</span> <span class="keyword">void</span> <span class="built_in">clear</span>() {
-    modCount++;
-
-    <span class="keyword">for</span>(<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; <span class="built_in">size</span>; i++)
-        elementData[i] = <span class="keyword">null</span>;
-
-    <span class="built_in">size</span> = <span class="number">0</span>;
-}
-
-<span class="comment">//正向查找，返回元素第一次出现的索引值</span>
-@Override
-<span class="keyword">public</span> <span class="built_in">int</span> indexOf(<span class="keyword">Object</span> o) {
-    <span class="keyword">if</span>(o == <span class="keyword">null</span>) {
-        <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; <span class="built_in">size</span>; i++)
-            <span class="keyword">if</span> (elementData[i] == <span class="keyword">null</span>)
-                <span class="keyword">return</span> i;
-    } <span class="keyword">else</span> {
-        <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; <span class="built_in">size</span>; i++)
-            <span class="keyword">if</span> (o.equals(elementData[i]))
-                <span class="keyword">return</span> i;
-    }
-    <span class="keyword">return</span> -<span class="number">1</span>;
-}
-
-<span class="comment">//反向查找，返回元素最后一次出现的索引值</span>
-@Override
-<span class="keyword">public</span> <span class="built_in">int</span> lastIndexOf(<span class="keyword">Object</span> o) {
-    <span class="keyword">if</span>(o == <span class="keyword">null</span>) {
-        <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="built_in">size</span> - <span class="number">1</span>; i &gt;= <span class="number">0</span>; --i)
-            <span class="keyword">if</span>(elementData[i] == <span class="keyword">null</span>)
-                <span class="keyword">return</span> i;
-    } <span class="keyword">else</span> {
-        <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="built_in">size</span> - <span class="number">1</span>; i &gt;= <span class="number">0</span>; --i)
-            <span class="keyword">if</span> (o.equals(elementData[i]))
-                <span class="keyword">return</span> i;
-    }
-    <span class="keyword">return</span> -<span class="number">1</span>;
-}
-
-@Override
-<span class="keyword">public</span> <span class="built_in">boolean</span> contains(<span class="keyword">Object</span> o) {
-    <span class="keyword">return</span> indexOf(o) &gt;= <span class="number">0</span>;
-}
-
-<span class="comment">//对数组进行排序</span>
-@Override
-@SuppressWarnings(<span class="string">"unchecked"</span>)
-<span class="keyword">public</span> <span class="keyword">void</span> <span class="built_in">sort</span>(Comparator&lt;? <span class="keyword">super</span> E&gt; c) {
-    <span class="keyword">final</span> <span class="built_in">int</span> expectedModCount = modCount;
-    Arrays.<span class="built_in">sort</span>((E[]) elementData, <span class="number">0</span>, <span class="built_in">size</span>, c);
-    <span class="keyword">if</span> (modCount != expectedModCount) {
-        <span class="keyword">throw</span> <span class="keyword">new</span> ConcurrentModificationException();
-    }
-    modCount++;
-}
-
-
-<span class="comment">//保护性拷贝</span>
-@Override
-<span class="keyword">public</span> <span class="keyword">Object</span>[] toArray() {
-    <span class="keyword">return</span> Arrays.copyOf(elementData, <span class="built_in">size</span>);
-}
-
-@SuppressWarnings(<span class="string">"unchecked"</span>)
-@Override
-<span class="keyword">public</span> &lt;T&gt; T[] toArray(T[] a) {
-    <span class="keyword">if</span>(a.length &lt; <span class="built_in">size</span>)
-        <span class="comment">//必须创建一个与参数类型相同的数组</span>
-        <span class="keyword">return</span> (T[])Arrays.copyOf(elementData, <span class="built_in">size</span>, a.getClass());
-    System.arraycopy(elementData, <span class="number">0</span>, a, <span class="number">0</span>, <span class="built_in">size</span>);
-    <span class="keyword">if</span> (a.length &gt; <span class="built_in">size</span>)
-        a[<span class="built_in">size</span>] = <span class="keyword">null</span>; <span class="comment">//用来帮助调用者确定集合长度（只有在明确知道集合中没有null元素时才有用）</span>
-    <span class="keyword">return</span> a;
-} 
-</code></pre>
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-8集合框架源码/">Java 8集合框架源码</a></li></ul>
 	</div>
 
       
@@ -1553,10 +1340,10 @@ E elementData(<span class="keyword">int</span> <span class="keyword">index</span
 
 
   
-    <article id="post-Java集合源码学习——LinkedHashMap" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-Java集合源码学习——LinkedList" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2015/12/07/Java集合源码学习——LinkedHashMap/" class="article-date">
+      <a href="/2015/12/07/Java集合源码学习——LinkedList/" class="article-date">
   	<time datetime="2015-12-07T14:28:49.000Z" itemprop="datePublished">2015-12-07</time>
 </a>
     </div>
@@ -1570,7 +1357,7 @@ E elementData(<span class="keyword">int</span> <span class="keyword">index</span
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/07/Java集合源码学习——LinkedHashMap/">Java 8集合源码学习——LinkedList</a>
+      <a class="article-title" href="/2015/12/07/Java集合源码学习——LinkedList/">Java 8集合源码学习——LinkedList</a>
     </h1>
   
 
@@ -2346,6 +2133,56 @@ Node&lt;E&gt; node(<span class="keyword">int</span> index) {
   
     <h1 itemprop="name">
       <a class="article-title" href="/2015/12/07/Java基础知识总结（十）——并发/">Java基础知识总结（十）——并发</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-Java基础知识总结（九）——集合" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/07/Java基础知识总结（九）——集合/" class="article-date">
+  	<time datetime="2015-12-07T03:48:55.000Z" itemprop="datePublished">2015-12-07</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/07/Java基础知识总结（九）——集合/">Java基础知识总结（九）——集合</a>
     </h1>
   
 
