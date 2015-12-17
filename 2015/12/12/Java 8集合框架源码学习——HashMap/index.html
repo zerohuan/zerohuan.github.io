@@ -15,7 +15,7 @@
 <meta property="og:description" content="心得：相较于JDK 1.7，Java 8中的HashMap有了较大的性能提升。修改了hash和resize方式，增加了红黑树的支持。
 学习参考资料：（1）疫苗：Java HashMap的死循环；
 1. HashMap要点（1）结构特点：Java中的HashMap是基于“数组+链表”的方式（链表法解决冲突），到了Java 8，应该是“数组+链表/红黑树”的方式。（2）线程安全：HashMap是不安全">
-<meta property="og:updated_time" content="2015-12-17T17:28:16.000Z">
+<meta property="og:updated_time" content="2015-12-17T17:29:49.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java 8集合框架源码学习——HashMap">
 <meta name="twitter:description" content="心得：相较于JDK 1.7，Java 8中的HashMap有了较大的性能提升。修改了hash和resize方式，增加了红黑树的支持。
@@ -121,7 +121,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java小工具/" style="font-size: 10px;">Java小工具</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 15px;">TCP/IP</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
+						<a href="/tags/JVM/" style="font-size: 13.33px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 16.67px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java小工具/" style="font-size: 10px;">Java小工具</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 13.33px;">TCP/IP</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
 					</div>
 				</section>
 				
@@ -226,6 +226,10 @@
       
       <div class="article-info article-info-post">
         
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-8集合框架源码/">Java 8集合框架源码</a></li></ul>
+	</div>
+
         
 
         <div class="clearfix"></div>
