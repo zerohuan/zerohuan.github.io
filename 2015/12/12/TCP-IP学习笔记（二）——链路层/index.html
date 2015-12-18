@@ -5,16 +5,16 @@
   
   <title>TCP/IP学习笔记（二）——链路层 | Zerohuan的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="1. 3种封装格式（以太网封装，SLIP，PPP）1.1 以太网封装格式以太网一般基于CSMA/CD，但是有两种常用的封装格式（RFC894和RFC1024），我总结了下这两种格式的异同：相同：（1）都具有48位地址，包括目的地址和源地址，也就是MAC地址，ARP和RARP就是用来解析MAC地址和IP地址映射的；（2）都具有类型标识，以太网可能包含IP数据报，ARP请求应答，RARP应答；（3）C">
+  <meta name="description" content="心得：看过以太网封装，SLIP封装，PPP封装这3个主要的链路层封装格式，可以明白链路层有哪些问题需要解决：（1）物理地址定位：以太网的MAC地址，而SLIP每端必须知道对方的地址，PPP协议提供了地址字段；（2）类型表示：实际中链路层可以有多种类型的封装格式，因此需要类型来标识，SLIP没有类型标识，所以只能独占使用信道；（3）校验：校验是每一层的都需要考虑的问题，SLIP没有校验机制，那就依赖">
 <meta property="og:type" content="article">
 <meta property="og:title" content="TCP/IP学习笔记（二）——链路层">
 <meta property="og:url" content="http://blog.ssearch.cn/2015/12/12/TCP-IP学习笔记（二）——链路层/index.html">
 <meta property="og:site_name" content="Zerohuan的博客">
-<meta property="og:description" content="1. 3种封装格式（以太网封装，SLIP，PPP）1.1 以太网封装格式以太网一般基于CSMA/CD，但是有两种常用的封装格式（RFC894和RFC1024），我总结了下这两种格式的异同：相同：（1）都具有48位地址，包括目的地址和源地址，也就是MAC地址，ARP和RARP就是用来解析MAC地址和IP地址映射的；（2）都具有类型标识，以太网可能包含IP数据报，ARP请求应答，RARP应答；（3）C">
-<meta property="og:updated_time" content="2015-12-16T19:38:18.000Z">
+<meta property="og:description" content="心得：看过以太网封装，SLIP封装，PPP封装这3个主要的链路层封装格式，可以明白链路层有哪些问题需要解决：（1）物理地址定位：以太网的MAC地址，而SLIP每端必须知道对方的地址，PPP协议提供了地址字段；（2）类型表示：实际中链路层可以有多种类型的封装格式，因此需要类型来标识，SLIP没有类型标识，所以只能独占使用信道；（3）校验：校验是每一层的都需要考虑的问题，SLIP没有校验机制，那就依赖">
+<meta property="og:updated_time" content="2015-12-18T05:24:39.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="TCP/IP学习笔记（二）——链路层">
-<meta name="twitter:description" content="1. 3种封装格式（以太网封装，SLIP，PPP）1.1 以太网封装格式以太网一般基于CSMA/CD，但是有两种常用的封装格式（RFC894和RFC1024），我总结了下这两种格式的异同：相同：（1）都具有48位地址，包括目的地址和源地址，也就是MAC地址，ARP和RARP就是用来解析MAC地址和IP地址映射的；（2）都具有类型标识，以太网可能包含IP数据报，ARP请求应答，RARP应答；（3）C">
+<meta name="twitter:description" content="心得：看过以太网封装，SLIP封装，PPP封装这3个主要的链路层封装格式，可以明白链路层有哪些问题需要解决：（1）物理地址定位：以太网的MAC地址，而SLIP每端必须知道对方的地址，PPP协议提供了地址字段；（2）类型表示：实际中链路层可以有多种类型的封装格式，因此需要类型来标识，SLIP没有类型标识，所以只能独占使用信道；（3）校验：校验是每一层的都需要考虑的问题，SLIP没有校验机制，那就依赖">
   
     <link rel="alternative" href="/atom.xml" title="Zerohuan的博客" type="application/atom+xml">
   
@@ -232,7 +232,8 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="1-_3种封装格式（以太网封装，SLIP，PPP）">1. 3种封装格式（以太网封装，SLIP，PPP）</h2><h3 id="1-1_以太网封装格式">1.1 以太网封装格式</h3><p>以太网一般基于CSMA/CD，但是有两种常用的封装格式（RFC894和RFC1024），我总结了下这两种格式的异同：<br><strong>相同：</strong><br>（1）都具有48位地址，包括目的地址和源地址，也就是MAC地址，ARP和RARP就是用来解析MAC地址和IP地址映射的；<br>（2）都具有类型标识，<strong>以太网可能包含IP数据报，ARP请求应答，RARP应答</strong>；<br>（3）CRC尾部校验；<br>（4）它们整个帧的长度最少为64位，这是CSMA/CD的机制决定的；<br><strong>不同：</strong><br>（1）RFC1024的头更为详细，包括LLC（逻辑链路控制）等内容；</p>
+        <p>心得：看过以太网封装，SLIP封装，PPP封装这3个主要的链路层封装格式，可以明白链路层有哪些问题需要解决：<br>（1）物理地址定位：以太网的MAC地址，而SLIP每端必须知道对方的地址，PPP协议提供了地址字段；<br>（2）类型表示：实际中链路层可以有多种类型的封装格式，因此需要类型来标识，SLIP没有类型标识，所以只能独占使用信道；<br>（3）校验：校验是每一层的都需要考虑的问题，SLIP没有校验机制，那就依赖上层的机制；<br>（4）控制响应时间：MTU；<br>（5）链路层基于不同的硬件，提供<strong>点到点</strong>的传输任务，封装IP，ARP请求/应答，RARP请求/应答；</p>
+<h2 id="1-_3种封装格式（以太网封装，SLIP，PPP）">1. 3种封装格式（以太网封装，SLIP，PPP）</h2><h3 id="1-1_以太网封装格式">1.1 以太网封装格式</h3><p>以太网一般基于CSMA/CD，但是有两种常用的封装格式（RFC894和RFC1024），我总结了下这两种格式的异同：<br><strong>相同：</strong><br>（1）都具有48位地址，包括目的地址和源地址，也就是MAC地址，ARP和RARP就是用来解析MAC地址和IP地址映射的；<br>（2）都具有类型标识，<strong>以太网可能包含IP数据报，ARP请求应答，RARP应答</strong>；<br>（3）CRC尾部校验；<br>（4）它们整个帧的长度最少为64位，这是CSMA/CD的机制决定的；<br><strong>不同：</strong><br>（1）RFC1024的头更为详细，包括LLC（逻辑链路控制）等内容；</p>
 <h3 id="1-2_SLIP和压缩的SLIP">1.2 SLIP和压缩的SLIP</h3><p>Serial Line IP，一种简单的对IP数据报的封装形式，需要注意End字符的转义；</p>
 <p><strong>SLIP的缺陷：</strong><br>（1）每一个端必须知道对方的IP地址；<br>（2）数据帧中没有字段类型字段（而以太网有），如果一条串行线路用于SLIP，就不能同时使用其他协议。<br>（3）没有校验和，依赖上层协议发现错误；</p>
 <p>串行线路的速率很低，通信经常是交互式的，因此数据的<strong>传输效率很重要</strong>；</p>
