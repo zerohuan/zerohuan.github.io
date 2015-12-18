@@ -15,7 +15,7 @@
 <meta property="og:description" content="心得：相较于JDK 1.7，Java 8中的HashMap有了较大的性能提升。修改了hash和resize方式，增加了红黑树的支持。
 学习参考资料：（1）疫苗：Java HashMap的死循环；
 1. HashMap要点（1）结构特点：Java中的HashMap是基于“数组+链表”的方式（链表法解决冲突），到了Java 8，应该是“数组+链表/红黑树”的方式。（2）线程安全：HashMap是不安全">
-<meta property="og:updated_time" content="2015-12-17T17:29:49.000Z">
+<meta property="og:updated_time" content="2015-12-18T03:46:08.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java 8集合框架源码学习——HashMap">
 <meta name="twitter:description" content="心得：相较于JDK 1.7，Java 8中的HashMap有了较大的性能提升。修改了hash和resize方式，增加了红黑树的支持。
@@ -497,6 +497,43 @@ if(<span class="built_in">first</span>.hash == hash &amp;&amp;
     public <span class="keyword">final</span> <span class="type">Map</span>.<span class="type">Entry</span>&lt;<span class="type">K</span>,<span class="type">V</span>&gt; next() { <span class="keyword">return</span> nextNode(); }
 }
 </code></pre><h4 id="视图集合实现：">视图集合实现：</h4><p>首先一个共同的特点是不能基于视图Set以及它们的迭代器执行添加操作；<br>remove，clear，contains基于HashMap对应方法实现的。</p>
+<h1 id="3-_HashMap的“树化”">3. HashMap的“树化”</h1><p>前面说过当桶的数量大于MIN_TREEIFY_CAPACITY（64）并且一个桶中的元素数超过TREEIFY_THRESHOLD时就会将这个桶中的链表变成红黑树结构，但是在树化的同时，这个红黑树保持了节点之间的“next”链接关系，使得可以向链表一样遍历，这在迭代其中十分有用，那它是如何保持的呢？</p>
+<h3 id="TreeNode的结构：">TreeNode的结构：</h3><p>和普通的红黑树节点相比，TreeNode多了两个引用变量：next和prev，这说明它同时保持了一个双向链表的结构，之所以要是双向链表是因为，在添加，删除是用使用红黑树的操作，但是为了支持链表同时也要维护链表链接，显然再遍历一边找到前序节点就又退化成链表了，故而使用双向链表。</p>
+<pre><code>TreeNode&lt;K,V&gt; parent;  // <span class="keyword">red</span>-black tree links
+TreeNode&lt;K,V&gt; <span class="keyword">left</span>;
+TreeNode&lt;K,V&gt; <span class="keyword">right</span>;
+TreeNode&lt;K,V&gt; <span class="keyword">prev</span>;    // needed <span class="keyword">to</span> unlink <span class="keyword">next</span> upon deletion
+boolean <span class="keyword">red</span>;
+</code></pre><h3 id="树化过程（treeifyBin()方法）：">树化过程（treeifyBin()方法）：</h3><p>（1）当小于MIN_TREEIFY_CAPACITY，不要树化，通过resize扩展桶数组：</p>
+<pre><code>if <span class="list">(<span class="keyword">tab</span> == null || <span class="list">(<span class="keyword">n</span> = tab.length)</span> &lt; MIN_TREEIFY_CAPACITY)</span>
+        resize<span class="list">()</span><span class="comment">;</span>
+</code></pre><p>（2）超过MIN_TREEIFY_CAPACITY，开始树化，首先是替换链表节点对象（Node）为TreeNode节点，建立双向链表。在从头开始进行树化。</p>
+<pre><code><span class="keyword">else</span> <span class="keyword">if</span> ((e = tab[index = (n - <span class="number">1</span>) &amp; hash]) != <span class="literal">null</span>) {
+        TreeNode&lt;K,V&gt; hd = <span class="literal">null</span>, tl = <span class="literal">null</span><span class="comment">;</span>
+        <span class="keyword">do</span> {
+            TreeNode&lt;K,V&gt; p = replacementTreeNode(e, <span class="literal">null</span>)<span class="comment">;</span>
+            <span class="keyword">if</span> (tl == <span class="literal">null</span>)
+                hd = p<span class="comment">;</span>
+            <span class="keyword">else</span> {
+                p.prev = tl<span class="comment">;</span>
+                tl.<span class="keyword">next</span> = p<span class="comment">;</span>
+            }
+            tl = p<span class="comment">;</span>
+        } <span class="keyword">while</span> ((e = e.<span class="keyword">next</span>) != <span class="literal">null</span>)<span class="comment">;</span>
+        <span class="keyword">if</span> ((tab[index] = hd) != <span class="literal">null</span>)
+            hd.treeify(tab)<span class="comment">;</span>
+    }
+</code></pre><p>（3）树化中的节点顺序问题，红黑树是搜索树，因此需要节点是有序的，但是HashMap的类型参数没有Comparable的限定，因此当key对象类型未实现Comparable接口，将使用这个对象的<strong>原始hashCode</strong>（即Object的hashCode，<strong>无论有没有覆盖hashCode方法</strong>，null的hashCode为0）进行比较；</p>
+<pre><code><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">tieBreakOrder</span><span class="params">(Object a, Object b)</span> </span>{
+        <span class="keyword">int</span> d;
+        <span class="keyword">if</span> (a == null || b == null ||
+            (d = a.getClass().getName().
+             compareTo(b.getClass().getName())) == <span class="number">0</span>)
+            d = (System.identityHashCode(a) &lt;= System.identityHashCode(b) ?
+                 -<span class="number">1</span> : <span class="number">1</span>);
+        <span class="keyword">return</span> d;
+    }
+</code></pre><p>（4）基于此树化中的两个疑问就弄清了：一是如何保持链表结构，二是有序性的获得，TreeNode.treeify这个方法的工作就是从这个节点开始遍历链表插入每个节点到红黑树中，每次插入之后修补黑平衡性这已经是很熟悉的内容了；</p>
 
       
     </div>
