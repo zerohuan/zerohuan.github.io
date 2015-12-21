@@ -114,7 +114,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/JVM/" style="font-size: 13.33px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 16.67px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java小工具/" style="font-size: 10px;">Java小工具</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 13.33px;">TCP/IP</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
+						<a href="/tags/JVM/" style="font-size: 12.5px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12.5px;">TCP/IP</a> <a href="/tags/思考和求解/" style="font-size: 17.5px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
 					</div>
 				</section>
 				
@@ -1312,7 +1312,125 @@ E elementData(<span class="keyword">int</span> <span class="keyword">index</span
       
       
 	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java小工具/">Java小工具</a></li></ul>
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/思考和求解/">思考和求解</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-final变量+匿名内部类的字节码分析，以及Java 8中的使用" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/09/final变量+匿名内部类的字节码分析，以及Java 8中的使用/" class="article-date">
+  	<time datetime="2015-12-09T08:38:24.000Z" itemprop="datePublished">2015-12-09</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/09/final变量+匿名内部类的字节码分析，以及Java 8中的使用/">Java中的final参数/变量+匿名内部类的字节码分析，以及Java 8中的使用</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在Java 8之前一个常识就是如果要在方法中定义一个匿名内部类并使用该方法内的局部变量（包括参数），需要使用final关键字修饰。网上也有很多对这种机制的解释和说明，但是大部分都是一种抽象的认识。如果能够分析一下字节码，这个问题其实很清楚。</p>
+<p>显然的一个事实是局部变量（称为变量a）是保存在栈帧的局部变量表中的（引用或基本类型），这里把定义匿名内部类的方法称为方法A，匿名内部类的中使用这个局部变量的方法（称为方法B）经过编译后保存在class文件的方法表中，方法体保存在Code属性中。运行时经过类加载，验证存储到方法区中。在执行匿名内部类中，JVM创建的是方法B的栈帧。它显然和方法A的栈帧没有直接的关系，甚至方法B执行时，方法A的栈帧已经被回收了，那JVM如何保证方法B能够正确的使用变量a指向的值呢？</p>
+<p>下面就通过查看字节码来看看Java编译器和JVM是如何做到这一点的，基于Oracle JDK8编译；</p>
+<p>##1. 字节码分析：</p>
+<p>外围类：FinalParameter<br>定义一个派生自A的匿名内部类，其中使用方法testFinal的局部变量a和参数bytes；</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">FinalParameter</span> </span>{
+    <span class="class"><span class="keyword">interface</span> <span class="title">A</span> </span>{
+        <span class="function"><span class="keyword">void</span> <span class="title">test</span><span class="params">()</span></span>;
+    }
+    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">testFinal</span><span class="params">(<span class="keyword">final</span> <span class="keyword">byte</span>[] bytes)</span> </span>{
+        <span class="keyword">final</span> <span class="keyword">int</span> a = <span class="number">10</span>;
+        <span class="keyword">new</span> A() {
+            <span class="annotation">@Override</span>
+            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test</span><span class="params">()</span> </span>{
+                System.out.println(a + <span class="string">" "</span> + bytes.length);
+            }
+        };
+    }
+}
+</code></pre><p>根据内部类命名规则我们知道这个匿名内部类的类名是FinalParameter\$1；<br>使用javap -verbose FinalParameter\$1，查看该类的字节码，Unix环境下注意不要忘了转义”\$”。<br>我截取了字段表部分：</p>
+<pre><code>final int val<span class="variable">$a</span>;
+  descriptor: I
+  flags: ACC_FINAL, ACC_SYNTHETIC
+
+final byte[] val<span class="variable">$bytes</span>;
+  descriptor: [B
+  flags: ACC_FINAL, ACC_SYNTHETIC
+
+final com.jvm.showByteCode.FinalParameter this<span class="variable">$0</span>;
+  descriptor: Lcom/jvm/showByteCode/FinalParameter;
+  flags: ACC_FINAL, ACC_SYNTHETIC
+</code></pre><p>可以看到编译器为我们添加了3个字段，分别是：<br><code>val$a，val$bytes，this$0</code>；<br>其中<code>this$0</code>是指向外围类对象实例的引用，而前两个正是从外围类方法局部变量bytes和a生成而来的，并且它们是final的。<br>再来看看<code>FinalParameter$1</code>类的<code>&lt;init&gt;()</code>方法：<br>描述符：</p>
+<pre><code><span class="label">descriptor:</span> (Lcom/jvm/showByteCode/FinalParameter<span class="comment">;I[B)V</span>
+</code></pre><p>Code属性（方法实现）：</p>
+<pre><code>Code:
+      <span class="built_in">stack</span>=<span class="number">2</span>, locals=<span class="number">4</span>, args_size=<span class="number">4</span>
+         <span class="number">0</span>: aload_0
+         <span class="number">1</span>: aload_1
+         <span class="number">2</span>: putfield      <span class="preprocessor">#<span class="number">1</span>                  <span class="comment">// Field this$0:Lcom/jvm/showByteCode/FinalParameter;</span></span>
+         <span class="number">5</span>: aload_0
+         <span class="number">6</span>: iload_2
+         <span class="number">7</span>: putfield      <span class="preprocessor">#<span class="number">2</span>                  <span class="comment">// Field val$a:I</span></span>
+        <span class="number">10</span>: aload_0
+        <span class="number">11</span>: aload_3
+        <span class="number">12</span>: putfield      <span class="preprocessor">#<span class="number">3</span>                  <span class="comment">// Field val$bytes:[B</span></span>
+        <span class="number">15</span>: aload_0
+        <span class="number">16</span>: invokespecial <span class="preprocessor">#<span class="number">4</span>                  <span class="comment">// Method java/lang/Object."&lt;init&gt;":()V</span></span>
+        <span class="number">19</span>: <span class="keyword">return</span>
+</code></pre><p>外围类中testFinal方法中调用匿名内部类的部分：</p>
+<pre><code><span class="number">10</span>: invokespecial <span class="preprocessor">#<span class="number">3</span>                  <span class="comment">// Method com/jvm/showByteCode/FinalParameter$1."&lt;init&gt;":(Lcom/jvm/showByteCode/FinalParameter;I[B)V</span></span>
+</code></pre><p>这里我们就可以清楚看到以下事实：<br>（1）<code>&lt;init&gt;()</code>方法有4个参数，其中第一个是this，另外三个分别类型分别FinalParameter，int，byte数组；<br>（2）它们参数被赋值给了对应的final字段<code>（this$0，val$a，val$bytes）</code>；<br>（3）外围类将当前实例对象引用，a数值，bytes数组引用传递给了<code>FinalParameter$1</code>的<code>&lt;init&gt;()</code>方法；</p>
+<p>因此，我们可以知道，在匿名内部类中使用外围类方法的局部变量，实际上是使用对应值（引用）的final成员变量。<br>内部类中使用的是该局部变量的副本，因此如果要在语义上保证局部变量和副本的一致性，就应当使用final来保证该局部变量不变。</p>
+<h1 id="2-_Java_8中“改进”：">2. Java 8中“改进”：</h1><p>下段代码通过了基于JDK8的编译，但是如果将注释去掉，仍然不能通过编译，看来只是在写法上“省力”了。<br>也就是说，Java中对于内部类使用局部变量的设计思想还要要保证这两个变量（一是局部变量，而是内部类的成员变量）一致性；<br>如果你不想保证这样的一致性，我觉得可以有以下方案：<br>（1）可以创建一个抽象类，添加一个构造器，通过构造器传入局部变量的值；<br>（2）编写一个一个工厂方法（或工厂类），局部变量传入工厂方法（工厂方法的对应参数是final的）返回一个内部类实例；<br>这样你就不用给局部变量设置为final；<br>因此，Java设计团队的设计思想是程序员在内部类中使用了局部变量，这种情况应该默认为需要保持两个变量的一致性。</p>
+<pre><code><span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">testFinal</span><span class="params">(<span class="keyword">byte</span>[] bytes)</span> </span>{
+        <span class="keyword">int</span> a = <span class="number">10</span>;
+        <span class="keyword">new</span> A() {
+            <span class="annotation">@Override</span>
+            <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">test</span><span class="params">()</span> </span>{
+                System.out.println(a + <span class="string">" "</span> + bytes.length);
+            }
+        };
+<span class="comment">//        a = 11; //ERROR</span>
+<span class="comment">//        bytes = null; //ERROR</span>
+    }
+</code></pre>
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/思考和求解/">思考和求解</a></li></ul>
 	</div>
 
       
@@ -2175,56 +2293,6 @@ Node&lt;E&gt; node(<span class="keyword">int</span> index) {
   
     <h1 itemprop="name">
       <a class="article-title" href="/2015/12/07/Java基础知识总结（十）——并发/">Java基础知识总结（十）——并发</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
-    <article id="post-Java基础知识总结（九）——集合" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/12/07/Java基础知识总结（九）——集合/" class="article-date">
-  	<time datetime="2015-12-07T03:48:55.000Z" itemprop="datePublished">2015-12-07</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/07/Java基础知识总结（九）——集合/">Java基础知识总结（九）——集合</a>
     </h1>
   
 

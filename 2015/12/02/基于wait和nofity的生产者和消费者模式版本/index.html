@@ -3,36 +3,27 @@
 <head>
   <meta charset="utf-8">
   
-  <title>反射工具——运行时打印对象状态（包括数组域） | Zerohuan的博客</title>
+  <title>基于wait和nofity的生产者和消费者模式版本 | Zerohuan的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="这两天遇到一个需求像打印出一个对象的状态，包括private域和多维数组域，因此写了个小工具类，打印数组的函数用递归实现处理多维数组（使用java.lang.reflect.Array打印数组值）：
-/**
- * 打印一个对象的实例数据状态
- * @param obj
- * @param out
- */
-public static void printStatus(Object obj, Prin">
+  <meta name="description" content="如果不用阻塞队列，生产者和消费者模式如何实现，我自己写了一版本，小记一下：
+除了Producer和Consumer之外，我还创建了一个ValueHolder用来解耦，并且包含了两个fianl对象作为锁；我觉得这样做可以基于final引用同步，更为安全一些；
+public class ProducerAndConsumer {
+    private static class Value {">
 <meta property="og:type" content="article">
-<meta property="og:title" content="反射工具——运行时打印对象状态（包括数组域）">
-<meta property="og:url" content="http://blog.ssearch.cn/2015/12/09/反射工具——运行时打印对象状态（包括数组域）/index.html">
+<meta property="og:title" content="基于wait和nofity的生产者和消费者模式版本">
+<meta property="og:url" content="http://blog.ssearch.cn/2015/12/02/基于wait和nofity的生产者和消费者模式版本/index.html">
 <meta property="og:site_name" content="Zerohuan的博客">
-<meta property="og:description" content="这两天遇到一个需求像打印出一个对象的状态，包括private域和多维数组域，因此写了个小工具类，打印数组的函数用递归实现处理多维数组（使用java.lang.reflect.Array打印数组值）：
-/**
- * 打印一个对象的实例数据状态
- * @param obj
- * @param out
- */
-public static void printStatus(Object obj, Prin">
-<meta property="og:updated_time" content="2015-12-21T07:27:07.000Z">
+<meta property="og:description" content="如果不用阻塞队列，生产者和消费者模式如何实现，我自己写了一版本，小记一下：
+除了Producer和Consumer之外，我还创建了一个ValueHolder用来解耦，并且包含了两个fianl对象作为锁；我觉得这样做可以基于final引用同步，更为安全一些；
+public class ProducerAndConsumer {
+    private static class Value {">
+<meta property="og:updated_time" content="2015-12-21T07:38:53.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="反射工具——运行时打印对象状态（包括数组域）">
-<meta name="twitter:description" content="这两天遇到一个需求像打印出一个对象的状态，包括private域和多维数组域，因此写了个小工具类，打印数组的函数用递归实现处理多维数组（使用java.lang.reflect.Array打印数组值）：
-/**
- * 打印一个对象的实例数据状态
- * @param obj
- * @param out
- */
-public static void printStatus(Object obj, Prin">
+<meta name="twitter:title" content="基于wait和nofity的生产者和消费者模式版本">
+<meta name="twitter:description" content="如果不用阻塞队列，生产者和消费者模式如何实现，我自己写了一版本，小记一下：
+除了Producer和Consumer之外，我还创建了一个ValueHolder用来解耦，并且包含了两个fianl对象作为锁；我觉得这样做可以基于final引用同步，更为安全一些；
+public class ProducerAndConsumer {
+    private static class Value {">
   
     <link rel="alternative" href="/atom.xml" title="Zerohuan的博客" type="application/atom+xml">
   
@@ -213,11 +204,11 @@ public static void printStatus(Object obj, Prin">
 		</header>				
 	</div>
 </nav>
-      <div class="body-wrap"><article id="post-反射工具——运行时打印对象状态（包括数组域）" class="article article-type-post" itemscope itemprop="blogPost">
+      <div class="body-wrap"><article id="post-基于wait和nofity的生产者和消费者模式版本" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2015/12/09/反射工具——运行时打印对象状态（包括数组域）/" class="article-date">
-  	<time datetime="2015-12-09T08:38:24.000Z" itemprop="datePublished">2015-12-09</time>
+      <a href="/2015/12/02/基于wait和nofity的生产者和消费者模式版本/" class="article-date">
+  	<time datetime="2015-12-02T05:19:32.000Z" itemprop="datePublished">2015-12-02</time>
 </a>
     </div>
   
@@ -230,7 +221,7 @@ public static void printStatus(Object obj, Prin">
         
   
     <h1 class="article-title" itemprop="name">
-      反射工具——运行时打印对象状态（包括数组域）
+      基于wait和nofity的生产者和消费者模式版本
     </h1>
   
 
@@ -250,64 +241,109 @@ public static void printStatus(Object obj, Prin">
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>这两天遇到一个需求像打印出一个对象的状态，包括private域和多维数组域，因此写了个小工具类，打印数组的函数用递归实现处理多维数组（使用java.lang.reflect.Array打印数组值）：</p>
-<pre><code><span class="comment">/**
- * 打印一个对象的实例数据状态
- * @param obj
- * @param out
- */</span>
-<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">printStatus</span>(<span class="params">Object obj, PrintStream <span class="keyword">out</span></span>)</span>{
-    Class&lt;?&gt; claz = obj.getClass();
-    Field[] fields = claz.getDeclaredFields();
-    <span class="keyword">try</span> {
-        <span class="keyword">for</span>(Field field : fields) {
-            field.setAccessible(<span class="keyword">true</span>);
-            <span class="keyword">out</span>.print(field);
-            <span class="keyword">out</span>.print(<span class="string">"\t"</span>);
-            Object fieldObj = field.<span class="keyword">get</span>(obj);
+        <p>如果不用阻塞队列，生产者和消费者模式如何实现，我自己写了一版本，小记一下：</p>
+<p>除了Producer和Consumer之外，我还创建了一个ValueHolder用来解耦，并且包含了两个fianl对象作为锁；我觉得这样做可以基于final引用同步，更为安全一些；</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ProducerAndConsumer</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Value</span> </span>{
+    }
 
-            <span class="comment">//判断是否为空</span>
-            <span class="keyword">if</span>(fieldObj == <span class="keyword">null</span>)
-                <span class="keyword">out</span>.println(<span class="string">"null"</span>);
-            <span class="keyword">else</span> {
-                Class&lt;?&gt; fieldClass = fieldObj.getClass();
-                <span class="comment">//判断是否为数组</span>
-                <span class="keyword">if</span>(fieldClass.isArray()) {
-                    printArray(fieldObj, <span class="keyword">out</span>);
-                    <span class="keyword">out</span>.println();
-                } <span class="keyword">else</span> {
-                    <span class="keyword">out</span>.println(fieldObj);
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">ValueHolder</span> </span>{
+        <span class="keyword">private</span> <span class="keyword">final</span> Object mutexProduce = <span class="keyword">new</span> Object();
+        <span class="keyword">private</span> <span class="keyword">final</span> Object mutexConsumer = <span class="keyword">new</span> Object();
+        <span class="keyword">private</span> <span class="keyword">final</span> ExecutorService executor;
+
+        <span class="keyword">private</span> Value value;
+
+        <span class="function"><span class="keyword">public</span> <span class="title">ValueHolder</span><span class="params">(ExecutorService executor)</span> </span>{
+            <span class="keyword">this</span>.executor = executor;
+        }
+    }
+
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Producer</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>{
+        <span class="keyword">private</span> <span class="keyword">final</span> ValueHolder holder;
+        <span class="keyword">private</span> <span class="keyword">int</span> count;
+
+        <span class="function"><span class="keyword">public</span> <span class="title">Producer</span><span class="params">(ValueHolder holder)</span> </span>{
+            <span class="keyword">this</span>.holder = holder;
+        }
+
+        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">produce</span><span class="params">()</span> </span>{
+            <span class="keyword">if</span>(holder != <span class="keyword">null</span>) {
+                <span class="keyword">try</span> {
+                    <span class="keyword">while</span>(!Thread.interrupted()) {
+                        <span class="keyword">synchronized</span> (holder.mutexProduce) {
+                            <span class="keyword">while</span>(holder.value != <span class="keyword">null</span>)
+                                holder.mutexProduce.wait();
+                        }
+                        <span class="keyword">if</span>(count &gt; <span class="number">10</span>)
+                            holder.executor.shutdownNow();
+                        System.out.println(<span class="string">"has a value produced..."</span>);
+                        <span class="keyword">synchronized</span> (holder.mutexConsumer) {
+                            TimeUnit.SECONDS.sleep(<span class="number">1</span>);
+                            holder.value = <span class="keyword">new</span> Value();
+                            count++;
+                            holder.mutexConsumer.notifyAll();
+                        }
+                    }
+                } <span class="keyword">catch</span> (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
         }
-    } <span class="keyword">catch</span> (IllegalAccessException e) {
-        e.printStackTrace();
-    }
-}
 
-<span class="comment">/**
- * 反射打印数组，如果是多维数组递归打印
- * @param arr
- * @param out
- */</span>
-<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">printArray</span>(<span class="params">Object arr, PrintStream <span class="keyword">out</span></span>) </span>{
-    Class&lt;?&gt; arrClass = arr.getClass();
-    <span class="keyword">if</span>(arrClass.isArray()) {
-        <span class="keyword">int</span> length = Array.getLength(arr);
-        <span class="keyword">out</span>.print(<span class="string">'['</span>);
-        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; length; ++i) {
-            Object o = Array.<span class="keyword">get</span>(arr, i);
-            <span class="comment">//如果元素仍然是数组类型，递归打印</span>
-            <span class="keyword">if</span>(o.getClass().isArray()) {
-                printArray(o, <span class="keyword">out</span>);
-            } <span class="keyword">else</span> {
-                <span class="keyword">out</span>.print(o);
-                <span class="keyword">if</span>(i &lt; length - <span class="number">1</span>)
-                    <span class="keyword">out</span>.print(<span class="string">","</span>);
+        <span class="annotation">@Override</span>
+        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+            produce();
+        }
+    }
+
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Consumer</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>{
+        <span class="keyword">private</span> <span class="keyword">final</span> ValueHolder holder;
+
+        <span class="function"><span class="keyword">public</span> <span class="title">Consumer</span><span class="params">(ValueHolder holder)</span> </span>{
+            <span class="keyword">this</span>.holder = holder;
+        }
+
+        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">consume</span><span class="params">()</span> </span>{
+            <span class="keyword">if</span>(holder != <span class="keyword">null</span>) {
+                <span class="keyword">try</span> {
+                    <span class="keyword">while</span>(!Thread.interrupted()) {
+                        <span class="keyword">synchronized</span> (holder.mutexConsumer) {
+                            <span class="keyword">while</span>(holder.value == <span class="keyword">null</span>)
+                                holder.mutexConsumer.wait();
+                        }
+                        System.out.println(<span class="string">"has a value from producer..."</span>);
+                        <span class="keyword">synchronized</span> (holder.mutexProduce) {
+                            TimeUnit.SECONDS.sleep(<span class="number">1</span>);
+                            holder.value = <span class="keyword">null</span>;
+                            holder.mutexProduce.notifyAll();
+                        }
+                    }
+                } <span class="keyword">catch</span> (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
-        <span class="keyword">out</span>.print(<span class="string">']'</span>);
+
+        <span class="annotation">@Override</span>
+        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+            consume();
+        }
     }
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
+        ExecutorService executor = Executors.newFixedThreadPool(<span class="number">2</span>);
+        ValueHolder valueHolder = <span class="keyword">new</span> ValueHolder(executor);
+        Producer producer = <span class="keyword">new</span> Producer(valueHolder);
+        Consumer consumer = <span class="keyword">new</span> Consumer(valueHolder);
+
+
+        executor.execute(producer);
+        executor.execute(consumer);
+
+        executor.shutdown();
+    }
+
 }
 </code></pre>
       
@@ -318,18 +354,18 @@ public static void printStatus(Object obj, Prin">
     
 <nav id="article-nav">
   
-    <a href="/2015/12/11/Java基础知识总结（九）——序列化/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2015/12/02/Java基础知识总结（二）——NIO/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption"><</strong>
       <div class="article-nav-title">
         
-          Java基础知识总结（九）——序列化
+          Java基础知识总结（二）——NIO
         
       </div>
     </a>
   
   
-    <a href="/2015/12/09/final变量+匿名内部类的字节码分析，以及Java 8中的使用/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">Java中的final参数/变量+匿名内部类的字节码分析，以及Java 8中的使用</div>
+    <a href="/2015/12/02/Java基础知识总结（四）——异常与异常处理表/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Java基础知识总结（四）——异常与异常处理表</div>
       <strong class="article-nav-caption">></strong>
     </a>
   
@@ -358,7 +394,7 @@ public static void printStatus(Object obj, Prin">
 
 <div class="duoshuo">
 	<!-- 多说评论框 start -->
-	<div class="ds-thread" data-thread-key="反射工具——运行时打印对象状态（包括数组域）" data-title="反射工具——运行时打印对象状态（包括数组域）" data-url="http://blog.ssearch.cn/2015/12/09/反射工具——运行时打印对象状态（包括数组域）/"></div>
+	<div class="ds-thread" data-thread-key="基于wait和nofity的生产者和消费者模式版本" data-title="基于wait和nofity的生产者和消费者模式版本" data-url="http://blog.ssearch.cn/2015/12/02/基于wait和nofity的生产者和消费者模式版本/"></div>
 	<!-- 多说评论框 end -->
 	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
 	<script type="text/javascript">

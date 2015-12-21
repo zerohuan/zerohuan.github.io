@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>关于Java类初始化和实例化中的2个“雷区” | Zerohuan的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="在考虑类初始化时，我们都知道进行子类初始化时，如果父类没有初始化要先初始化子类。然而事情并没有一句话这么简单。
+首先看看Java中初始化触发的条件：（1）在使用new实例化对象，访问静态数据和方法时，也就是遇到指令：new，getstatic/putstatic和invokestatic时；（2）使用反射对类进行调用时；（3）当初始化一个类时，父类如果没有进行初始化，先触发父类的初始化；（4）执行">
+<meta property="og:type" content="article">
+<meta property="og:title" content="关于Java类初始化和实例化中的2个“雷区”">
+<meta property="og:url" content="http://blog.ssearch.cn/2015/12/02/关于Java类初始化和实例化中的2个“雷区”/index.html">
+<meta property="og:site_name" content="Zerohuan的博客">
+<meta property="og:description" content="在考虑类初始化时，我们都知道进行子类初始化时，如果父类没有初始化要先初始化子类。然而事情并没有一句话这么简单。
+首先看看Java中初始化触发的条件：（1）在使用new实例化对象，访问静态数据和方法时，也就是遇到指令：new，getstatic/putstatic和invokestatic时；（2）使用反射对类进行调用时；（3）当初始化一个类时，父类如果没有进行初始化，先触发父类的初始化；（4）执行">
+<meta property="og:updated_time" content="2015-12-21T07:37:13.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="关于Java类初始化和实例化中的2个“雷区”">
+<meta name="twitter:description" content="在考虑类初始化时，我们都知道进行子类初始化时，如果父类没有初始化要先初始化子类。然而事情并没有一句话这么简单。
+首先看看Java中初始化触发的条件：（1）在使用new实例化对象，访问静态数据和方法时，也就是遇到指令：new，getstatic/putstatic和invokestatic时；（2）使用反射对类进行调用时；（3）当初始化一个类时，父类如果没有进行初始化，先触发父类的初始化；（4）执行">
+  
+    <link rel="alternative" href="/atom.xml" title="Zerohuan的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+	<header id="header" class="inner">
+		<a href="/" class="profilepic">
+			
+			<img lazy-src="/avatar.jpg" class="js-avatar">
+			
+		</a>
+
+		<hgroup>
+		  <h1 class="header-author"><a href="/">Zerohuan</a></h1>
+		</hgroup>
+
+		
+		<p class="header-subtitle">我在路上</p>
+		
+
+		
+			<div class="switch-btn">
+				<div class="icon">
+					<div class="icon-ctn">
+						<div class="icon-wrap icon-house" data-idx="0">
+							<div class="birdhouse"></div>
+							<div class="birdhouse_holes"></div>
+						</div>
+						<div class="icon-wrap icon-ribbon hide" data-idx="1">
+							<div class="ribbon"></div>
+						</div>
+						
+						<div class="icon-wrap icon-link hide" data-idx="2">
+							<div class="loopback_l"></div>
+							<div class="loopback_r"></div>
+						</div>
+						
+						
+						<div class="icon-wrap icon-me hide" data-idx="3">
+							<div class="user"></div>
+							<div class="shoulder"></div>
+						</div>
+						
+					</div>
+					
+				</div>
+				<div class="tips-box hide">
+					<div class="tips-arrow"></div>
+					<ul class="tips-inner">
+						<li>菜单</li>
+						<li>标签</li>
+						
+						<li>友情链接</li>
+						
+						
+						<li>关于我</li>
+						
+					</ul>
+				</div>
+			</div>
+		
+
+		<div class="switch-area">
+			<div class="switch-wrap">
+				<section class="switch-part switch-part1">
+					<nav class="header-menu">
+						<ul>
+						
+							<li><a href="/">主页</a></li>
+				        
+							<li><a href="/archives">所有文章</a></li>
+				        
+						</ul>
+					</nav>
+					<nav class="header-nav">
+						<div class="social">
+							
+								<a class="github" target="_blank" href="https://github.com/zerohuan" title="github">github</a>
+					        
+								<a class="weibo" target="_blank" href="/#" title="weibo">weibo</a>
+					        
+								<a class="zhihu" target="_blank" href="http://www.zhihu.com/people/yan-jin-heng" title="zhihu">zhihu</a>
+					        
+								<a class="mail" target="_blank" href="mailto:yanjinheng@qq.com" title="mail">mail</a>
+					        
+						</div>
+					</nav>
+				</section>
+				
+				
+				<section class="switch-part switch-part2">
+					<div class="widget tagcloud" id="js-tagcloud">
+						<a href="/tags/JVM/" style="font-size: 12.5px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12.5px;">TCP/IP</a> <a href="/tags/思考和求解/" style="font-size: 17.5px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
+					</div>
+				</section>
+				
+				
+				
+				<section class="switch-part switch-part3">
+					<div id="js-friends">
+					
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">奥巴马的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">卡卡的美丽传说</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">本泽马的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">吉格斯的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">习大大大不同</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">托蒂的博客</a>
+			        
+			        </div>
+				</section>
+				
+
+				
+				
+				<section class="switch-part switch-part4">
+				
+					<div id="js-aboutme">现南京大学研究生一枚，目前专注于Java Web方向。</div>
+				</section>
+				
+			</div>
+		</div>
+	</header>				
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+  	<div class="overlay">
+  		<div class="slider-trigger"></div>
+  		<h1 class="header-author js-mobile-header hide">Zerohuan</h1>
+  	</div>
+	<div class="intrude-less">
+		<header id="header" class="inner">
+			<div class="profilepic">
+				<img lazy-src="/avatar.jpg" class="js-avatar">
+			</div>
+			<hgroup>
+			  <h1 class="header-author">Zerohuan</h1>
+			</hgroup>
+			
+			<p class="header-subtitle">我在路上</p>
+			
+			<nav class="header-menu">
+				<ul>
+				
+					<li><a href="/">主页</a></li>
+		        
+					<li><a href="/archives">所有文章</a></li>
+		        
+		        <div class="clearfix"></div>
+				</ul>
+			</nav>
+			<nav class="header-nav">
+				<div class="social">
+					
+						<a class="github" target="_blank" href="https://github.com/zerohuan" title="github">github</a>
+			        
+						<a class="weibo" target="_blank" href="/#" title="weibo">weibo</a>
+			        
+						<a class="zhihu" target="_blank" href="http://www.zhihu.com/people/yan-jin-heng" title="zhihu">zhihu</a>
+			        
+						<a class="mail" target="_blank" href="mailto:yanjinheng@qq.com" title="mail">mail</a>
+			        
+				</div>
+			</nav>
+		</header>				
+	</div>
+</nav>
+      <div class="body-wrap"><article id="post-关于Java类初始化和实例化中的2个“雷区”" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/02/关于Java类初始化和实例化中的2个“雷区”/" class="article-date">
+  	<time datetime="2015-12-02T05:19:32.000Z" itemprop="datePublished">2015-12-02</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      关于Java类初始化和实例化中的2个“雷区”
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/思考和求解/">思考和求解</a></li></ul>
+	</div>
+
+        
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在考虑类初始化时，我们都知道进行子类初始化时，如果父类没有初始化要先初始化子类。然而事情并没有一句话这么简单。</p>
+<p><strong>首先看看Java中初始化触发的条件：</strong><br>（1）在使用new实例化对象，访问静态数据和方法时，也就是遇到指令：new，getstatic/putstatic和invokestatic时；<br>（2）使用反射对类进行调用时；<br>（3）当初始化一个类时，父类如果没有进行初始化，先触发父类的初始化；<br>（4）执行入口main方法所在的类；<br>（5）JDK1.7动态语言支持中方法句柄所在的类，如果没有初始化触发起初始化；</p>
+<p>经过编译后生成一个<code>&lt;clinit&gt;</code>方法，类的初始化就在这个方法中进行，该方法只执行，由JVM保证这一点，并进行同步控制；</p>
+<p>其中条件（3），从方法调用的角度来看，是子类的<code>&lt;clinit&gt;</code>会在开始时递归的调用父类的<code>&lt;clinit&gt;</code>，这类似与我们在子类构造器中必须首先调用父类的构造器；</p>
+<p>但需要注意的是“触发”并不是完成初始化，这意味着有可能子类的初始化会提前于父类初始化结束，这就是“危险”的所在。</p>
+<h2 id="1-_一个类初始化的例子：">1. 一个类初始化的例子：</h2><p>这个例子我使用一个外围类包含2个有继承关系的静态成员类，因为外围类的初始化和静态成员类没有因果关系，因此这样展示是安全和方便的；<br>父类A和子类B分别包含main函数，由上面的触发条件（4）可知，通过分别调用这个两个main函数来触发不同的类初始化路径；<br>这个例子的问题在于父类包含子类的static引用并在定义处进行初始化的问题：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">WrapperClass</span> {
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title">A</span> {
+        <span class="keyword">static</span> {
+            System.<span class="keyword">out</span>.println(<span class="string">"类A初始化开始..."</span>);
+        }
+        <span class="comment">//父类包含子类的static引用</span>
+        <span class="keyword">private</span> <span class="keyword">static</span> B b = <span class="keyword">new</span> B();
+        <span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">int</span> aInt = <span class="number">9</span>;
+
+        <span class="keyword">static</span> {
+            System.<span class="keyword">out</span>.println(<span class="string">"类A初始化结束..."</span>);
+        }
+
+        <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
+
+        }
+    }
+
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title">B</span> <span class="title">extends</span> <span class="title">A</span> {
+        <span class="keyword">static</span> {
+            System.<span class="keyword">out</span>.println(<span class="string">"类B初始化开始..."</span>);
+        }
+        <span class="comment">//子类的域依赖于父类的域</span>
+        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> bInt = <span class="number">9</span> + A.aInt;
+
+        <span class="function"><span class="keyword">public</span> <span class="title">B</span>(<span class="params"></span>) </span>{
+            <span class="comment">//构造器依赖类的static域</span>
+            System.<span class="keyword">out</span>.println(<span class="string">"类B的构造器调用 "</span> + <span class="string">"bInt的值"</span> + bInt);
+        }
+
+        <span class="keyword">static</span> {
+            System.<span class="keyword">out</span>.println(<span class="string">"类B初始化结束... "</span> + <span class="string">"aInt的值："</span> + bInt);
+        }
+
+        <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
+
+        }
+    }
+}
+</code></pre><p>情景一：入口为类B的main函数时输出结果：</p>
+<pre><code>/<span class="keyword">*</span><span class="keyword">*</span>
+ <span class="keyword">*</span> 类A初始化开始...
+ <span class="keyword">*</span> 类B的构造器调用 bInt的值0
+ <span class="keyword">*</span> 类A初始化结束...
+ <span class="keyword">*</span> 类B初始化开始...
+ <span class="keyword">*</span> 类B初始化结束... aInt的值：18
+ <span class="keyword">*</span>/
+</code></pre><p><strong>分析</strong>：可以看到，main函数的调用触发了类B的初始化，进入类B的<code>&lt;clinit&gt;</code>方法，类A作为其父类先开始初始化进入了A的<code>&lt;clinit&gt;</code>方法，其中有一个语句<code>new B();</code>这时会进行B的实例化，这是已经在类B的<code>&lt;clinit&gt;</code>中了，main线程已经获得锁开始执行类B的<code>&lt;clinit&gt;</code>，我们开头说过JVM会保证一个类的初始化方法只被执行一次，JVM收到new指令后不会再进入类B的<code>&lt;clinit&gt;</code>方法而是直接进行实例化，但是此时类B还没有完成类初始化，所以可以看到bInt的值为0（这个0是类加载中准备阶段分配方法区内存后进行的置零初始化）；<br>因此，可以得出，再父类中包含子类类型的static域并进行赋值动作，会可能导致子类实例化在类初始化完成前进行；</p>
+<p>情景二：入口为类A的main函数时输出结果：</p>
+<pre><code>/<span class="keyword">*</span><span class="keyword">*</span>
+ <span class="keyword">*</span> 类A初始化开始...
+ <span class="keyword">*</span> 类B初始化开始...
+ <span class="keyword">*</span> 类B初始化结束... aInt的值：9
+ <span class="keyword">*</span> 类B的构造器调用 bInt的值9
+ <span class="keyword">*</span> 类A初始化结束...
+ <span class="keyword">*</span>/
+</code></pre><p><strong>分析</strong>：经过情景一的分析，我们知道，由类B的初始化触发类A的初始化，会导致类A中类变量b的实例化在类B初始化完成前进行，那如果先初始化类A是不是就可以在类变量实例化的时候先触发类B的初始化，从而使得初始化在实例化前呢？答案是肯定的，但是这仍然有问题。<br>根据输出，可以看到，类B的初始化在类A的初始化完成前进行了，这导致了像类变量aInt的变量在类B初始化完成后才进行初始化，所以类B中的域bInt获取到的aInt的值是“0”，而不是我们预期的“18”；</p>
+<h2 id="结论：">结论：</h2><p>综上，可以得出，在父类中包含子类类型的类变量，并在定义出进行实例化是非常危险的行为，具体情况可能不会向例子一样直白，调用方法在定义处赋值一样隐含着危险，即使要包含子类类型的static域，也应该通过static方法进行赋值，因为JVM可以保证在static方法调用前完成所有的初始化动作（当然这种保证也是你不应该包含static B b = new B();这样的初始化行为）；</p>
+<h1 id="2-_一个实例化的例子：">2. 一个实例化的例子：</h1><p>首先需要知道对象创建的过程：<br>（1）遇到new指令，检查类是否完成了加载，验证，准备，解析，初始化（解析过程就是符号引用解析成直接引用，比如方法名就是一个符号引用，可以在初始化完成后使用这个符号引用的时候进行，正是为了支持动态绑定），没有完成先进行这些过程；<br>（2）分配内存，采用空闲列表或者指针碰撞的方法，并将新分配的内存“置零”，因此所有的实例变量在此环节都进行了一次默认初始化为0（引用为null）的过程；<br>（3）执行<code>&lt;init&gt;</code>方法，包括检查调用父类的<code>&lt;init&gt;</code>方法（构造器），实例变量定义出的赋值动作，实例化器顺序执行，最后调用构造器中的动作。</p>
+<p>这个例子可能更为大家所熟知，也就是它违反了“不要在构造器，clone方法和readObject方法中调用可被覆盖的方法”。其原因就在于Java中的多态，也就是动态绑定。<br>父类A的构造器中包含一个protected方法，类B是其子类。</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WrongInstantiation</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>{
+        <span class="function"><span class="keyword">public</span> <span class="title">A</span><span class="params">()</span> </span>{
+            doSomething();
+        }
+
+    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span> </span>{
+        System.out.println(<span class="string">"A's doSomething"</span>);
+    }
+}
+
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">B</span> <span class="keyword">extends</span> <span class="title">A</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">int</span> bInt = <span class="number">9</span>;
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span> </span>{
+        System.out.println(<span class="string">"B's doSomething, bInt: "</span> + bInt);
+    }
+}
+
+<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
+    B b = <span class="keyword">new</span> B();
+}
+</code></pre><p>}<br>输出结果：</p>
+<pre><code>/<span class="keyword">*</span><span class="keyword">*</span>
+ <span class="keyword">*</span> B's doSomething, bInt: 0
+ <span class="keyword">*</span>/
+</code></pre><p><strong>分析</strong>：首先需要知道，在没有显示提供构造器时Java编译器会生成默认构造器，并在开始处调用父类的构造器，因此类B的构造器开始会先调用类A的构造器。<br>类A中调用了protected方法doSomething，从输出结果中我们看到实际上调用的是子类的方法实现，而此时子类的实例化还未开始，因此bInt并没有如“预期”那样是9,而是0；</p>
+<p>这就是由于动态绑定，doSomething是一个protected方法，因此它是通过invokevirtual指令调用的，该指令根据对象实例的类型找到对应的方法实现（这里就是B的实例对象，对应方法就是类B的方法实现）执行，故而有此结果。</p>
+<h2 id="结论">结论</h2><p>正如前面说的“不要在构造器，clone方法和readObject方法中调用可被覆盖的方法”；<br>PS：在构造器中调用可被覆盖的方法的另一个风险是造成对象在构造过程中“逸出”，导致线程不安全；</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2015/12/02/Java基础知识总结（四）——异常与异常处理表/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption"><</strong>
+      <div class="article-nav-title">
+        
+          Java基础知识总结（四）——异常与异常处理表
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/12/02/Java基础知识总结（五）——安全/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Java基础知识总结（五）——安全</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<div class="share">
+	<!-- JiaThis Button BEGIN -->
+	<div class="jiathis_style">
+		<span class="jiathis_txt">分享到：</span>
+		<a class="jiathis_button_tsina"></a>
+		<a class="jiathis_button_cqq"></a>
+		<a class="jiathis_button_douban"></a>
+		<a class="jiathis_button_weixin"></a>
+		<a class="jiathis_button_tumblr"></a>
+		<a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jtico jtico_jiathis" target="_blank"></a>
+	</div>
+	<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=1405949716054953" charset="utf-8"></script>
+	<!-- JiaThis Button END -->
+</div>
+
+
+
+<div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="关于Java类初始化和实例化中的2个“雷区”" data-title="关于Java类初始化和实例化中的2个“雷区”" data-url="http://blog.ssearch.cn/2015/12/02/关于Java类初始化和实例化中的2个“雷区”/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"true"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+
+
+</div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info">
+    	<div class="footer-left">
+    		&copy; 2015 Zerohuan
+    	</div>
+      	<div class="footer-right">
+      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
+      	</div>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+
+<script>
+	var yiliaConfig = {
+		fancybox: true,
+		mathjax: true,
+		animate: true,
+		isHome: false,
+		isPost: true,
+		isArchive: false,
+		isTag: false,
+		isCategory: false,
+		open_in_new: true
+	}
+</script>
+<script src="http://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js" type="text/javascript"></script>
+<script src="/js/main.js" type="text/javascript"></script>
+
+
+
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  </div>
+</body>
+</html>

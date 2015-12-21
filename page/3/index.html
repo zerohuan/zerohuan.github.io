@@ -114,7 +114,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/JVM/" style="font-size: 13.33px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 16.67px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java小工具/" style="font-size: 10px;">Java小工具</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 13.33px;">TCP/IP</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
+						<a href="/tags/JVM/" style="font-size: 12.5px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12.5px;">TCP/IP</a> <a href="/tags/思考和求解/" style="font-size: 17.5px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
 					</div>
 				</section>
 				
@@ -195,6 +195,945 @@
 	</div>
 </nav>
       <div class="body-wrap">
+  
+    <article id="post-Java基础知识总结（五）——安全" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/02/Java基础知识总结（五）——安全/" class="article-date">
+  	<time datetime="2015-12-02T05:19:32.000Z" itemprop="datePublished">2015-12-02</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/02/Java基础知识总结（五）——安全/">Java基础知识总结（五）——安全</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h5 id="小结：">小结：</h5><p>一直说Java安全性比较好，系统的整理了下有关的Java的安全的三个方面：语言特性，安全管理器（保护域），签名和加密算法的应用。</p>
+<h1 id="1-_概括">1. 概括</h1><p>Java语言的安全由三个方面共同进行保证：</p>
+<h3 id="（1）语言特性：">（1）语言特性：</h3><p>类，域，方法的访问控制；<br>运行时的检查：指针操作的封装，数组的越界检查，类型转换的检查；<br>编译时检查：字节码加载，比如语义分析时会对变量是否初始化，运算符两边的类型是否匹配等等；<br>类加载：双亲委托加载模型/线程上下文类加载器，验证（文件格式验证，元数据验证，字节码验证（是否初始化，类型是否匹配等），符号验证（访问权限））；</p>
+<p><strong>类加载器的安全性在于</strong>：<br>（1）双亲委托的模型中核心类，扩展类，应用类有各自层次的类加载器；<br>（2）Java中每个类型有全限定名和类加载实例两者决定，每个类加载器实例提供一个类型的命名空间；<br>（3）类加载器会检查不能由非BootStrap类加载器加载JDK核心类；<br>（4）验证环节；</p>
+<h3 id="（2）访问控制：安全管理器">（2）访问控制：安全管理器</h3><h3 id="（3）代码签名，加密算法验证创建者；">（3）代码签名，加密算法验证创建者；</h3><h1 id="2-_安全管理器">2. 安全管理器</h1><p>Java平台安全性的演进：<br>（1）JDK1.0：本地代码具有所有的权限，远程代码在沙盒中运行，只能打印到屏幕和与用户交互；<br>（2）JDK1.1：远程代码带有可信赖的签名，具有与本地代码资源的所有权限；<br>（3）JDK2.0：基于<strong>保护域</strong>的安全体系，保护域包括<strong>代码来源</strong>和<strong>权限集合</strong>的映射，SecurityManager检查<strong>调用堆栈上所有方法的类</strong>的保护域，其权限集合是否允许执行当前的操作,如果所有域都通过检查则通过，否则抛出SecurityException异常；</p>
+<h2 id="2-1_重要的类和方法（体系结构）：">2.1 重要的类和方法（体系结构）：</h2><p>（1）SecurityManager：checkPermission等验证方法，抛出SecurityException；<br>（2）java.Security.ProtectionDomain：保护域，包含代码来源（CodeSource）和权限集合（PermissionCollection）；<br>（3）Class：getProtectionDomain获取该类的保护域；<br>（4）java.Security.CodeSource：代码来源，包含代码位置和相关联的证书链（用于类文件签名）；<br>（5）Permission：包含implies方法（条件间的依赖关系），通过name属性是关键，equals和hashcode主要由它决定，和Principal一样可以自定义；</p>
+<p>安全策略文件：<br>位置：<br>（1）Java平台主目录（java.policy文件）；<br>（2）用户主目录（.java.policy）；<br>（3）通过jvm参数指定，<br>（4）System.setProperty(“java.security.plicy”,)设置；</p>
+<h2 id="2-2_用户认证（JAAS_API规范）：">2.2 用户认证（JAAS API规范）：</h2><p>（1）通过LoginContext登录，可以传入CallbackHandler（handler中可以携带一些登录信息），使用在config文件中定义的LoginModule（也可以自定义）将callbackHandler中的登录信息传递到回调对象，从而获得登录信息；<br>（2）根据用户信息库（可以是目录文件，数据库等等）。通过验证后可以获得一个Subject；<br>（3）LoginModule会给这个用Subject添加一些Principal（特征），通过Subject.doAsPrivileged（一个新的上下文，与登录环境权限分离）中执行受检查的action；<br>（4）如果policy中subject带有的principal有对应权限的话这可以执行，否则抛出AccessControlException；</p>
+<p>LoginModule是检查登录权限的关键，向它传入CallbackHandler（登录信息），Subject（认证对象），options（config中对应的键值对信息），sharedState（登录模块间通信）；</p>
+<h1 id="3-_数字签名">3. 数字签名</h1><h2 id="3-1_消息摘要">3.1 消息摘要</h2><p>消息摘要（message digest）：是数据块的数字指纹。<br>基本属性：<br>（1）如果数据的1位或几位改变了，那么消息摘要也将要改变。<br>（2）拥有给定消息的伪造者不能创建与原消息具有相同的假消息；</p>
+<p>Java中的MessageDigest和Charset的体系很像，作为消息摘要算法子类的超类的同时也是工厂类；</p>
+<p>消息摘要意义在于检查文件（消息）是否被修改过，这就要求消息摘要和消息分开传递，否则一同截获再被修改（很容易）就无法起作用了。比如，保存文件是常常可以通过MD5验证的方式检查文件是否是同一文件。</p>
+<h2 id="3-2_消息签名">3.2 消息签名</h2><p>由于消息摘要的局限性，在需要认证用户身份的时候就需要数字签名同时能够校验消息有无被修改，中途被篡改。</p>
+<p>数字签名算法（DSA）；</p>
+<h3 id="重要概念：">重要概念：</h3><p>（1）公共密钥：可以公开，数字签名中，对方通过公共密钥校验消息的来源可信性（原始信息未修改，验证对方身份）；在非对称加密算法中，可以用来加密给对方的消息；<br>（2）私有密钥：非公开，在数字签名中，可以用生成签名；在非对加密中，可以通过私有密钥解密对方发来的加密消息；<br>（3）公共密钥和私有密钥的设计在于通过一个密钥推算出另一个密钥是实际不可性的，在数字签名中，私有密钥相当于个人的凭证。</p>
+<h3 id="数字签名原理：">数字签名原理：</h3><p>（1）发送方，生成自己的密钥库，包含私有密钥和公有密钥，将公有密钥包含导出成证书将这个证书发送给接受方；<br>（2）接收方，验证证书的真实性，接受到带有签名的消息后，利用证书验证<strong>是否为发送方的签名</strong>和<strong>消息有无被修改</strong>；</p>
+<h3 id="基于第三方认证机构的认证">基于第三方认证机构的认证</h3><p>我觉得这种模式类似于中介者设计模式/迪米特法则，类似的还有集群架构中中心式的拓扑结构，将多对多的联系变成一对多，复杂性集中在中介者身上，将认证的步骤分离出来。<br>（1）第三方将自己的<strong>根证书（公有密钥）</strong>导出，可以利用pem格式（隐私增强型邮件格式）；<br>（2）用户将<strong>根证书</strong>导入密钥库中，这时用户的密钥库能够信任这个第三方平台发来的信息；<br>（3）将发送方的证书同样导出成pem格式，基于openssl和第三方的CA对该证书签名生成pem，这是第三方平台对发送方的认证；<br>（4）将这个带有第三方签名的证书由接收方导入密钥库（因为已有了第三方的证书），最后接收方就拥有了发送方的证书；</p>
+<h3 id="keytool，jarsign：JDK数字证书，签名生成工具">keytool，jarsign：JDK数字证书，签名生成工具</h3><p>生成密钥库：keytool -genkeypair -keystore xxx.certs -alias xxx；<br>导出证书：keytool -exportcert -keystore xxx.certs -alias acmeroot -file acmeroot.cer；<br>导入证书到密钥库：keytool -importcert -keystore xxx.certs -alias yyy -file yyy.cer（yyy发送方别名）；<br>打印证书：keytool -printcert -file xxx.cer；<br>列出密钥库证书：keytool -list -v -keystore xxx</p>
+<p>使用证书签名jar：jarsigner -keystore xxx.certs document.jar xxx<br>验证jar签名：jarsigner -verify -keystore xxx.certs document.jar</p>
+<h2 id="4-_加密：">4. 加密：</h2><p>消息签名可以认证代码的来源，并且校验是否被修改，但是消息本身是可见的，对于重要的信息需要加密。</p>
+<p>Cipher类：与Charset和MessageDigest一样，超类+工厂类。</p>
+<h3 id="4-1_加密算法：">4.1 加密算法：</h3><p>对称密码：DES（穷举法可破解），AES等；<br>非对称密码：RSA等</p>
+<h4 id="非对称加密算法的应用方式">非对称加密算法的应用方式</h4><p><strong>公有密钥算法比对称密钥算法慢的多</strong>，因此不能用来加密大量的信息。使用对称密钥算法加密正文，公有密钥加密对称密钥是一种可行的方式。<br>（1）发送方生成对称密钥，对明文进行加密，并使用接收方的公有密钥对对称密钥进行加密；<br>（2）将加密后的明文和对称密钥一同发送给接收方；<br>（3）接收方使用自己的私有密钥将对称密钥解密，再用对称密钥解密得到明文；</p>
+<p>使用公有密钥算法的方式和下面对称加密算法的方式类似：主要要使用WARP_MODE和UNWARP_MODE对对称加密的<code>key</code>进行加解密。</p>
+<h4 id="生成密钥">生成密钥</h4><p>生成密钥可以用<strong>SecureRandom</strong>或者<strong>随机序列（随机敲键盘）</strong>的得到随机种子。密钥可以用序列化的方式输出到磁盘等地方保存。<br>方式一：</p>
+<pre><code><span class="constant">KeyGenerator keyGenerator</span> = KeyGenerator.getInstance(<span class="string">"AES"</span>);
+<span class="comment">//"真正的随机数"，加密的随机数，需要额外性能</span>
+<span class="comment">//Random以日期和时间为种子并不安全</span>
+<span class="constant">SecureRandom secureRandom</span> = new SecureRandom();
+keyGenerator.init(secureRandom);
+<span class="constant">Key key</span> = keyGenerator.generateKey();
+</code></pre><p>方式二：</p>
+<pre><code><span class="built_in">byte</span>[] seq = <span class="string">"sdlkfjiuqoenrgiuerds,msfd"</span>.getBytes();
+SecretKey <span class="variable">key</span> = <span class="keyword">new</span> SecretKeySpec(seq, <span class="string">"AES"</span>);
+</code></pre><h4 id="加密">加密</h4><p>选择加密算法：</p>
+<pre><code>Cipher aes = Cipher.getInstance(<span class="string">"AES"</span>);
+<span class="comment">/* 
+    模式有4种：
+    ENCRYPT_MODE
+    DECRYPT_MODE
+    UNWARP_MODE
+    WARP_MODE
+*/</span>
+<span class="built_in">int</span> mode = Cipher.ENCRYPT_MODE;
+aes.init(mode, <span class="variable">key</span>);
+</code></pre><p>将输入流中的数据加密写入输出流。注意如果数据不能以blockSize对齐，应该使用doFinal写入深入部分，该方法可以补齐。</p>
+<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">crypt</span>(<span class="params">InputStream <span class="keyword">in</span>, OutputStream <span class="keyword">out</span>, Cipher cipher</span>) throws IOException, GeneralSecurityException </span>{
+        <span class="keyword">int</span> blockSize = cipher.getBlockSize();
+        <span class="keyword">int</span> outputSize = cipher.getOutputSize(blockSize);
+        <span class="keyword">byte</span>[] inBytes = <span class="keyword">new</span> <span class="keyword">byte</span>[blockSize];
+        <span class="keyword">byte</span>[] outBytes = <span class="keyword">new</span> <span class="keyword">byte</span>[outputSize];
+
+        boolean more = <span class="keyword">true</span>;
+        <span class="keyword">int</span> inLen = <span class="number">0</span>;
+        <span class="keyword">while</span>(more) {
+            inLen = <span class="keyword">in</span>.read(inBytes);
+            <span class="keyword">if</span>(inLen == blockSize) {
+                <span class="keyword">int</span> outputLen = cipher.update(inBytes, <span class="number">0</span>, blockSize, outBytes);
+                <span class="keyword">out</span>.write(outBytes, <span class="number">0</span>, outputLen);
+            } <span class="keyword">else</span> {
+                more = <span class="keyword">false</span>;
+            }
+        }
+        <span class="keyword">if</span>(inLen &gt; <span class="number">0</span>) outBytes = cipher.doFinal(inBytes, <span class="number">0</span>, inLen);
+        <span class="keyword">else</span> outBytes = cipher.doFinal();
+        <span class="keyword">out</span>.write(outBytes);
+        <span class="keyword">out</span>.flush();
+    }
+</code></pre><h4 id="密码流">密码流</h4><p>使用CiperInputStream和CiperOutputStream可以屏蔽<code>update</code>和<code>doFinal</code>等细节；</p>
+<hr>
+<h3 id="附：policy，config语法小记：">附：policy，config语法小记：</h3><p>grant：codeBase，principal，signedBy（加alias）；<br>Login1 {LoginModule}：登录上下文定义；</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-基于WebSocket，Spring开发消息系统后台" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/02/基于WebSocket，Spring开发消息系统后台/" class="article-date">
+  	<time datetime="2015-12-02T05:19:32.000Z" itemprop="datePublished">2015-12-02</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/02/基于WebSocket，Spring开发消息系统后台/">基于WebSocket，Spring开发消息系统后台</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="1-_为什么需要WebSocket：">1. 为什么需要WebSocket：</h2><p>回答这个首先需要知道一些历史，我们知道HTTP是客户端向服务器请求获取数据的普遍方式，但是它是一种被动性的通信机制。request=response，服务器只有在接受到客户端请求的时候才可能向客户端发送数据。但有时候服务器需要告诉客户端有新的数据应该接受，比如消息，即时聊天等功能，也就是说我们应该需要一种全双工的通信方式，而HTTP的被动性使得这一问题很难解决。</p>
+<p>你可能会问webSocket很新啊，在这之前是如果实现类似的功能的呢？下面介绍几种技术用来在在“单连接的HTTP中模拟全双工”的：</p>
+<h3 id="解决方案一：频繁轮询：">解决方案一：频繁轮询：</h3><p>客户端以较短的时间间隔向服务器请求新的数据，比如1秒：<br>那么请求过程可能是这样的：</p>
+<pre><code>client： GET/ajaxEndponit 有没有新数据
+server： <span class="number">200</span> OK Content-Length:<span class="number">123</span> 有，给你
+<span class="number">1</span>s...
+client： GET/ajaxEndponit 有没有新数据
+server： <span class="number">200</span> OK Content-Length:<span class="number">0</span> 没有。。。
+<span class="number">1</span>s...
+client： GET/ajaxEndponit 有没有新数据
+server： <span class="number">200</span> OK Content-Length:<span class="number">0</span> 没有。。。
+<span class="number">1</span>s...
+...n秒后
+client： GET/ajaxEndponit 有没有新数据
+server： <span class="number">200</span> OK Content-Length:<span class="number">123</span> 有，给你
+</code></pre><p>显然这种方案产生了大量的请求，其中很多请求是无意义的，造成了大量的浪费。这时你可能会想：要是可以减少连接数就好了，这就是长轮询。</p>
+<h3 id="解决方案二：长轮询：">解决方案二：长轮询：</h3><p>HTTP是被动性的，因此想要减少连接数量只能增长连接的时间否则你无法及时返回新的数据。客户端发起一个超时时间较长（比如20秒）的请求，服务器在没有数据的时候并不立即返回，而是以某种方式阻塞（使用阻塞队列神马的），当有数据的时候在返回，或者在时间超时时返回无数据。<br>那么请求过程可能是这样的：</p>
+<pre><code>clinet：GET/longPollEndpoint
+server：<span class="number">200</span> OK Content-Length:<span class="number">123</span>有，给你
+client：GET/longPollEndpoint 
+server检查没有数据，阻塞等待
+.
+. <span class="number">20</span>秒
+.
+server：<span class="number">200</span> OK Content-Length:<span class="number">0</span> 没有数据。。。
+client：GET/longPollEndpoint 
+.
+. <span class="number">15</span>秒
+.
+server：<span class="number">200</span> OK Content-Length:<span class="number">123</span>有，给你
+</code></pre><p>可以看到，连接的数量大大减少了，但是存在连接几乎一直存在啊，这样会不会有什么问题？有，首先，HTTP/1.1规范中对同一主机名的访问是有数量限制的：不超过2个，也就是我们少了一半可以请求其他数据的连接资源。。。再有，如果在服务器没有数据阻塞的时候客户端又有新数据要请求时怎么办，只能另起一个并行的请求去做了。</p>
+<h3 id="解决方案三：分块编码：">解决方案三：分块编码：</h3><p>这个方案可能是为了解决浏览器长时间等待而创建的，一直等待响应对浏览器来说并不友好，但我觉得这个方案有些奇葩，分块的思想大致是这样的，既然我发现有很多时间都是在等待，那我有数据的时候就不一次性返回给客户端了，把它分割分几次返回给客户端，这样看上去浏览不就是一直在请求和获取数据吗。。。这个方法并没有什么本质上的改观，如果某些时候需要返回的数据大量产生呢，那我们是不是需要动态维护块的大小适应数据流，显然这是一件不简单的事情，又需要额外的成本。</p>
+<h3 id="解决方案四：Applet和Adobe_Flash：">解决方案四：Applet和Adobe Flash：</h3><p>Java applet是一个“久远”的概念，它是一种内嵌在浏览器中的Java 小程序和Flash一样，它们不再使用HTTP，而是TCP套接字来实现全双工的通信，但是它们并不安全，没有构建什么安全协议，而写资源消耗，你懂的。。。尤其是移动互联网出现后很多移动端的浏览器并不支持它们，所以。。。</p>
+<h1 id="2-_WekSocket简介：">2. WekSocket简介：</h1><p>说了这么多，你应当发现这是个难搞的问题啊，是的，HTTP的被动性本质使得在它的框架内我们无法实现真正的全双工通信。WebSocket正是解决这一问题的方案。<br>那么如何从一个HTTP连接机制中的通信环境发起一个WebSocket连接呢？</p>
+<p>利用HTTP/1.1的升级特性迁移到WebSocket协议：</p>
+<pre><code>GET /chat HTTP/<span class="number">1.1</span>
+<span class="label">Host:</span> server.example.com
+<span class="label">Upgrade:</span> websocket
+<span class="label">Connection:</span> Upgrade
+<span class="keyword">Sec</span>-WebSocket-Key: x3JJHMbDL1EzLkh9GBhXDw==
+<span class="keyword">Sec</span>-WebSocket-Protocol: chat, superchat
+<span class="keyword">Sec</span>-WebSocket-Version: <span class="number">13</span>
+<span class="label">Origin:</span> http://example.com
+<span class="label">Connection:</span> Upgrade表示我要升级成其他的协议；
+<span class="label">Upgrade:</span>websocket表示我要升级层websocket，服务器你支持不？
+<span class="keyword">Sec</span>-WebSocket-Key，客户端随机生成的，服务器之后会拿这个进行加密作为标识之一。
+<span class="keyword">Sec</span>-WebSocket-Protocol：区分同一URL下需要使用的不同协议。
+<span class="keyword">Sec</span>-WebSokcet-Version：版本号。
+服务器会返回：
+HTTP/<span class="number">1.1</span> <span class="number">101</span> Switching Protocols
+<span class="label">Upgrade:</span> websocket
+<span class="label">Connection:</span> Upgrade
+<span class="keyword">Sec</span>-WebSocket-Accept: HSmrc0sMlYUkAGmm5OPpG2HaGWk=
+<span class="keyword">Sec</span>-WebSocket-Protocol: chat
+<span class="keyword">Sec</span>-WebSocket-Accept：看我加密了你发来的随机码，你认识我了吧！
+<span class="keyword">Sec</span>-WebSocket-Protocol：我支持chat协议；
+</code></pre><p>注意，HTTP的状态码是101, Switch Protocols，ok，到这里，我们从原来的HTTP协议已经建立了一个持久的、全双工的TCP套接字协议，</p>
+<p>PS：有些时候，服务器的特定资源只接受HTTP升级请求，这时如果请求为发起升级，会返回426 Upgrade Required；如果客户端不支持就返回400咯。</p>
+<h3 id="那WebSocket到底有什么好处呢？">那WebSocket到底有什么好处呢？</h3><p>在握手之后，信道已经建立起来了，ws和wss分别对应与http和https（看我们已经可以使用新的协议了）。<br>这时已经是一个全双工，持久的信道了，它有这些优点：<br>（1）使用HTTP来进行握手，可以很方便的继承与浏览器和HTTP服务器中；<br>（2）ws和wss与http和https一样同样对应与80和443端口，一般防火墙是不会阻止的；<br>（3）心跳机制，一般用来保持连接的，两边都不说话时，也通过心跳包来保持连接～；<br>（4）不再收到2个连接的限制了；<br>（5）可以安全进行跨域连接了，HTTP的origin会限制ajax和XMLHttpRequest跨域；<br>值得一提的是使用webSocket提供高清视频流更为强大；</p>
+<h1 id="3-_Java中的WebSocket：">3. Java中的WebSocket：</h1><p>当然使用H5中的js的webSocket api是浏览器的方法，这里为了演示我就只介绍Java的WebSocket API了，同样分为客户端和服务端两部分。</p>
+<p>maven依赖：</p>
+<pre><code><span class="tag">&lt;<span class="title">dependency</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>javax.websocket<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>javax.websocket-api<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">version</span>&gt;</span>1.1<span class="tag">&lt;/<span class="title">version</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">scope</span>&gt;</span>provided<span class="tag">&lt;/<span class="title">scope</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">dependency</span>&gt;</span>
+</code></pre><p>集成了客户端和服务端，如果你只需要客户端可以使用 javax.websocket-client-api。<br>这里使用的是provided，显然和其他J2EE规范一样我们在开发时也只需要使用api面向接口开发，tomcat8.0中提供了websocket的实现。</p>
+<h2 id="3-1_WebSocket_API：">3.1 WebSocket API：</h2><p><strong>客户端API：</strong><br>有几个关键的接口：<br><strong>ContainerProvider</strong>：这是服务提供者接口，不同的实现者可以通过实现该接口来构建服务（webSocket）的提供者，通过提供者注册接口来提供具体的服务，如果你不清楚这种模式可以参看《Effective Java》中的第一条；<br><strong>WebSocketContainer</strong>：这就我们需要的webSocket“服务”了，通过ContainerProvider.getContainer获得，通过他的connectToServer方法可以返回Session；<br><strong>Session</strong>：使用session我们一发送数据，关闭会话；<br><strong>RemoteEndPoint</strong>：我的理解是一个回调接口，它代表的实例由WebContainer管理，就像Servlet和Servlet容器一样；</p>
+<p><strong>服务器API：</strong><br>serverContainer继承了WebSocketContainer，你可以通过ServletContext.getArribute(“javax.websocket.ServerContainer”)来获取它，但你并不需要这么做，你只需要在POJO上添加一个@ServerEndpoint，webSocket会扫面它创建实例，默认是每一个连接都会创建一个EndPoint实例，理解这一点很重要，因为在和Spring的自动注入结合后会产生问题（如果你不是用Spring WebSocket配置的话）。</p>
+<p>EndPoint有四个回调方法：@OnOpen，@OnMessage，@OnClose，@OnError，你可以通过注解在POJO中标注。</p>
+<h1 id="4-_基于Spring_webSocket开发消息系统：">4. 基于Spring webSocket开发消息系统：</h1><h2 id="4-1_服务端实现：">4.1 服务端实现：</h2><pre><code><span class="annotation">@ServerEndpoint</span>(value = <span class="string">"/message/{userId}"</span>, configurator = SpringConfigurator.class)
+<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MessageServer</span> <span class="keyword">implements</span> <span class="title">DisposableBean</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">static</span> Map&lt;Long, Session&gt; userSessions = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();
+    <span class="keyword">private</span> <span class="keyword">static</span> ObjectMapper mapper = <span class="keyword">new</span> ObjectMapper();
+    <span class="keyword">private</span> <span class="keyword">static</span> Logger logger = LogManager.getLogger();
+
+    <span class="annotation">@Inject</span>
+    <span class="keyword">private</span> MessageService messageService;
+
+    <span class="annotation">@Override</span>
+    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>{
+        userSessions.clear();
+        userSessions = <span class="keyword">null</span>;
+    }
+
+    <span class="comment">/**
+     * Get unread messages by userId when session opened.
+     *
+     * <span class="doctag">@param</span> session session get from WebSocketContain.connectToServer
+     * <span class="doctag">@param</span> userId user's ID
+     */</span>
+    <span class="annotation">@OnOpen</span>
+    <span class="keyword">public</span> <span class="keyword">void</span> onOpen(Session session, <span class="annotation">@PathParam</span>(<span class="string">"userId"</span>) <span class="keyword">long</span> userId) {
+        logger.debug(<span class="string">"open session: userId:"</span> + userId + <span class="string">" sessionId"</span> + session.getId());
+
+        List&lt;BMessageEntity&gt; unReadMessages =
+                <span class="keyword">this</span>.messageService.getMessageByIsRead(userId, BMessageState.UNREAD);
+
+        <span class="keyword">if</span>(unReadMessages.size() &gt; <span class="number">0</span>) {
+            <span class="keyword">this</span>.sendJsonMessage(session, userId, unReadMessages);
+        }
+
+        userSessions.put(userId, session);
+    }
+
+    <span class="comment">/**
+     * client should send new BMessageEntity to this server, and opMessage() save data to dataBase
+     *
+     * <span class="doctag">@param</span> session session get from WebSocketContain.connectToServer
+     * <span class="doctag">@param</span> byteBuffer accept messages
+     */</span>
+    <span class="annotation">@OnMessage</span>
+    <span class="keyword">public</span> <span class="keyword">void</span> onMessage(Session session, ByteBuffer byteBuffer,
+                          <span class="annotation">@PathParam</span>(<span class="string">"userId"</span>) <span class="keyword">long</span> userId) {
+        CharBuffer charBuffer = Charset.forName(<span class="string">"utf8"</span>).decode(byteBuffer);
+        String message = charBuffer.toString();
+
+        <span class="keyword">try</span> {
+            MessageJson messageJson = mapper.readValue(message, MessageJson.class);
+
+            <span class="keyword">long</span> replyUserId = messageJson.getReplyUserId();
+
+            <span class="comment">//save new message</span>
+            BMessageEntity messageEntity = <span class="keyword">this</span>.messageService.saveMessage(userId, replyUserId, messageJson.getMessage());
+            <span class="keyword">if</span>(messageEntity != <span class="keyword">null</span>) {
+                <span class="comment">//send</span>
+                Session replySession = userSessions.get(replyUserId);
+                <span class="keyword">if</span>(replySession != <span class="keyword">null</span>) {
+                    <span class="keyword">this</span>.sendJsonMessage(replySession, userId, messageEntity);
+                }
+            }
+        } <span class="keyword">catch</span> (IOException e) {
+            logger.<span class="keyword">error</span>(e);
+        }
+    }
+
+    <span class="annotation">@OnError</span>
+    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">onError</span><span class="params">(Session session, Throwable e)</span> </span>{
+        logger.<span class="keyword">error</span>(<span class="string">"sessionId:"</span> + session.getId() + <span class="string">" "</span> + e);
+    }
+
+    <span class="annotation">@OnClose</span>
+    <span class="keyword">public</span> <span class="keyword">void</span> onClose(Session session, <span class="annotation">@PathParam</span>(<span class="string">"userId"</span>) <span class="keyword">long</span> userId) {
+        Session session1 = userSessions.get(userId);
+        <span class="keyword">if</span>(session1 != <span class="keyword">null</span>) {
+            <span class="keyword">try</span> {
+                <span class="keyword">if</span>(session1.isOpen())
+                    session1.close();
+            } <span class="keyword">catch</span> (IOException e) {
+                logger.<span class="keyword">error</span>(e);
+            } <span class="keyword">finally</span> {
+                userSessions.remove(userId);
+            }
+        }
+    }
+
+    <span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">sendJsonMessage</span><span class="params">(Session session, <span class="keyword">long</span> userId, Object object)</span> </span>{
+        <span class="keyword">try</span> {
+            session.getBasicRemote()
+                    .sendText(MessageServer.mapper.writeValueAsString(object));
+        } <span class="keyword">catch</span> (IOException e) {
+            <span class="keyword">this</span>.handleException(e, userId);
+        }
+    }
+
+    <span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">handleException</span><span class="params">(Throwable throwable, <span class="keyword">long</span> userId)</span> </span>{
+        <span class="keyword">try</span>(Session session = userSessions.get(userId)) {
+            session.close(<span class="keyword">new</span> CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION, throwable.toString()));
+        } <span class="keyword">catch</span> (IOException e) {
+            logger.<span class="keyword">error</span>(e);
+        } <span class="keyword">finally</span> {
+            userSessions.remove(userId);
+        }
+    }
+
+    <span class="comment">/**
+     * custom configurator, TODO collect some require, then use this configurator
+     */</span>
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">EndpointConfigurator</span> <span class="keyword">extends</span> <span class="title">SpringConfigurator</span> </span>{
+
+    }
+}
+</code></pre><p>首先，使用了configurator = SpringConfigurator.class，SpringConfigurator取代了默认的Configurator，它将使得我们可以正确使用Spring进行实例化和注入，如果没有这个设置，你会得到NullPointException，因为它是有WebSocket实现实例化，它并不会帮我们注入哦，这也是上面提到的问题。</p>
+<pre><code>@<span class="function"><span class="title">ServerEndpoint</span><span class="params">(value = <span class="string">"/message/{userId}"</span>, configurator = SpringConfigurator.class)</span></span>
+</code></pre><p>定义一个HashMap存放session，用来向指定的user发送消息，ObjectMapper是用来转换json格式的。</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">static</span> Map&lt;<span class="keyword">Long</span>, Session&gt; userSessions = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();
+<span class="keyword">private</span> <span class="keyword">static</span> ObjectMapper mapper = <span class="keyword">new</span> ObjectMapper();
+</code></pre><p>打开连接是，我从数据库中取出未读消息，返回给客户端，并将session存到map中：</p>
+<pre><code><span class="keyword">@OnOpen</span>
+<span class="keyword">public</span> <span class="keyword">void</span> onOpen(Session session, <span class="keyword">@PathParam</span>(<span class="string">"userId"</span>) <span class="built_in">long</span> userId) {
+    logger.<span class="keyword">debug</span>(<span class="string">"open session: userId:"</span> + userId + <span class="string">" sessionId"</span> + session.getId());
+
+    List&lt;BMessageEntity&gt; unReadMessages =
+            <span class="keyword">this</span>.messageService.getMessageByIsRead(userId, BMessageState.UNREAD);
+
+    <span class="keyword">if</span>(unReadMessages.size() &gt; <span class="number">0</span>) {
+        <span class="keyword">this</span>.sendJsonMessage(session, userId, unReadMessages);
+    }
+
+    userSessions.put(userId, session);
+}
+</code></pre><p>接受到消息后，保存消息到数据库，然后在map中查找对方的session，如果存在的话（对方有可能不在线哦），将这条消息发送给他。</p>
+<pre><code><span class="annotation">@OnMessage</span>
+<span class="keyword">public</span> <span class="keyword">void</span> onMessage(Session session, ByteBuffer byteBuffer,
+                      <span class="annotation">@PathParam</span>(<span class="string">"userId"</span>) <span class="keyword">long</span> userId) {
+    CharBuffer charBuffer = Charset.forName(<span class="string">"utf8"</span>).decode(byteBuffer);
+    String message = charBuffer.toString();
+
+    <span class="keyword">try</span> {
+        MessageJson messageJson = mapper.readValue(message, MessageJson.class);
+
+        <span class="keyword">long</span> replyUserId = messageJson.getReplyUserId();
+
+        <span class="comment">//save new message</span>
+        BMessageEntity messageEntity = <span class="keyword">this</span>.messageService.saveMessage(userId, replyUserId, messageJson.getMessage());
+        <span class="keyword">if</span>(messageEntity != <span class="keyword">null</span>) {
+            <span class="comment">//send</span>
+            Session replySession = userSessions.get(replyUserId);
+            <span class="keyword">if</span>(replySession != <span class="keyword">null</span>) {
+                <span class="keyword">this</span>.sendJsonMessage(replySession, userId, messageEntity);
+            }
+        }
+    } <span class="keyword">catch</span> (IOException e) {
+        logger.<span class="keyword">error</span>(e);
+    }
+}
+</code></pre><p>PS：这时，还是有WebSocket实现来创建它的，依然是一个连接一个实例，它也并不在Spring的单例bean注册表中，因此我们也无法将它注入到其他bean中，但是你可以在@Configuration配置中添加一个单例：</p>
+<pre><code><span class="annotation">@Bean</span>
+<span class="keyword">public</span> <span class="function">MessageServer <span class="title">messageServer</span><span class="params">()</span> </span>{
+    <span class="keyword">return</span> <span class="keyword">new</span> MessageServer();
+}
+</code></pre><p> 这样也很省资源呢，但是注意线程安全。</p>
+<h2 id="4-2_客户端实现：">4.2 客户端实现：</h2><p>我这里使用了两个Servlet实例来模拟两个客户端，实现@ClientEndpoint，注意@ClientEndpoint并不会有websocket实例化，因此我们可以放心的在servlet上直接添加：</p>
+<pre><code><span class="annotation">@ClientEndpoint</span>
+<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ClientServlet</span> <span class="keyword">extends</span> <span class="title">HttpServlet</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">static</span> Logger logger = LogManager.getLogger();
+
+    <span class="keyword">private</span> <span class="keyword">static</span> ObjectMapper mapper = <span class="keyword">new</span> ObjectMapper();
+
+    <span class="keyword">private</span> Session session;
+    <span class="keyword">private</span> <span class="keyword">long</span> userId;
+
+    <span class="keyword">private</span> <span class="keyword">static</span> ObjectMapper objectMapper = <span class="keyword">new</span> ObjectMapper();
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span> <span class="keyword">throws</span> ServletException </span>{
+        userId = Long.valueOf(<span class="keyword">this</span>.getInitParameter(<span class="string">"userId"</span>));
+
+        String path = <span class="keyword">this</span>.getServletContext().getContextPath() + <span class="string">"/message/"</span> +
+                userId;
+
+        logger.debug(path);
+
+        <span class="keyword">try</span> {
+            URI uri = <span class="keyword">new</span> URI(<span class="string">"ws"</span>, <span class="string">"localhost:8080"</span>, path, <span class="keyword">null</span>, <span class="keyword">null</span>);
+            <span class="keyword">this</span>.session = ContainerProvider.getWebSocketContainer()
+                    .connectToServer(<span class="keyword">this</span>, uri);
+            logger.debug(session.getId());
+        } <span class="keyword">catch</span> (IOException | URISyntaxException | DeploymentException e) {
+            <span class="keyword">throw</span> <span class="keyword">new</span> ServletException(<span class="string">"Cannot connect to "</span> + path + <span class="string">"."</span> + e);
+        }
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> </span>{
+        <span class="keyword">try</span> {
+            <span class="keyword">this</span>.session.close();
+        } <span class="keyword">catch</span> (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span> <span class="keyword">throws</span> ServletException, IOException </span>{
+        MessageJson messageJson = <span class="keyword">new</span> MessageJson();
+        messageJson.setMessage(req.getParameter(<span class="string">"message"</span>));
+        messageJson.setReplyUserId(Long.valueOf(req.getParameter(<span class="string">"replyUserId"</span>)));
+
+        <span class="keyword">try</span>(OutputStream outputStream = <span class="keyword">this</span>.session.getBasicRemote().getSendStream()) {
+            mapper.writeValue(outputStream, messageJson);
+            outputStream.flush();
+        }
+        resp.getWriter().append(<span class="string">"OK"</span>);
+    }
+
+    <span class="annotation">@OnMessage</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onMessage</span><span class="params">(String message)</span> </span>{
+        System.out.println(message);
+    }
+
+    <span class="annotation">@OnClose</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClose</span><span class="params">(CloseReason reason)</span> </span>{
+        CloseReason.CloseCode code = reason.getCloseCode();
+
+
+    }
+}
+</code></pre><p>在部署描述符中，部署两个实例，它们分别有初始化参数，userId，代表两个用户～：</p>
+<pre><code><span class="variable">&lt;servlet&gt;</span>
+        <span class="variable">&lt;servlet-name&gt;</span>Client1<span class="variable">&lt;/servlet-name&gt;</span>
+        <span class="variable">&lt;servlet-class&gt;</span>com.yjh.cg.site.server.ClientServlet<span class="variable">&lt;/servlet-class&gt;</span>
+        <span class="variable">&lt;init-param&gt;</span>
+            <span class="variable">&lt;param-name&gt;</span><span class="keyword">user</span>Id<span class="variable">&lt;/param-name&gt;</span>
+            <span class="variable">&lt;param-value&gt;</span><span class="number">1</span><span class="variable">&lt;/param-value&gt;</span>
+        <span class="variable">&lt;/init-param&gt;</span>
+    <span class="variable">&lt;/servlet&gt;</span>
+    <span class="variable">&lt;servlet-mapping&gt;</span>
+        <span class="variable">&lt;servlet-name&gt;</span>Client1<span class="variable">&lt;/servlet-name&gt;</span>
+        <span class="variable">&lt;url-pattern&gt;</span>/client1<span class="variable">&lt;/url-pattern&gt;</span>
+    <span class="variable">&lt;/servlet-mapping&gt;</span>
+
+    <span class="variable">&lt;servlet&gt;</span>
+        <span class="variable">&lt;servlet-name&gt;</span>Client2<span class="variable">&lt;/servlet-name&gt;</span>
+        <span class="variable">&lt;servlet-class&gt;</span>com.yjh.cg.site.server.ClientServlet<span class="variable">&lt;/servlet-class&gt;</span>
+        <span class="variable">&lt;init-param&gt;</span>
+            <span class="variable">&lt;param-name&gt;</span><span class="keyword">user</span>Id<span class="variable">&lt;/param-name&gt;</span>
+            <span class="variable">&lt;param-value&gt;</span><span class="number">2</span><span class="variable">&lt;/param-value&gt;</span>
+        <span class="variable">&lt;/init-param&gt;</span>
+    <span class="variable">&lt;/servlet&gt;</span>
+    <span class="variable">&lt;servlet-mapping&gt;</span>
+        <span class="variable">&lt;servlet-name&gt;</span>Client2<span class="variable">&lt;/servlet-name&gt;</span>
+        <span class="variable">&lt;url-pattern&gt;</span>/client2<span class="variable">&lt;/url-pattern&gt;</span>
+    <span class="variable">&lt;/servlet-mapping&gt;</span>
+</code></pre><p>在servlet初始化的时候，我们向服务器请求建立连接，获取session对象：</p>
+<pre><code>URI uri = <span class="keyword">new</span> URI(<span class="string">"ws"</span>, <span class="string">"localhost:8080"</span>, path, <span class="literal">null</span>, <span class="literal">null</span>);
+          <span class="keyword">this</span>.session = ContainerProvider.getWebSocketContainer()
+                  .connectToServer(<span class="keyword">this</span>, uri);
+</code></pre><p>在doGet方法中我将http请求“包装”成websocket消息发送到服务器，当然这只是为了模拟：</p>
+<pre><code><span class="annotation">@Override</span>
+<span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span> <span class="keyword">throws</span> ServletException, IOException </span>{
+    MessageJson messageJson = <span class="keyword">new</span> MessageJson();
+    messageJson.setMessage(req.getParameter(<span class="string">"message"</span>));
+    messageJson.setReplyUserId(Long.valueOf(req.getParameter(<span class="string">"replyUserId"</span>)));
+
+    <span class="keyword">try</span>(OutputStream outputStream = <span class="keyword">this</span>.session.getBasicRemote().getSendStream()) {
+        mapper.writeValue(outputStream, messageJson);
+        outputStream.flush();
+    }
+    resp.getWriter().append(<span class="string">"OK"</span>);
+}
+</code></pre><h1 id="5-_模拟：">5. 模拟：</h1><p>user2发送消息给user1：<br><a href="http://localhost:8080/client2?message=我是谁&amp;replyUserId=2" target="_blank" rel="external">http://localhost:8080/client2?message=我是谁&amp;replyUserId=2</a></p>
+<p>user1收到消息：我是谁</p>
+<p>user1回复：Zerohuan<br><a href="http://localhost:8080/client1?message=Zerohuan&amp;replyUserId=1" target="_blank" rel="external">http://localhost:8080/client1?message=Zerohuan&amp;replyUserId=1</a></p>
+<p>好了，控制台的log我就不一一贴了，碎觉去了。。。</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/思考和求解/">思考和求解</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-Java网络编程小记" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/01/Java网络编程小记/" class="article-date">
+  	<time datetime="2015-12-01T06:37:13.000Z" itemprop="datePublished">2015-12-01</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/01/Java网络编程小记/">Java基础知识总结（六）——网络编程</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在系统的看Tomcat源码的时候，先动手复习一下Java网络编程的基础知识，实现一个简单的服务器/客户端，并在实现中思考一个服务器需要考虑那些问题，记录下来，看Tomcat源码的时候带着这些问题。</p>
+<hr>
+<h3 id="积累的问题和思考：">积累的问题和思考：</h3><ol>
+<li>异常的处理，如何定义自己的异常体系，像具体协议HTTP的404等异常状态如何分发到对应页面；</li>
+<li>怎样设计软件结构，支持NIO和BIO切换，并和Servlet规范结合的；</li>
+<li>如何让Java进程成为类似Daemon进程，当前终端退出后不关闭（shell脚本控制？）；</li>
+<li>关闭服务器的时候，对于没有完成的连接是如何处理的；</li>
+<li>tomcat是如何支持HTTP协议的；</li>
+</ol>
+<h1 id="1-_Socket和InetAddress">1. Socket和InetAddress</h1><p>套接字连接：<br>需要注意：<br>（1）设置合理的超时时间，包括连接超时和读取超时；<br>（2）这是基于TCP的套接字连接，另外的UDP连接是数据报的形式，是无连接的。</p>
+<h3 id="基本用法：">基本用法：</h3><pre><code><span class="comment">//套接字连接</span>
+<span class="constant">Socket socket</span> = new Socket(<span class="string">"www.baidu.com"</span>, <span class="number">80</span>); <span class="comment">//在构造函数中连接/阻塞</span>
+<span class="comment">//获取输入输出流</span>
+<span class="constant">InputStream inputStream</span> = socket.getInputStream();
+<span class="constant">OutputStream outputStream</span> = socket.getOutputStream();
+<span class="comment">//关闭</span>
+socket.close();
+</code></pre><h3 id="套接字超时时间：">套接字超时时间：</h3><pre><code><span class="comment">//套接字超时时间</span>
+<span class="comment">//建立一个无连接的Socket</span>
+Socket socket1 = <span class="keyword">new</span> Socket();
+<span class="comment">//设置连接超时时间，超过时间直接返回</span>
+socket1.connect(<span class="keyword">new</span> InetSocketAddress(<span class="string">"www.baidu.com"</span>, <span class="number">80</span>), <span class="number">1000</span>);
+<span class="comment">//设置等待读取的超时时间，超时返回InterruptedIOException</span>
+socket1.setSoTimeout(<span class="number">5000</span>);
+<span class="keyword">BufferedReader</span> reader = <span class="keyword">new</span> <span class="keyword">BufferedReader</span>(<span class="keyword">new</span> InputStreamReader(socket1.getInputStream()));
+<span class="keyword">try</span> {
+    System.out.<span class="built_in">println</span>(reader.readLine());
+} <span class="keyword">catch</span> (InterruptedIOException e) {
+    e.printStackTrace();
+}
+<span class="comment">//检查是否已经连接</span>
+out.<span class="built_in">println</span>(socket.isConnected());
+out.<span class="built_in">println</span>(socket1.isConnected());
+<span class="comment">//是否关闭</span>
+out.<span class="built_in">println</span>(socket1.isClosed());
+socket1.close();
+out.<span class="built_in">println</span>(socket1.isClosed());
+</code></pre><h3 id="因特网地址">因特网地址</h3><p><strong>注意</strong>：<br>（1）如果一个主机名对应于多个ip，比如：<br><strong>基于DNS的负载均衡</strong>：<br>为多个ip地址配置相同的域名，客户端请求某个域名服务时，域名服务器采用轮询的方式为客户端选择一个ip地址。为不同的客户端选择不同的服务器，从而实现负载均衡的目的。<br>DNS做负载均衡简单方便，但存在不少问题。<br>a.DNS无法知道解析的服务节点是否有效，若服务节点无效，DNS服务器依然会将域名解析到该节点上，造成访问服务节点无效。<br>b.DNS的缓存时间较长，一旦出现问题，更新DNS信息需要等待客户数分钟甚至数十分钟，可靠性不高。<br>c.DNS无法知晓服务器间的差异，也不能反映服务器当前的运行状态。其有可能将轻量级的访问发给空闲的服务器，将重量级的访问发给负载已经很重的服务器。<br>（2）InetAddress使用工厂方法创建实例，根据主机名/地址返回具体的实现（Inet4Address或Inet6Address）；</p>
+<pre><code><span class="comment">//根据主机名获取一个地址，依赖DNS，如果服务器是负载均衡将随机得到一个ip地址</span>
+<span class="comment">//通过工厂方法返回Inet4Address或Inet6Address实例</span>
+InetAddress taobao = InetAddress.getByName(<span class="string">"www.taobao.com"</span>);
+<span class="comment">//得到ip地址</span>
+byte[] ip = taobao.getAddress();
+<span class="keyword">out</span>.println(<span class="string">"Taobao IP:"</span> + Arrays.<span class="keyword">toString</span>(ip));
+<span class="comment">//获取主机名对应的所有ip地址</span>
+InetAddress[] baidus = InetAddress.getAllByName(<span class="string">"www.baidu.com"</span>);
+<span class="keyword">out</span>.println(Arrays.<span class="keyword">toString</span>(baidus));
+<span class="comment">//获取本机地址</span>
+InetAddress localhost = InetAddress.getLocalHost();
+<span class="keyword">out</span>.println(localhost);
+<span class="keyword">out</span>.println(InetAddress.getLoopbackAddress());
+<span class="keyword">out</span>.println(localhost.getHostAddress());
+<span class="keyword">out</span>.println(localhost.getHostName());
+<span class="keyword">out</span>.println(localhost.getCanonicalHostName());
+</code></pre><h1 id="2-_简单的服务器实现">2. 简单的服务器实现</h1><p>（1）使用阻塞IO要使用线程池支持并发访问，这里我用的固定大小的线程池；<br>（2）Socket等产生的阻塞是不可中断的，实现可中断的阻塞可以用nio中的Channel；<br>（3）在客户端实现合适的半关闭策略；</p>
+<p><strong>代码实现：</strong><br>服务接口：</p>
+<pre><code><span class="comment">/**
+ * 服务接口
+ * Created by yjh on 15-12-1.
+ */</span>
+<span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Server</span> <span class="keyword">extends</span> <span class="title">Runnable</span>, <span class="title">AutoCloseable</span> </span>{
+    <span class="function"><span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>;
+}
+</code></pre><p>服务骨架类：<br>（1）原子类布尔值实现安全的close退出；<br>（2）设置是否为nio；</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">AbstractServer</span> <span class="keyword">implements</span> <span class="title">Server</span> </span>{
+    <span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">final</span> String EOF = <span class="string">"EOF"</span>;
+
+    <span class="keyword">protected</span> <span class="keyword">volatile</span> AtomicBoolean isDone = <span class="keyword">new</span> AtomicBoolean(<span class="keyword">false</span>);
+    <span class="keyword">protected</span> <span class="keyword">final</span> <span class="keyword">int</span> port;
+    <span class="keyword">protected</span> <span class="keyword">final</span> <span class="keyword">boolean</span> isNIO; <span class="comment">//false使用BIO</span>
+
+    <span class="function"><span class="keyword">protected</span> <span class="title">AbstractServer</span><span class="params">(<span class="keyword">int</span> port, <span class="keyword">boolean</span> isNIO)</span> </span>{
+        <span class="keyword">this</span>.port = port;
+        <span class="keyword">this</span>.isNIO = isNIO;
+
+    }
+}
+</code></pre><p>阻塞IO服务实现：<br>（1）用静态内部类包含线程池实例，延迟加载；<br>（2）使用固定大小的线程池；<br>（3）简单的数据处理逻辑：返回客户端的请求数据；<br>（4）使用Scanner和PrintWriter包装操作输入输出流；<br>（5）使用CAS操作布尔值控制线程安全；</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BioServer</span> <span class="keyword">extends</span> <span class="title">AbstractServer</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger logger = LogManager.getLogger();
+    <span class="keyword">private</span> ServerSocket serverSocket;
+
+    <span class="function"><span class="keyword">public</span> <span class="title">BioServer</span><span class="params">(<span class="keyword">int</span> port)</span> </span>{
+        <span class="keyword">super</span>(port, <span class="keyword">false</span>);
+        <span class="keyword">try</span> {
+            serverSocket = <span class="keyword">new</span> ServerSocket(port);
+        } <span class="keyword">catch</span> (IOException e) {
+            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"serverSocket created fail."</span>);
+        }
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> </span>{
+        run();
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+        <span class="keyword">try</span> (ServerSocket serverSocket = <span class="keyword">this</span>.serverSocket) {
+            <span class="keyword">while</span>(!isDone.get()) {
+                Socket incoming = serverSocket.accept();
+                ThreadPoolHolder.executor.execute(<span class="keyword">new</span> SocketHandler(incoming));
+            }
+        } <span class="keyword">catch</span> (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    <span class="comment">/**
+     * 静态内部类，包含一个线程池实例，延迟加载
+     */</span>
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">ThreadPoolHolder</span> </span>{
+        <span class="comment">//延时加载，固定大小10的线程池</span>
+        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ExecutorService executor = Executors.newFixedThreadPool(<span class="number">10</span>);
+    }
+
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">SocketHandler</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>{
+        <span class="keyword">private</span> Socket incoming;
+
+        <span class="function"><span class="keyword">public</span> <span class="title">SocketHandler</span><span class="params">(Socket incoming)</span> </span>{
+            <span class="keyword">this</span>.incoming = incoming;
+            logger.info(Thread.currentThread().getName() + <span class="string">"'s connection is established"</span>);
+        }
+
+        <span class="annotation">@Override</span>
+        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+            <span class="keyword">try</span> {
+                <span class="keyword">try</span>(Socket incoming = <span class="keyword">this</span>.incoming) {
+                    InputStream inputStream = incoming.getInputStream();
+                    OutputStream outputStream = incoming.getOutputStream();
+
+                    <span class="keyword">try</span>(Scanner in = <span class="keyword">new</span> Scanner(inputStream);
+                        PrintWriter out = <span class="keyword">new</span> PrintWriter(outputStream, <span class="keyword">true</span>)) {
+                        out.println(<span class="string">"Accepted request, send '"</span> + EOF  + <span class="string">"' to exit"</span>);
+
+                        <span class="keyword">boolean</span> isDone = <span class="keyword">false</span>;
+                        String line;
+                        <span class="keyword">while</span>(!isDone &amp;&amp; in.hasNextLine()) {
+                            line = in.nextLine();
+                            out.println(<span class="string">"Echo: "</span> + line);
+                            <span class="keyword">if</span>(line.trim().equalsIgnoreCase(EOF) || StringUtils.isEmpty(line.trim())) isDone = <span class="keyword">true</span>;
+                        }
+                    }
+                }
+            } <span class="keyword">catch</span> (IOException e) {
+                e.printStackTrace();
+            }
+            logger.info(Thread.currentThread().getName() + <span class="string">"'s connection is closed"</span>);
+        }
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">close</span><span class="params">()</span> </span>{
+        <span class="keyword">while</span>(isDone.compareAndSet(<span class="keyword">false</span>, <span class="keyword">true</span>)) {
+            ThreadPoolHolder.executor.shutdownNow();
+        }
+    }
+}
+</code></pre><p>非阻塞IO实现：<br>（1）使用ServerSocketChannel，SocketChannel注册到Selector，由Selector轮询并通知执行对应的回调（订阅-分发模式）；<br>（2）设置Channel设置为（同步）非阻塞模式，提高IO效率，增加CPU的负载，适用于并发量大，数据量小的情形；</p>
+<pre><code>public class <span class="type">NioServer</span> extends <span class="type">AbstractServer</span> {
+    private <span class="keyword">static</span> final <span class="type">Logger</span> logger = <span class="type">LogManager</span>.getLogger();
+
+    private final <span class="type">ServerSocketChannel</span> serverChannel;
+    private final <span class="type">Selector</span> selector;
+    private <span class="keyword">static</span> final <span class="type">int</span> <span class="type">BufferSize</span> = <span class="number">4096</span>;
+    private <span class="keyword">static</span> final <span class="type">int</span> <span class="type">TIME_OUT</span> = <span class="number">3000</span>;
+
+    public <span class="type">NioServer</span>(<span class="type">int</span> port, boolean isNIO) {
+        super(port, isNIO);
+        <span class="keyword">try</span> {
+            selector = <span class="type">Selector</span>.open();
+            serverChannel = <span class="type">ServerSocketChannel</span>.open();
+            serverChannel.configureBlocking(!isNIO);
+        } catch (<span class="type">IOException</span> e) {
+            throw new <span class="type">RuntimeException</span>(<span class="string">"serverSocket created fail."</span>);
+        }
+    }
+
+    @<span class="type">Override</span>
+    public <span class="type">void</span> start() throws <span class="type">IOException</span> {
+        serverChannel.socket().<span class="keyword">bind</span>(new <span class="type">InetSocketAddress</span>(port));
+        serverChannel.register(selector, <span class="type">SelectionKey</span>.<span class="type">OP_ACCEPT</span>);
+        run();
+    }
+
+    @<span class="type">Override</span>
+    public <span class="type">void</span> close() throws <span class="type">Exception</span> {
+        <span class="keyword">try</span> {
+            serverChannel.close();
+        } <span class="keyword">finally</span> {
+            isDone.compareAndSet(<span class="literal">false</span>, <span class="literal">true</span>);
+        }
+    }
+
+    @<span class="type">Override</span>
+    public <span class="type">void</span> run() {
+        <span class="type">Protocol</span> protocol = new <span class="type">NioTCPProtocol</span>(<span class="type">BufferSize</span>);
+        <span class="keyword">while</span>(!isDone.get()) {
+            <span class="type">Iterator</span>&lt;<span class="type">SelectionKey</span>&gt; <span class="keyword">iterator</span> = null;
+            <span class="keyword">try</span> {
+                <span class="keyword">if</span>(selector.select(<span class="type">TIME_OUT</span>) == <span class="number">0</span>) <span class="keyword">continue</span>;
+
+                <span class="type">Set</span>&lt;<span class="type">SelectionKey</span>&gt; selectionKeys = selector.selectedKeys();
+                <span class="keyword">for</span>(<span class="keyword">iterator</span> = selectionKeys.<span class="keyword">iterator</span>(); <span class="keyword">iterator</span>.hasNext();) {
+                    <span class="type">SelectionKey</span> key = <span class="keyword">iterator</span>.next();
+                    <span class="keyword">if</span>(key.isAcceptable()) {
+                        protocol.handleAccept(key);
+                    } <span class="keyword">else</span> <span class="keyword">if</span>(key.isConnectable()) {
+                        <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"doSomething when be able to connect"</span>);
+                    } <span class="keyword">else</span> <span class="keyword">if</span>(key.isReadable()) {
+                        protocol.handleRead(key);
+                    } <span class="keyword">else</span> <span class="keyword">if</span>(key.isWritable()) {
+                        protocol.handleWrite(key);
+                    }
+                    <span class="keyword">iterator</span>.remove(); //注意要从就绪集合中删除，下次就绪有selector添加
+                }
+            } catch (<span class="type">Exception</span> e) {
+                logger.error(e);
+                <span class="keyword">if</span>(<span class="keyword">iterator</span> != null)
+                    <span class="keyword">iterator</span>.remove();
+            }
+        }
+    }
+
+}
+</code></pre><p>处理对应Select事件：</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NioProtocol</span> <span class="keyword">implements</span> <span class="title">Protocol</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger logger = LogManager.getLogger();
+
+    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> bufferSize; <span class="comment">//缓冲区大小</span>
+
+    <span class="function"><span class="keyword">public</span> <span class="title">NioProtocol</span><span class="params">(<span class="keyword">int</span> bufferSize)</span> </span>{
+        <span class="keyword">this</span>.bufferSize = bufferSize;
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleAccept</span><span class="params">(SelectionKey key)</span> <span class="keyword">throws</span> IOException </span>{
+        <span class="comment">//accept事件，由ServerSokcetChannel打开SocketChannel，并设置非阻塞和注册</span>
+        SocketChannel channel = ((ServerSocketChannel)key.channel()).accept();
+        channel.configureBlocking(<span class="keyword">false</span>);
+        channel.register(key.selector(), SelectionKey.OP_READ,
+                ByteBuffer.allocate(bufferSize));
+        logger.info(channel.getRemoteAddress() + <span class="string">"'s connection is established."</span>);
+    }
+
+    <span class="comment">//客户端发送数据，通过Buffer从Channel中读取请求数据并返回</span>
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleRead</span><span class="params">(SelectionKey key)</span> <span class="keyword">throws</span> IOException </span>{
+        SocketChannel channel = (SocketChannel) key.channel();
+        <span class="comment">//创建缓冲区</span>
+        ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
+        buffer.clear();
+        <span class="keyword">long</span> len = <span class="number">0</span>;
+        StringBuilder sb = <span class="keyword">new</span> StringBuilder();
+        Charset charset = Charset.forName(<span class="string">"UTF8"</span>);
+        <span class="keyword">while</span> ((len = channel.read(buffer)) &gt; <span class="number">0</span>) {
+            buffer.flip();
+            sb.append(charset.decode(buffer).toString());
+            buffer.clear();
+        }
+        logger.debug(sb.toString());
+        <span class="keyword">if</span> (sb.length() == <span class="number">0</span>) {
+            logger.info(channel.getRemoteAddress() + <span class="string">"'s connection is closed."</span>);
+            channel.close();
+        } <span class="keyword">else</span> {
+            <span class="comment">//TODO 抽象出事件处理机制，类似Servlet的回调，分发给特定的处理点</span>
+            <span class="keyword">byte</span>[] bytes = sb.toString().getBytes(<span class="string">"UTF8"</span>);
+            ByteBuffer responseBuffer = ByteBuffer.allocate(bytes.length);
+            responseBuffer.put(bytes);
+            responseBuffer.flip();
+            channel.write(responseBuffer);
+            key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+        }
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleWrite</span><span class="params">(SelectionKey key)</span> <span class="keyword">throws</span> IOException </span>{
+
+    }
+}
+</code></pre><h1 id="3-_URI，URL，URLConnection获取Web数据">3. URI，URL，URLConnection获取Web数据</h1><p>URI是统一资源标识符，起描述作用；<br>URL是统一资源定位符，起定位作用；URL是URI的特例；</p>
+<p>URI的各个部分：<br>[scheme:][schemeSpecificPart][#fragment]<br>（1）绝对与相对：是否包含scheme部分；<br>（2）透明与不透明：schemeSpecificPart是否以”/“开头；<br>schemeSpecificPart又进一步分层：<br>[//authority][path][?query]<br>authority又可以分为：<br>[user-info@]host:[port]；</p>
+<pre><code>URI uri = URI.create(<span class="string">"http://localhost:8080/example/servlets/servlet/空幻?author=空幻<span class="subst">#success</span>"</span>);
+</code></pre><p>scheme：http；<br>schemeSpecificPart：localhost:8080/example/servlets/servlet/空幻?author=空幻；<br>fragment：success<br>authority：localhost:8080<br>path：/example/servlets/servlet/空幻<br>query：author=空幻<br>host：localhost<br>port：8080</p>
+<p>对于Servlet规范来说这个URI可能是这样的：<br>getUri：/example/servlets/servlet/空幻，返回相对的；<br>Url：<a href="http://localhost:8080/example/servlets/servlet/空幻；" target="_blank" rel="external">http://localhost:8080/example/servlets/servlet/空幻；</a><br>ContextPath：example；<br>servletPath：/servlets/servlet<br>PathInfo：空幻<br>QueryString：author=空幻</p>
+<h2 id="使用URLConnection">使用URLConnection</h2><p>（1）创建：</p>
+<pre><code><span class="keyword">URL</span> url = new <span class="keyword">URL</span>(<span class="string">"http://localhost:8080/debug"</span>);
+HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+</code></pre><p>（2）设置连接属性：</p>
+<pre><code><span class="function">setOutput</span>(true); <span class="comment">//如果要写入必须设置</span>
+<span class="function">setUseCaches</span>(boolean); <span class="comment">//URLConnection本身不提供缓存支持需要外部实现，如浏览器；</span>
+<span class="function">setConnectionTimeout</span>(); <span class="comment">//连接超时时间</span>
+<span class="function">setReadTimeout</span>(); <span class="comment">//读取超时时间</span>
+</code></pre><p>使用HttpURLConnection时，使用post应该设置setContentLength；<br>（3）连接：</p>
+<pre><code>connect()<span class="comment">;</span>
+</code></pre><p>（4）获取响应属性：</p>
+<pre><code><span class="function">getHeaderFields</span>();
+<span class="function">getHeaderFieldKey</span>();
+<span class="function">getHeaderField</span>();
+<span class="function">getContentLength</span>();
+<span class="function">getContentType</span>();
+<span class="function">getContentEncoding</span>();
+<span class="comment">//等等</span>
+</code></pre><p>（5）获取响应数据：</p>
+<pre><code><span class="function">getInputStream</span>();
+<span class="function">getContent</span>(); <span class="comment">//不常用，需要MIME类型支持，对应的处理器处理</span>
+</code></pre><p>补充：HttpURLConnection包含了一些额外方法，如：<br>setRequestMethod，getErrStream等；</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-Java-Servlet-4-0-Specification解读" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/11/30/Java-Servlet-4-0-Specification解读/" class="article-date">
+  	<time datetime="2015-11-30T09:34:47.000Z" itemprop="datePublished">2015-11-30</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/11/30/Java-Servlet-4-0-Specification解读/">Java Servlet 4.0 Specification解读</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/技术更新/">技术更新</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
   
     <article id="post-学习JVM的一点感想" class="article article-type-post" itemscope itemprop="blogPost">
   

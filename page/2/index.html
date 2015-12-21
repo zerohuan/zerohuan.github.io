@@ -114,7 +114,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/JVM/" style="font-size: 13.33px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 16.67px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java小工具/" style="font-size: 10px;">Java小工具</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 13.33px;">TCP/IP</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
+						<a href="/tags/JVM/" style="font-size: 12.5px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12.5px;">TCP/IP</a> <a href="/tags/思考和求解/" style="font-size: 17.5px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
 					</div>
 				</section>
 				
@@ -195,6 +195,56 @@
 	</div>
 </nav>
       <div class="body-wrap">
+  
+    <article id="post-Java基础知识总结（九）——集合" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/07/Java基础知识总结（九）——集合/" class="article-date">
+  	<time datetime="2015-12-07T03:48:55.000Z" itemprop="datePublished">2015-12-07</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/07/Java基础知识总结（九）——集合/">Java基础知识总结（九）——集合</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
   
     <article id="post-Java基础知识总结（八）——反射" class="article article-type-post" itemscope itemprop="blogPost">
   
@@ -1121,10 +1171,10 @@ Pair &gt; Pair<span class="variable">&lt;?&gt;</span> &gt; Pair<span class="vari
 
 
   
-    <article id="post-Java基础知识总结（五）——安全" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-基于wait和nofity的生产者和消费者模式版本" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2015/12/02/Java基础知识总结（五）——安全/" class="article-date">
+      <a href="/2015/12/02/基于wait和nofity的生产者和消费者模式版本/" class="article-date">
   	<time datetime="2015-12-02T05:19:32.000Z" itemprop="datePublished">2015-12-02</time>
 </a>
     </div>
@@ -1138,7 +1188,7 @@ Pair &gt; Pair<span class="variable">&lt;?&gt;</span> &gt; Pair<span class="vari
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/02/Java基础知识总结（五）——安全/">Java基础知识总结（五）——安全</a>
+      <a class="article-title" href="/2015/12/02/基于wait和nofity的生产者和消费者模式版本/">基于wait和nofity的生产者和消费者模式版本</a>
     </h1>
   
 
@@ -1147,78 +1197,111 @@ Pair &gt; Pair<span class="variable">&lt;?&gt;</span> &gt; Pair<span class="vari
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h5 id="小结：">小结：</h5><p>一直说Java安全性比较好，系统的整理了下有关的Java的安全的三个方面：语言特性，安全管理器（保护域），签名和加密算法的应用。</p>
-<h1 id="1-_概括">1. 概括</h1><p>Java语言的安全由三个方面共同进行保证：</p>
-<h3 id="（1）语言特性：">（1）语言特性：</h3><p>类，域，方法的访问控制；<br>运行时的检查：指针操作的封装，数组的越界检查，类型转换的检查；<br>编译时检查：字节码加载，比如语义分析时会对变量是否初始化，运算符两边的类型是否匹配等等；<br>类加载：双亲委托加载模型/线程上下文类加载器，验证（文件格式验证，元数据验证，字节码验证（是否初始化，类型是否匹配等），符号验证（访问权限））；</p>
-<p><strong>类加载器的安全性在于</strong>：<br>（1）双亲委托的模型中核心类，扩展类，应用类有各自层次的类加载器；<br>（2）Java中每个类型有全限定名和类加载实例两者决定，每个类加载器实例提供一个类型的命名空间；<br>（3）类加载器会检查不能由非BootStrap类加载器加载JDK核心类；<br>（4）验证环节；</p>
-<h3 id="（2）访问控制：安全管理器">（2）访问控制：安全管理器</h3><h3 id="（3）代码签名，加密算法验证创建者；">（3）代码签名，加密算法验证创建者；</h3><h1 id="2-_安全管理器">2. 安全管理器</h1><p>Java平台安全性的演进：<br>（1）JDK1.0：本地代码具有所有的权限，远程代码在沙盒中运行，只能打印到屏幕和与用户交互；<br>（2）JDK1.1：远程代码带有可信赖的签名，具有与本地代码资源的所有权限；<br>（3）JDK2.0：基于<strong>保护域</strong>的安全体系，保护域包括<strong>代码来源</strong>和<strong>权限集合</strong>的映射，SecurityManager检查<strong>调用堆栈上所有方法的类</strong>的保护域，其权限集合是否允许执行当前的操作,如果所有域都通过检查则通过，否则抛出SecurityException异常；</p>
-<h2 id="2-1_重要的类和方法（体系结构）：">2.1 重要的类和方法（体系结构）：</h2><p>（1）SecurityManager：checkPermission等验证方法，抛出SecurityException；<br>（2）java.Security.ProtectionDomain：保护域，包含代码来源（CodeSource）和权限集合（PermissionCollection）；<br>（3）Class：getProtectionDomain获取该类的保护域；<br>（4）java.Security.CodeSource：代码来源，包含代码位置和相关联的证书链（用于类文件签名）；<br>（5）Permission：包含implies方法（条件间的依赖关系），通过name属性是关键，equals和hashcode主要由它决定，和Principal一样可以自定义；</p>
-<p>安全策略文件：<br>位置：<br>（1）Java平台主目录（java.policy文件）；<br>（2）用户主目录（.java.policy）；<br>（3）通过jvm参数指定，<br>（4）System.setProperty(“java.security.plicy”,)设置；</p>
-<h2 id="2-2_用户认证（JAAS_API规范）：">2.2 用户认证（JAAS API规范）：</h2><p>（1）通过LoginContext登录，可以传入CallbackHandler（handler中可以携带一些登录信息），使用在config文件中定义的LoginModule（也可以自定义）将callbackHandler中的登录信息传递到回调对象，从而获得登录信息；<br>（2）根据用户信息库（可以是目录文件，数据库等等）。通过验证后可以获得一个Subject；<br>（3）LoginModule会给这个用Subject添加一些Principal（特征），通过Subject.doAsPrivileged（一个新的上下文，与登录环境权限分离）中执行受检查的action；<br>（4）如果policy中subject带有的principal有对应权限的话这可以执行，否则抛出AccessControlException；</p>
-<p>LoginModule是检查登录权限的关键，向它传入CallbackHandler（登录信息），Subject（认证对象），options（config中对应的键值对信息），sharedState（登录模块间通信）；</p>
-<h1 id="3-_数字签名">3. 数字签名</h1><h2 id="3-1_消息摘要">3.1 消息摘要</h2><p>消息摘要（message digest）：是数据块的数字指纹。<br>基本属性：<br>（1）如果数据的1位或几位改变了，那么消息摘要也将要改变。<br>（2）拥有给定消息的伪造者不能创建与原消息具有相同的假消息；</p>
-<p>Java中的MessageDigest和Charset的体系很像，作为消息摘要算法子类的超类的同时也是工厂类；</p>
-<p>消息摘要意义在于检查文件（消息）是否被修改过，这就要求消息摘要和消息分开传递，否则一同截获再被修改（很容易）就无法起作用了。比如，保存文件是常常可以通过MD5验证的方式检查文件是否是同一文件。</p>
-<h2 id="3-2_消息签名">3.2 消息签名</h2><p>由于消息摘要的局限性，在需要认证用户身份的时候就需要数字签名同时能够校验消息有无被修改，中途被篡改。</p>
-<p>数字签名算法（DSA）；</p>
-<h3 id="重要概念：">重要概念：</h3><p>（1）公共密钥：可以公开，数字签名中，对方通过公共密钥校验消息的来源可信性（原始信息未修改，验证对方身份）；在非对称加密算法中，可以用来加密给对方的消息；<br>（2）私有密钥：非公开，在数字签名中，可以用生成签名；在非对加密中，可以通过私有密钥解密对方发来的加密消息；<br>（3）公共密钥和私有密钥的设计在于通过一个密钥推算出另一个密钥是实际不可性的，在数字签名中，私有密钥相当于个人的凭证。</p>
-<h3 id="数字签名原理：">数字签名原理：</h3><p>（1）发送方，生成自己的密钥库，包含私有密钥和公有密钥，将公有密钥包含导出成证书将这个证书发送给接受方；<br>（2）接收方，验证证书的真实性，接受到带有签名的消息后，利用证书验证<strong>是否为发送方的签名</strong>和<strong>消息有无被修改</strong>；</p>
-<h3 id="基于第三方认证机构的认证">基于第三方认证机构的认证</h3><p>我觉得这种模式类似于中介者设计模式/迪米特法则，类似的还有集群架构中中心式的拓扑结构，将多对多的联系变成一对多，复杂性集中在中介者身上，将认证的步骤分离出来。<br>（1）第三方将自己的<strong>根证书（公有密钥）</strong>导出，可以利用pem格式（隐私增强型邮件格式）；<br>（2）用户将<strong>根证书</strong>导入密钥库中，这时用户的密钥库能够信任这个第三方平台发来的信息；<br>（3）将发送方的证书同样导出成pem格式，基于openssl和第三方的CA对该证书签名生成pem，这是第三方平台对发送方的认证；<br>（4）将这个带有第三方签名的证书由接收方导入密钥库（因为已有了第三方的证书），最后接收方就拥有了发送方的证书；</p>
-<h3 id="keytool，jarsign：JDK数字证书，签名生成工具">keytool，jarsign：JDK数字证书，签名生成工具</h3><p>生成密钥库：keytool -genkeypair -keystore xxx.certs -alias xxx；<br>导出证书：keytool -exportcert -keystore xxx.certs -alias acmeroot -file acmeroot.cer；<br>导入证书到密钥库：keytool -importcert -keystore xxx.certs -alias yyy -file yyy.cer（yyy发送方别名）；<br>打印证书：keytool -printcert -file xxx.cer；<br>列出密钥库证书：keytool -list -v -keystore xxx</p>
-<p>使用证书签名jar：jarsigner -keystore xxx.certs document.jar xxx<br>验证jar签名：jarsigner -verify -keystore xxx.certs document.jar</p>
-<h2 id="4-_加密：">4. 加密：</h2><p>消息签名可以认证代码的来源，并且校验是否被修改，但是消息本身是可见的，对于重要的信息需要加密。</p>
-<p>Cipher类：与Charset和MessageDigest一样，超类+工厂类。</p>
-<h3 id="4-1_加密算法：">4.1 加密算法：</h3><p>对称密码：DES（穷举法可破解），AES等；<br>非对称密码：RSA等</p>
-<h4 id="非对称加密算法的应用方式">非对称加密算法的应用方式</h4><p><strong>公有密钥算法比对称密钥算法慢的多</strong>，因此不能用来加密大量的信息。使用对称密钥算法加密正文，公有密钥加密对称密钥是一种可行的方式。<br>（1）发送方生成对称密钥，对明文进行加密，并使用接收方的公有密钥对对称密钥进行加密；<br>（2）将加密后的明文和对称密钥一同发送给接收方；<br>（3）接收方使用自己的私有密钥将对称密钥解密，再用对称密钥解密得到明文；</p>
-<p>使用公有密钥算法的方式和下面对称加密算法的方式类似：主要要使用WARP_MODE和UNWARP_MODE对对称加密的<code>key</code>进行加解密。</p>
-<h4 id="生成密钥">生成密钥</h4><p>生成密钥可以用<strong>SecureRandom</strong>或者<strong>随机序列（随机敲键盘）</strong>的得到随机种子。密钥可以用序列化的方式输出到磁盘等地方保存。<br>方式一：</p>
-<pre><code><span class="constant">KeyGenerator keyGenerator</span> = KeyGenerator.getInstance(<span class="string">"AES"</span>);
-<span class="comment">//"真正的随机数"，加密的随机数，需要额外性能</span>
-<span class="comment">//Random以日期和时间为种子并不安全</span>
-<span class="constant">SecureRandom secureRandom</span> = new SecureRandom();
-keyGenerator.init(secureRandom);
-<span class="constant">Key key</span> = keyGenerator.generateKey();
-</code></pre><p>方式二：</p>
-<pre><code><span class="built_in">byte</span>[] seq = <span class="string">"sdlkfjiuqoenrgiuerds,msfd"</span>.getBytes();
-SecretKey <span class="variable">key</span> = <span class="keyword">new</span> SecretKeySpec(seq, <span class="string">"AES"</span>);
-</code></pre><h4 id="加密">加密</h4><p>选择加密算法：</p>
-<pre><code>Cipher aes = Cipher.getInstance(<span class="string">"AES"</span>);
-<span class="comment">/* 
-    模式有4种：
-    ENCRYPT_MODE
-    DECRYPT_MODE
-    UNWARP_MODE
-    WARP_MODE
-*/</span>
-<span class="built_in">int</span> mode = Cipher.ENCRYPT_MODE;
-aes.init(mode, <span class="variable">key</span>);
-</code></pre><p>将输入流中的数据加密写入输出流。注意如果数据不能以blockSize对齐，应该使用doFinal写入深入部分，该方法可以补齐。</p>
-<pre><code><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">crypt</span>(<span class="params">InputStream <span class="keyword">in</span>, OutputStream <span class="keyword">out</span>, Cipher cipher</span>) throws IOException, GeneralSecurityException </span>{
-        <span class="keyword">int</span> blockSize = cipher.getBlockSize();
-        <span class="keyword">int</span> outputSize = cipher.getOutputSize(blockSize);
-        <span class="keyword">byte</span>[] inBytes = <span class="keyword">new</span> <span class="keyword">byte</span>[blockSize];
-        <span class="keyword">byte</span>[] outBytes = <span class="keyword">new</span> <span class="keyword">byte</span>[outputSize];
+        <p>如果不用阻塞队列，生产者和消费者模式如何实现，我自己写了一版本，小记一下：</p>
+<p>除了Producer和Consumer之外，我还创建了一个ValueHolder用来解耦，并且包含了两个fianl对象作为锁；我觉得这样做可以基于final引用同步，更为安全一些；</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ProducerAndConsumer</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Value</span> </span>{
+    }
 
-        boolean more = <span class="keyword">true</span>;
-        <span class="keyword">int</span> inLen = <span class="number">0</span>;
-        <span class="keyword">while</span>(more) {
-            inLen = <span class="keyword">in</span>.read(inBytes);
-            <span class="keyword">if</span>(inLen == blockSize) {
-                <span class="keyword">int</span> outputLen = cipher.update(inBytes, <span class="number">0</span>, blockSize, outBytes);
-                <span class="keyword">out</span>.write(outBytes, <span class="number">0</span>, outputLen);
-            } <span class="keyword">else</span> {
-                more = <span class="keyword">false</span>;
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">ValueHolder</span> </span>{
+        <span class="keyword">private</span> <span class="keyword">final</span> Object mutexProduce = <span class="keyword">new</span> Object();
+        <span class="keyword">private</span> <span class="keyword">final</span> Object mutexConsumer = <span class="keyword">new</span> Object();
+        <span class="keyword">private</span> <span class="keyword">final</span> ExecutorService executor;
+
+        <span class="keyword">private</span> Value value;
+
+        <span class="function"><span class="keyword">public</span> <span class="title">ValueHolder</span><span class="params">(ExecutorService executor)</span> </span>{
+            <span class="keyword">this</span>.executor = executor;
+        }
+    }
+
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Producer</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>{
+        <span class="keyword">private</span> <span class="keyword">final</span> ValueHolder holder;
+        <span class="keyword">private</span> <span class="keyword">int</span> count;
+
+        <span class="function"><span class="keyword">public</span> <span class="title">Producer</span><span class="params">(ValueHolder holder)</span> </span>{
+            <span class="keyword">this</span>.holder = holder;
+        }
+
+        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">produce</span><span class="params">()</span> </span>{
+            <span class="keyword">if</span>(holder != <span class="keyword">null</span>) {
+                <span class="keyword">try</span> {
+                    <span class="keyword">while</span>(!Thread.interrupted()) {
+                        <span class="keyword">synchronized</span> (holder.mutexProduce) {
+                            <span class="keyword">while</span>(holder.value != <span class="keyword">null</span>)
+                                holder.mutexProduce.wait();
+                        }
+                        <span class="keyword">if</span>(count &gt; <span class="number">10</span>)
+                            holder.executor.shutdownNow();
+                        System.out.println(<span class="string">"has a value produced..."</span>);
+                        <span class="keyword">synchronized</span> (holder.mutexConsumer) {
+                            TimeUnit.SECONDS.sleep(<span class="number">1</span>);
+                            holder.value = <span class="keyword">new</span> Value();
+                            count++;
+                            holder.mutexConsumer.notifyAll();
+                        }
+                    }
+                } <span class="keyword">catch</span> (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
-        <span class="keyword">if</span>(inLen &gt; <span class="number">0</span>) outBytes = cipher.doFinal(inBytes, <span class="number">0</span>, inLen);
-        <span class="keyword">else</span> outBytes = cipher.doFinal();
-        <span class="keyword">out</span>.write(outBytes);
-        <span class="keyword">out</span>.flush();
-    }
-</code></pre><h4 id="密码流">密码流</h4><p>使用CiperInputStream和CiperOutputStream可以屏蔽<code>update</code>和<code>doFinal</code>等细节；</p>
-<hr>
-<h3 id="附：policy，config语法小记：">附：policy，config语法小记：</h3><p>grant：codeBase，principal，signedBy（加alias）；<br>Login1 {LoginModule}：登录上下文定义；</p>
 
+        <span class="annotation">@Override</span>
+        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+            produce();
+        }
+    }
+
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Consumer</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>{
+        <span class="keyword">private</span> <span class="keyword">final</span> ValueHolder holder;
+
+        <span class="function"><span class="keyword">public</span> <span class="title">Consumer</span><span class="params">(ValueHolder holder)</span> </span>{
+            <span class="keyword">this</span>.holder = holder;
+        }
+
+        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">consume</span><span class="params">()</span> </span>{
+            <span class="keyword">if</span>(holder != <span class="keyword">null</span>) {
+                <span class="keyword">try</span> {
+                    <span class="keyword">while</span>(!Thread.interrupted()) {
+                        <span class="keyword">synchronized</span> (holder.mutexConsumer) {
+                            <span class="keyword">while</span>(holder.value == <span class="keyword">null</span>)
+                                holder.mutexConsumer.wait();
+                        }
+                        System.out.println(<span class="string">"has a value from producer..."</span>);
+                        <span class="keyword">synchronized</span> (holder.mutexProduce) {
+                            TimeUnit.SECONDS.sleep(<span class="number">1</span>);
+                            holder.value = <span class="keyword">null</span>;
+                            holder.mutexProduce.notifyAll();
+                        }
+                    }
+                } <span class="keyword">catch</span> (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        <span class="annotation">@Override</span>
+        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+            consume();
+        }
+    }
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
+        ExecutorService executor = Executors.newFixedThreadPool(<span class="number">2</span>);
+        ValueHolder valueHolder = <span class="keyword">new</span> ValueHolder(executor);
+        Producer producer = <span class="keyword">new</span> Producer(valueHolder);
+        Consumer consumer = <span class="keyword">new</span> Consumer(valueHolder);
+
+
+        executor.execute(producer);
+        executor.execute(consumer);
+
+        executor.shutdown();
+    }
+
+}
+</code></pre>
       
     </div>
     
@@ -1226,7 +1309,7 @@ aes.init(mode, <span class="variable">key</span>);
       
       
 	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/思考和求解/">思考和求解</a></li></ul>
 	</div>
 
       
@@ -1451,11 +1534,11 @@ throws java<span class="class">.io</span><span class="class">.IOException</span>
 
 
   
-    <article id="post-Java网络编程小记" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-关于Java类初始化和实例化中的2个“雷区”" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2015/12/01/Java网络编程小记/" class="article-date">
-  	<time datetime="2015-12-01T06:37:13.000Z" itemprop="datePublished">2015-12-01</time>
+      <a href="/2015/12/02/关于Java类初始化和实例化中的2个“雷区”/" class="article-date">
+  	<time datetime="2015-12-02T05:19:32.000Z" itemprop="datePublished">2015-12-02</time>
 </a>
     </div>
   
@@ -1468,7 +1551,7 @@ throws java<span class="class">.io</span><span class="class">.IOException</span>
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/01/Java网络编程小记/">Java基础知识总结（六）——网络编程</a>
+      <a class="article-title" href="/2015/12/02/关于Java类初始化和实例化中的2个“雷区”/">关于Java类初始化和实例化中的2个“雷区”</a>
     </h1>
   
 
@@ -1477,313 +1560,102 @@ throws java<span class="class">.io</span><span class="class">.IOException</span>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>在系统的看Tomcat源码的时候，先动手复习一下Java网络编程的基础知识，实现一个简单的服务器/客户端，并在实现中思考一个服务器需要考虑那些问题，记录下来，看Tomcat源码的时候带着这些问题。</p>
-<hr>
-<h3 id="积累的问题和思考：">积累的问题和思考：</h3><ol>
-<li>异常的处理，如何定义自己的异常体系，像具体协议HTTP的404等异常状态如何分发到对应页面；</li>
-<li>怎样设计软件结构，支持NIO和BIO切换，并和Servlet规范结合的；</li>
-<li>如何让Java进程成为类似Daemon进程，当前终端退出后不关闭（shell脚本控制？）；</li>
-<li>关闭服务器的时候，对于没有完成的连接是如何处理的；</li>
-<li>tomcat是如何支持HTTP协议的；</li>
-</ol>
-<h1 id="1-_Socket和InetAddress">1. Socket和InetAddress</h1><p>套接字连接：<br>需要注意：<br>（1）设置合理的超时时间，包括连接超时和读取超时；<br>（2）这是基于TCP的套接字连接，另外的UDP连接是数据报的形式，是无连接的。</p>
-<h3 id="基本用法：">基本用法：</h3><pre><code><span class="comment">//套接字连接</span>
-<span class="constant">Socket socket</span> = new Socket(<span class="string">"www.baidu.com"</span>, <span class="number">80</span>); <span class="comment">//在构造函数中连接/阻塞</span>
-<span class="comment">//获取输入输出流</span>
-<span class="constant">InputStream inputStream</span> = socket.getInputStream();
-<span class="constant">OutputStream outputStream</span> = socket.getOutputStream();
-<span class="comment">//关闭</span>
-socket.close();
-</code></pre><h3 id="套接字超时时间：">套接字超时时间：</h3><pre><code><span class="comment">//套接字超时时间</span>
-<span class="comment">//建立一个无连接的Socket</span>
-Socket socket1 = <span class="keyword">new</span> Socket();
-<span class="comment">//设置连接超时时间，超过时间直接返回</span>
-socket1.connect(<span class="keyword">new</span> InetSocketAddress(<span class="string">"www.baidu.com"</span>, <span class="number">80</span>), <span class="number">1000</span>);
-<span class="comment">//设置等待读取的超时时间，超时返回InterruptedIOException</span>
-socket1.setSoTimeout(<span class="number">5000</span>);
-<span class="keyword">BufferedReader</span> reader = <span class="keyword">new</span> <span class="keyword">BufferedReader</span>(<span class="keyword">new</span> InputStreamReader(socket1.getInputStream()));
-<span class="keyword">try</span> {
-    System.out.<span class="built_in">println</span>(reader.readLine());
-} <span class="keyword">catch</span> (InterruptedIOException e) {
-    e.printStackTrace();
-}
-<span class="comment">//检查是否已经连接</span>
-out.<span class="built_in">println</span>(socket.isConnected());
-out.<span class="built_in">println</span>(socket1.isConnected());
-<span class="comment">//是否关闭</span>
-out.<span class="built_in">println</span>(socket1.isClosed());
-socket1.close();
-out.<span class="built_in">println</span>(socket1.isClosed());
-</code></pre><h3 id="因特网地址">因特网地址</h3><p><strong>注意</strong>：<br>（1）如果一个主机名对应于多个ip，比如：<br><strong>基于DNS的负载均衡</strong>：<br>为多个ip地址配置相同的域名，客户端请求某个域名服务时，域名服务器采用轮询的方式为客户端选择一个ip地址。为不同的客户端选择不同的服务器，从而实现负载均衡的目的。<br>DNS做负载均衡简单方便，但存在不少问题。<br>a.DNS无法知道解析的服务节点是否有效，若服务节点无效，DNS服务器依然会将域名解析到该节点上，造成访问服务节点无效。<br>b.DNS的缓存时间较长，一旦出现问题，更新DNS信息需要等待客户数分钟甚至数十分钟，可靠性不高。<br>c.DNS无法知晓服务器间的差异，也不能反映服务器当前的运行状态。其有可能将轻量级的访问发给空闲的服务器，将重量级的访问发给负载已经很重的服务器。<br>（2）InetAddress使用工厂方法创建实例，根据主机名/地址返回具体的实现（Inet4Address或Inet6Address）；</p>
-<pre><code><span class="comment">//根据主机名获取一个地址，依赖DNS，如果服务器是负载均衡将随机得到一个ip地址</span>
-<span class="comment">//通过工厂方法返回Inet4Address或Inet6Address实例</span>
-InetAddress taobao = InetAddress.getByName(<span class="string">"www.taobao.com"</span>);
-<span class="comment">//得到ip地址</span>
-byte[] ip = taobao.getAddress();
-<span class="keyword">out</span>.println(<span class="string">"Taobao IP:"</span> + Arrays.<span class="keyword">toString</span>(ip));
-<span class="comment">//获取主机名对应的所有ip地址</span>
-InetAddress[] baidus = InetAddress.getAllByName(<span class="string">"www.baidu.com"</span>);
-<span class="keyword">out</span>.println(Arrays.<span class="keyword">toString</span>(baidus));
-<span class="comment">//获取本机地址</span>
-InetAddress localhost = InetAddress.getLocalHost();
-<span class="keyword">out</span>.println(localhost);
-<span class="keyword">out</span>.println(InetAddress.getLoopbackAddress());
-<span class="keyword">out</span>.println(localhost.getHostAddress());
-<span class="keyword">out</span>.println(localhost.getHostName());
-<span class="keyword">out</span>.println(localhost.getCanonicalHostName());
-</code></pre><h1 id="2-_简单的服务器实现">2. 简单的服务器实现</h1><p>（1）使用阻塞IO要使用线程池支持并发访问，这里我用的固定大小的线程池；<br>（2）Socket等产生的阻塞是不可中断的，实现可中断的阻塞可以用nio中的Channel；<br>（3）在客户端实现合适的半关闭策略；</p>
-<p><strong>代码实现：</strong><br>服务接口：</p>
-<pre><code><span class="comment">/**
- * 服务接口
- * Created by yjh on 15-12-1.
- */</span>
-<span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Server</span> <span class="keyword">extends</span> <span class="title">Runnable</span>, <span class="title">AutoCloseable</span> </span>{
-    <span class="function"><span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>;
-}
-</code></pre><p>服务骨架类：<br>（1）原子类布尔值实现安全的close退出；<br>（2）设置是否为nio；</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">AbstractServer</span> <span class="keyword">implements</span> <span class="title">Server</span> </span>{
-    <span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">final</span> String EOF = <span class="string">"EOF"</span>;
+        <p>在考虑类初始化时，我们都知道进行子类初始化时，如果父类没有初始化要先初始化子类。然而事情并没有一句话这么简单。</p>
+<p><strong>首先看看Java中初始化触发的条件：</strong><br>（1）在使用new实例化对象，访问静态数据和方法时，也就是遇到指令：new，getstatic/putstatic和invokestatic时；<br>（2）使用反射对类进行调用时；<br>（3）当初始化一个类时，父类如果没有进行初始化，先触发父类的初始化；<br>（4）执行入口main方法所在的类；<br>（5）JDK1.7动态语言支持中方法句柄所在的类，如果没有初始化触发起初始化；</p>
+<p>经过编译后生成一个<code>&lt;clinit&gt;</code>方法，类的初始化就在这个方法中进行，该方法只执行，由JVM保证这一点，并进行同步控制；</p>
+<p>其中条件（3），从方法调用的角度来看，是子类的<code>&lt;clinit&gt;</code>会在开始时递归的调用父类的<code>&lt;clinit&gt;</code>，这类似与我们在子类构造器中必须首先调用父类的构造器；</p>
+<p>但需要注意的是“触发”并不是完成初始化，这意味着有可能子类的初始化会提前于父类初始化结束，这就是“危险”的所在。</p>
+<h2 id="1-_一个类初始化的例子：">1. 一个类初始化的例子：</h2><p>这个例子我使用一个外围类包含2个有继承关系的静态成员类，因为外围类的初始化和静态成员类没有因果关系，因此这样展示是安全和方便的；<br>父类A和子类B分别包含main函数，由上面的触发条件（4）可知，通过分别调用这个两个main函数来触发不同的类初始化路径；<br>这个例子的问题在于父类包含子类的static引用并在定义处进行初始化的问题：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">WrapperClass</span> {
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title">A</span> {
+        <span class="keyword">static</span> {
+            System.<span class="keyword">out</span>.println(<span class="string">"类A初始化开始..."</span>);
+        }
+        <span class="comment">//父类包含子类的static引用</span>
+        <span class="keyword">private</span> <span class="keyword">static</span> B b = <span class="keyword">new</span> B();
+        <span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">int</span> aInt = <span class="number">9</span>;
 
-    <span class="keyword">protected</span> <span class="keyword">volatile</span> AtomicBoolean isDone = <span class="keyword">new</span> AtomicBoolean(<span class="keyword">false</span>);
-    <span class="keyword">protected</span> <span class="keyword">final</span> <span class="keyword">int</span> port;
-    <span class="keyword">protected</span> <span class="keyword">final</span> <span class="keyword">boolean</span> isNIO; <span class="comment">//false使用BIO</span>
+        <span class="keyword">static</span> {
+            System.<span class="keyword">out</span>.println(<span class="string">"类A初始化结束..."</span>);
+        }
 
-    <span class="function"><span class="keyword">protected</span> <span class="title">AbstractServer</span><span class="params">(<span class="keyword">int</span> port, <span class="keyword">boolean</span> isNIO)</span> </span>{
-        <span class="keyword">this</span>.port = port;
-        <span class="keyword">this</span>.isNIO = isNIO;
+        <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
 
-    }
-}
-</code></pre><p>阻塞IO服务实现：<br>（1）用静态内部类包含线程池实例，延迟加载；<br>（2）使用固定大小的线程池；<br>（3）简单的数据处理逻辑：返回客户端的请求数据；<br>（4）使用Scanner和PrintWriter包装操作输入输出流；<br>（5）使用CAS操作布尔值控制线程安全；</p>
-<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BioServer</span> <span class="keyword">extends</span> <span class="title">AbstractServer</span> </span>{
-    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger logger = LogManager.getLogger();
-    <span class="keyword">private</span> ServerSocket serverSocket;
-
-    <span class="function"><span class="keyword">public</span> <span class="title">BioServer</span><span class="params">(<span class="keyword">int</span> port)</span> </span>{
-        <span class="keyword">super</span>(port, <span class="keyword">false</span>);
-        <span class="keyword">try</span> {
-            serverSocket = <span class="keyword">new</span> ServerSocket(port);
-        } <span class="keyword">catch</span> (IOException e) {
-            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"serverSocket created fail."</span>);
         }
     }
 
-    <span class="annotation">@Override</span>
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> </span>{
-        run();
-    }
-
-    <span class="annotation">@Override</span>
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-        <span class="keyword">try</span> (ServerSocket serverSocket = <span class="keyword">this</span>.serverSocket) {
-            <span class="keyword">while</span>(!isDone.get()) {
-                Socket incoming = serverSocket.accept();
-                ThreadPoolHolder.executor.execute(<span class="keyword">new</span> SocketHandler(incoming));
-            }
-        } <span class="keyword">catch</span> (IOException e) {
-            e.printStackTrace();
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title">B</span> <span class="title">extends</span> <span class="title">A</span> {
+        <span class="keyword">static</span> {
+            System.<span class="keyword">out</span>.println(<span class="string">"类B初始化开始..."</span>);
         }
-    }
+        <span class="comment">//子类的域依赖于父类的域</span>
+        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> bInt = <span class="number">9</span> + A.aInt;
 
-    <span class="comment">/**
-     * 静态内部类，包含一个线程池实例，延迟加载
-     */</span>
-    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">ThreadPoolHolder</span> </span>{
-        <span class="comment">//延时加载，固定大小10的线程池</span>
-        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ExecutorService executor = Executors.newFixedThreadPool(<span class="number">10</span>);
-    }
-
-    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">SocketHandler</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>{
-        <span class="keyword">private</span> Socket incoming;
-
-        <span class="function"><span class="keyword">public</span> <span class="title">SocketHandler</span><span class="params">(Socket incoming)</span> </span>{
-            <span class="keyword">this</span>.incoming = incoming;
-            logger.info(Thread.currentThread().getName() + <span class="string">"'s connection is established"</span>);
+        <span class="function"><span class="keyword">public</span> <span class="title">B</span>(<span class="params"></span>) </span>{
+            <span class="comment">//构造器依赖类的static域</span>
+            System.<span class="keyword">out</span>.println(<span class="string">"类B的构造器调用 "</span> + <span class="string">"bInt的值"</span> + bInt);
         }
 
-        <span class="annotation">@Override</span>
-        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-            <span class="keyword">try</span> {
-                <span class="keyword">try</span>(Socket incoming = <span class="keyword">this</span>.incoming) {
-                    InputStream inputStream = incoming.getInputStream();
-                    OutputStream outputStream = incoming.getOutputStream();
-
-                    <span class="keyword">try</span>(Scanner in = <span class="keyword">new</span> Scanner(inputStream);
-                        PrintWriter out = <span class="keyword">new</span> PrintWriter(outputStream, <span class="keyword">true</span>)) {
-                        out.println(<span class="string">"Accepted request, send '"</span> + EOF  + <span class="string">"' to exit"</span>);
-
-                        <span class="keyword">boolean</span> isDone = <span class="keyword">false</span>;
-                        String line;
-                        <span class="keyword">while</span>(!isDone &amp;&amp; in.hasNextLine()) {
-                            line = in.nextLine();
-                            out.println(<span class="string">"Echo: "</span> + line);
-                            <span class="keyword">if</span>(line.trim().equalsIgnoreCase(EOF) || StringUtils.isEmpty(line.trim())) isDone = <span class="keyword">true</span>;
-                        }
-                    }
-                }
-            } <span class="keyword">catch</span> (IOException e) {
-                e.printStackTrace();
-            }
-            logger.info(Thread.currentThread().getName() + <span class="string">"'s connection is closed"</span>);
+        <span class="keyword">static</span> {
+            System.<span class="keyword">out</span>.println(<span class="string">"类B初始化结束... "</span> + <span class="string">"aInt的值："</span> + bInt);
         }
-    }
 
-    <span class="annotation">@Override</span>
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">close</span><span class="params">()</span> </span>{
-        <span class="keyword">while</span>(isDone.compareAndSet(<span class="keyword">false</span>, <span class="keyword">true</span>)) {
-            ThreadPoolHolder.executor.shutdownNow();
+        <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
+
         }
     }
 }
-</code></pre><p>非阻塞IO实现：<br>（1）使用ServerSocketChannel，SocketChannel注册到Selector，由Selector轮询并通知执行对应的回调（订阅-分发模式）；<br>（2）设置Channel设置为（同步）非阻塞模式，提高IO效率，增加CPU的负载，适用于并发量大，数据量小的情形；</p>
-<pre><code>public class <span class="type">NioServer</span> extends <span class="type">AbstractServer</span> {
-    private <span class="keyword">static</span> final <span class="type">Logger</span> logger = <span class="type">LogManager</span>.getLogger();
-
-    private final <span class="type">ServerSocketChannel</span> serverChannel;
-    private final <span class="type">Selector</span> selector;
-    private <span class="keyword">static</span> final <span class="type">int</span> <span class="type">BufferSize</span> = <span class="number">4096</span>;
-    private <span class="keyword">static</span> final <span class="type">int</span> <span class="type">TIME_OUT</span> = <span class="number">3000</span>;
-
-    public <span class="type">NioServer</span>(<span class="type">int</span> port, boolean isNIO) {
-        super(port, isNIO);
-        <span class="keyword">try</span> {
-            selector = <span class="type">Selector</span>.open();
-            serverChannel = <span class="type">ServerSocketChannel</span>.open();
-            serverChannel.configureBlocking(!isNIO);
-        } catch (<span class="type">IOException</span> e) {
-            throw new <span class="type">RuntimeException</span>(<span class="string">"serverSocket created fail."</span>);
+</code></pre><p>情景一：入口为类B的main函数时输出结果：</p>
+<pre><code>/<span class="keyword">*</span><span class="keyword">*</span>
+ <span class="keyword">*</span> 类A初始化开始...
+ <span class="keyword">*</span> 类B的构造器调用 bInt的值0
+ <span class="keyword">*</span> 类A初始化结束...
+ <span class="keyword">*</span> 类B初始化开始...
+ <span class="keyword">*</span> 类B初始化结束... aInt的值：18
+ <span class="keyword">*</span>/
+</code></pre><p><strong>分析</strong>：可以看到，main函数的调用触发了类B的初始化，进入类B的<code>&lt;clinit&gt;</code>方法，类A作为其父类先开始初始化进入了A的<code>&lt;clinit&gt;</code>方法，其中有一个语句<code>new B();</code>这时会进行B的实例化，这是已经在类B的<code>&lt;clinit&gt;</code>中了，main线程已经获得锁开始执行类B的<code>&lt;clinit&gt;</code>，我们开头说过JVM会保证一个类的初始化方法只被执行一次，JVM收到new指令后不会再进入类B的<code>&lt;clinit&gt;</code>方法而是直接进行实例化，但是此时类B还没有完成类初始化，所以可以看到bInt的值为0（这个0是类加载中准备阶段分配方法区内存后进行的置零初始化）；<br>因此，可以得出，再父类中包含子类类型的static域并进行赋值动作，会可能导致子类实例化在类初始化完成前进行；</p>
+<p>情景二：入口为类A的main函数时输出结果：</p>
+<pre><code>/<span class="keyword">*</span><span class="keyword">*</span>
+ <span class="keyword">*</span> 类A初始化开始...
+ <span class="keyword">*</span> 类B初始化开始...
+ <span class="keyword">*</span> 类B初始化结束... aInt的值：9
+ <span class="keyword">*</span> 类B的构造器调用 bInt的值9
+ <span class="keyword">*</span> 类A初始化结束...
+ <span class="keyword">*</span>/
+</code></pre><p><strong>分析</strong>：经过情景一的分析，我们知道，由类B的初始化触发类A的初始化，会导致类A中类变量b的实例化在类B初始化完成前进行，那如果先初始化类A是不是就可以在类变量实例化的时候先触发类B的初始化，从而使得初始化在实例化前呢？答案是肯定的，但是这仍然有问题。<br>根据输出，可以看到，类B的初始化在类A的初始化完成前进行了，这导致了像类变量aInt的变量在类B初始化完成后才进行初始化，所以类B中的域bInt获取到的aInt的值是“0”，而不是我们预期的“18”；</p>
+<h2 id="结论：">结论：</h2><p>综上，可以得出，在父类中包含子类类型的类变量，并在定义出进行实例化是非常危险的行为，具体情况可能不会向例子一样直白，调用方法在定义处赋值一样隐含着危险，即使要包含子类类型的static域，也应该通过static方法进行赋值，因为JVM可以保证在static方法调用前完成所有的初始化动作（当然这种保证也是你不应该包含static B b = new B();这样的初始化行为）；</p>
+<h1 id="2-_一个实例化的例子：">2. 一个实例化的例子：</h1><p>首先需要知道对象创建的过程：<br>（1）遇到new指令，检查类是否完成了加载，验证，准备，解析，初始化（解析过程就是符号引用解析成直接引用，比如方法名就是一个符号引用，可以在初始化完成后使用这个符号引用的时候进行，正是为了支持动态绑定），没有完成先进行这些过程；<br>（2）分配内存，采用空闲列表或者指针碰撞的方法，并将新分配的内存“置零”，因此所有的实例变量在此环节都进行了一次默认初始化为0（引用为null）的过程；<br>（3）执行<code>&lt;init&gt;</code>方法，包括检查调用父类的<code>&lt;init&gt;</code>方法（构造器），实例变量定义出的赋值动作，实例化器顺序执行，最后调用构造器中的动作。</p>
+<p>这个例子可能更为大家所熟知，也就是它违反了“不要在构造器，clone方法和readObject方法中调用可被覆盖的方法”。其原因就在于Java中的多态，也就是动态绑定。<br>父类A的构造器中包含一个protected方法，类B是其子类。</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WrongInstantiation</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>{
+        <span class="function"><span class="keyword">public</span> <span class="title">A</span><span class="params">()</span> </span>{
+            doSomething();
         }
-    }
 
-    @<span class="type">Override</span>
-    public <span class="type">void</span> start() throws <span class="type">IOException</span> {
-        serverChannel.socket().<span class="keyword">bind</span>(new <span class="type">InetSocketAddress</span>(port));
-        serverChannel.register(selector, <span class="type">SelectionKey</span>.<span class="type">OP_ACCEPT</span>);
-        run();
-    }
-
-    @<span class="type">Override</span>
-    public <span class="type">void</span> close() throws <span class="type">Exception</span> {
-        <span class="keyword">try</span> {
-            serverChannel.close();
-        } <span class="keyword">finally</span> {
-            isDone.compareAndSet(<span class="literal">false</span>, <span class="literal">true</span>);
-        }
-    }
-
-    @<span class="type">Override</span>
-    public <span class="type">void</span> run() {
-        <span class="type">Protocol</span> protocol = new <span class="type">NioTCPProtocol</span>(<span class="type">BufferSize</span>);
-        <span class="keyword">while</span>(!isDone.get()) {
-            <span class="type">Iterator</span>&lt;<span class="type">SelectionKey</span>&gt; <span class="keyword">iterator</span> = null;
-            <span class="keyword">try</span> {
-                <span class="keyword">if</span>(selector.select(<span class="type">TIME_OUT</span>) == <span class="number">0</span>) <span class="keyword">continue</span>;
-
-                <span class="type">Set</span>&lt;<span class="type">SelectionKey</span>&gt; selectionKeys = selector.selectedKeys();
-                <span class="keyword">for</span>(<span class="keyword">iterator</span> = selectionKeys.<span class="keyword">iterator</span>(); <span class="keyword">iterator</span>.hasNext();) {
-                    <span class="type">SelectionKey</span> key = <span class="keyword">iterator</span>.next();
-                    <span class="keyword">if</span>(key.isAcceptable()) {
-                        protocol.handleAccept(key);
-                    } <span class="keyword">else</span> <span class="keyword">if</span>(key.isConnectable()) {
-                        <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"doSomething when be able to connect"</span>);
-                    } <span class="keyword">else</span> <span class="keyword">if</span>(key.isReadable()) {
-                        protocol.handleRead(key);
-                    } <span class="keyword">else</span> <span class="keyword">if</span>(key.isWritable()) {
-                        protocol.handleWrite(key);
-                    }
-                    <span class="keyword">iterator</span>.remove(); //注意要从就绪集合中删除，下次就绪有selector添加
-                }
-            } catch (<span class="type">Exception</span> e) {
-                logger.error(e);
-                <span class="keyword">if</span>(<span class="keyword">iterator</span> != null)
-                    <span class="keyword">iterator</span>.remove();
-            }
-        }
-    }
-
-}
-</code></pre><p>处理对应Select事件：</p>
-<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NioProtocol</span> <span class="keyword">implements</span> <span class="title">Protocol</span> </span>{
-    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger logger = LogManager.getLogger();
-
-    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> bufferSize; <span class="comment">//缓冲区大小</span>
-
-    <span class="function"><span class="keyword">public</span> <span class="title">NioProtocol</span><span class="params">(<span class="keyword">int</span> bufferSize)</span> </span>{
-        <span class="keyword">this</span>.bufferSize = bufferSize;
-    }
-
-    <span class="annotation">@Override</span>
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleAccept</span><span class="params">(SelectionKey key)</span> <span class="keyword">throws</span> IOException </span>{
-        <span class="comment">//accept事件，由ServerSokcetChannel打开SocketChannel，并设置非阻塞和注册</span>
-        SocketChannel channel = ((ServerSocketChannel)key.channel()).accept();
-        channel.configureBlocking(<span class="keyword">false</span>);
-        channel.register(key.selector(), SelectionKey.OP_READ,
-                ByteBuffer.allocate(bufferSize));
-        logger.info(channel.getRemoteAddress() + <span class="string">"'s connection is established."</span>);
-    }
-
-    <span class="comment">//客户端发送数据，通过Buffer从Channel中读取请求数据并返回</span>
-    <span class="annotation">@Override</span>
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleRead</span><span class="params">(SelectionKey key)</span> <span class="keyword">throws</span> IOException </span>{
-        SocketChannel channel = (SocketChannel) key.channel();
-        <span class="comment">//创建缓冲区</span>
-        ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
-        buffer.clear();
-        <span class="keyword">long</span> len = <span class="number">0</span>;
-        StringBuilder sb = <span class="keyword">new</span> StringBuilder();
-        Charset charset = Charset.forName(<span class="string">"UTF8"</span>);
-        <span class="keyword">while</span> ((len = channel.read(buffer)) &gt; <span class="number">0</span>) {
-            buffer.flip();
-            sb.append(charset.decode(buffer).toString());
-            buffer.clear();
-        }
-        logger.debug(sb.toString());
-        <span class="keyword">if</span> (sb.length() == <span class="number">0</span>) {
-            logger.info(channel.getRemoteAddress() + <span class="string">"'s connection is closed."</span>);
-            channel.close();
-        } <span class="keyword">else</span> {
-            <span class="comment">//TODO 抽象出事件处理机制，类似Servlet的回调，分发给特定的处理点</span>
-            <span class="keyword">byte</span>[] bytes = sb.toString().getBytes(<span class="string">"UTF8"</span>);
-            ByteBuffer responseBuffer = ByteBuffer.allocate(bytes.length);
-            responseBuffer.put(bytes);
-            responseBuffer.flip();
-            channel.write(responseBuffer);
-            key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-        }
-    }
-
-    <span class="annotation">@Override</span>
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleWrite</span><span class="params">(SelectionKey key)</span> <span class="keyword">throws</span> IOException </span>{
-
+    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span> </span>{
+        System.out.println(<span class="string">"A's doSomething"</span>);
     }
 }
-</code></pre><h1 id="3-_URI，URL，URLConnection获取Web数据">3. URI，URL，URLConnection获取Web数据</h1><p>URI是统一资源标识符，起描述作用；<br>URL是统一资源定位符，起定位作用；URL是URI的特例；</p>
-<p>URI的各个部分：<br>[scheme:][schemeSpecificPart][#fragment]<br>（1）绝对与相对：是否包含scheme部分；<br>（2）透明与不透明：schemeSpecificPart是否以”/“开头；<br>schemeSpecificPart又进一步分层：<br>[//authority][path][?query]<br>authority又可以分为：<br>[user-info@]host:[port]；</p>
-<pre><code>URI uri = URI.create(<span class="string">"http://localhost:8080/example/servlets/servlet/空幻?author=空幻<span class="subst">#success</span>"</span>);
-</code></pre><p>scheme：http；<br>schemeSpecificPart：localhost:8080/example/servlets/servlet/空幻?author=空幻；<br>fragment：success<br>authority：localhost:8080<br>path：/example/servlets/servlet/空幻<br>query：author=空幻<br>host：localhost<br>port：8080</p>
-<p>对于Servlet规范来说这个URI可能是这样的：<br>getUri：/example/servlets/servlet/空幻，返回相对的；<br>Url：<a href="http://localhost:8080/example/servlets/servlet/空幻；" target="_blank" rel="external">http://localhost:8080/example/servlets/servlet/空幻；</a><br>ContextPath：example；<br>servletPath：/servlets/servlet<br>PathInfo：空幻<br>QueryString：author=空幻</p>
-<h2 id="使用URLConnection">使用URLConnection</h2><p>（1）创建：</p>
-<pre><code><span class="keyword">URL</span> url = new <span class="keyword">URL</span>(<span class="string">"http://localhost:8080/debug"</span>);
-HttpURLConnection connection = (HttpURLConnection)url.openConnection();
-</code></pre><p>（2）设置连接属性：</p>
-<pre><code><span class="function">setOutput</span>(true); <span class="comment">//如果要写入必须设置</span>
-<span class="function">setUseCaches</span>(boolean); <span class="comment">//URLConnection本身不提供缓存支持需要外部实现，如浏览器；</span>
-<span class="function">setConnectionTimeout</span>(); <span class="comment">//连接超时时间</span>
-<span class="function">setReadTimeout</span>(); <span class="comment">//读取超时时间</span>
-</code></pre><p>使用HttpURLConnection时，使用post应该设置setContentLength；<br>（3）连接：</p>
-<pre><code>connect()<span class="comment">;</span>
-</code></pre><p>（4）获取响应属性：</p>
-<pre><code><span class="function">getHeaderFields</span>();
-<span class="function">getHeaderFieldKey</span>();
-<span class="function">getHeaderField</span>();
-<span class="function">getContentLength</span>();
-<span class="function">getContentType</span>();
-<span class="function">getContentEncoding</span>();
-<span class="comment">//等等</span>
-</code></pre><p>（5）获取响应数据：</p>
-<pre><code><span class="function">getInputStream</span>();
-<span class="function">getContent</span>(); <span class="comment">//不常用，需要MIME类型支持，对应的处理器处理</span>
-</code></pre><p>补充：HttpURLConnection包含了一些额外方法，如：<br>setRequestMethod，getErrStream等；</p>
+
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">B</span> <span class="keyword">extends</span> <span class="title">A</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">int</span> bInt = <span class="number">9</span>;
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span> </span>{
+        System.out.println(<span class="string">"B's doSomething, bInt: "</span> + bInt);
+    }
+}
+
+<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
+    B b = <span class="keyword">new</span> B();
+}
+</code></pre><p>}<br>输出结果：</p>
+<pre><code>/<span class="keyword">*</span><span class="keyword">*</span>
+ <span class="keyword">*</span> B's doSomething, bInt: 0
+ <span class="keyword">*</span>/
+</code></pre><p><strong>分析</strong>：首先需要知道，在没有显示提供构造器时Java编译器会生成默认构造器，并在开始处调用父类的构造器，因此类B的构造器开始会先调用类A的构造器。<br>类A中调用了protected方法doSomething，从输出结果中我们看到实际上调用的是子类的方法实现，而此时子类的实例化还未开始，因此bInt并没有如“预期”那样是9,而是0；</p>
+<p>这就是由于动态绑定，doSomething是一个protected方法，因此它是通过invokevirtual指令调用的，该指令根据对象实例的类型找到对应的方法实现（这里就是B的实例对象，对应方法就是类B的方法实现）执行，故而有此结果。</p>
+<h2 id="结论">结论</h2><p>正如前面说的“不要在构造器，clone方法和readObject方法中调用可被覆盖的方法”；<br>PS：在构造器中调用可被覆盖的方法的另一个风险是造成对象在构造过程中“逸出”，导致线程不安全；</p>
 
       
     </div>
@@ -1792,61 +1664,7 @@ HttpURLConnection connection = (HttpURLConnection)url.openConnection();
       
       
 	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
-    <article id="post-Java-Servlet-4-0-Specification解读" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/11/30/Java-Servlet-4-0-Specification解读/" class="article-date">
-  	<time datetime="2015-11-30T09:34:47.000Z" itemprop="datePublished">2015-11-30</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/11/30/Java-Servlet-4-0-Specification解读/">Java Servlet 4.0 Specification解读</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/技术更新/">技术更新</a></li></ul>
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/思考和求解/">思考和求解</a></li></ul>
 	</div>
 
       

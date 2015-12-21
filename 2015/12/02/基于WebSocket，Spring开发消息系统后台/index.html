@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>基于WebSocket，Spring开发消息系统后台 | Zerohuan的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="1. 为什么需要WebSocket：回答这个首先需要知道一些历史，我们知道HTTP是客户端向服务器请求获取数据的普遍方式，但是它是一种被动性的通信机制。request=response，服务器只有在接受到客户端请求的时候才可能向客户端发送数据。但有时候服务器需要告诉客户端有新的数据应该接受，比如消息，即时聊天等功能，也就是说我们应该需要一种全双工的通信方式，而HTTP的被动性使得这一问题很难解决。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于WebSocket，Spring开发消息系统后台">
+<meta property="og:url" content="http://blog.ssearch.cn/2015/12/02/基于WebSocket，Spring开发消息系统后台/index.html">
+<meta property="og:site_name" content="Zerohuan的博客">
+<meta property="og:description" content="1. 为什么需要WebSocket：回答这个首先需要知道一些历史，我们知道HTTP是客户端向服务器请求获取数据的普遍方式，但是它是一种被动性的通信机制。request=response，服务器只有在接受到客户端请求的时候才可能向客户端发送数据。但有时候服务器需要告诉客户端有新的数据应该接受，比如消息，即时聊天等功能，也就是说我们应该需要一种全双工的通信方式，而HTTP的被动性使得这一问题很难解决。">
+<meta property="og:updated_time" content="2015-12-21T07:44:52.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="基于WebSocket，Spring开发消息系统后台">
+<meta name="twitter:description" content="1. 为什么需要WebSocket：回答这个首先需要知道一些历史，我们知道HTTP是客户端向服务器请求获取数据的普遍方式，但是它是一种被动性的通信机制。request=response，服务器只有在接受到客户端请求的时候才可能向客户端发送数据。但有时候服务器需要告诉客户端有新的数据应该接受，比如消息，即时聊天等功能，也就是说我们应该需要一种全双工的通信方式，而HTTP的被动性使得这一问题很难解决。">
+  
+    <link rel="alternative" href="/atom.xml" title="Zerohuan的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+	<header id="header" class="inner">
+		<a href="/" class="profilepic">
+			
+			<img lazy-src="/avatar.jpg" class="js-avatar">
+			
+		</a>
+
+		<hgroup>
+		  <h1 class="header-author"><a href="/">Zerohuan</a></h1>
+		</hgroup>
+
+		
+		<p class="header-subtitle">我在路上</p>
+		
+
+		
+			<div class="switch-btn">
+				<div class="icon">
+					<div class="icon-ctn">
+						<div class="icon-wrap icon-house" data-idx="0">
+							<div class="birdhouse"></div>
+							<div class="birdhouse_holes"></div>
+						</div>
+						<div class="icon-wrap icon-ribbon hide" data-idx="1">
+							<div class="ribbon"></div>
+						</div>
+						
+						<div class="icon-wrap icon-link hide" data-idx="2">
+							<div class="loopback_l"></div>
+							<div class="loopback_r"></div>
+						</div>
+						
+						
+						<div class="icon-wrap icon-me hide" data-idx="3">
+							<div class="user"></div>
+							<div class="shoulder"></div>
+						</div>
+						
+					</div>
+					
+				</div>
+				<div class="tips-box hide">
+					<div class="tips-arrow"></div>
+					<ul class="tips-inner">
+						<li>菜单</li>
+						<li>标签</li>
+						
+						<li>友情链接</li>
+						
+						
+						<li>关于我</li>
+						
+					</ul>
+				</div>
+			</div>
+		
+
+		<div class="switch-area">
+			<div class="switch-wrap">
+				<section class="switch-part switch-part1">
+					<nav class="header-menu">
+						<ul>
+						
+							<li><a href="/">主页</a></li>
+				        
+							<li><a href="/archives">所有文章</a></li>
+				        
+						</ul>
+					</nav>
+					<nav class="header-nav">
+						<div class="social">
+							
+								<a class="github" target="_blank" href="https://github.com/zerohuan" title="github">github</a>
+					        
+								<a class="weibo" target="_blank" href="/#" title="weibo">weibo</a>
+					        
+								<a class="zhihu" target="_blank" href="http://www.zhihu.com/people/yan-jin-heng" title="zhihu">zhihu</a>
+					        
+								<a class="mail" target="_blank" href="mailto:yanjinheng@qq.com" title="mail">mail</a>
+					        
+						</div>
+					</nav>
+				</section>
+				
+				
+				<section class="switch-part switch-part2">
+					<div class="widget tagcloud" id="js-tagcloud">
+						<a href="/tags/JVM/" style="font-size: 12.5px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12.5px;">TCP/IP</a> <a href="/tags/思考和求解/" style="font-size: 17.5px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
+					</div>
+				</section>
+				
+				
+				
+				<section class="switch-part switch-part3">
+					<div id="js-friends">
+					
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">奥巴马的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">卡卡的美丽传说</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">本泽马的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">吉格斯的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">习大大大不同</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">托蒂的博客</a>
+			        
+			        </div>
+				</section>
+				
+
+				
+				
+				<section class="switch-part switch-part4">
+				
+					<div id="js-aboutme">现南京大学研究生一枚，目前专注于Java Web方向。</div>
+				</section>
+				
+			</div>
+		</div>
+	</header>				
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+  	<div class="overlay">
+  		<div class="slider-trigger"></div>
+  		<h1 class="header-author js-mobile-header hide">Zerohuan</h1>
+  	</div>
+	<div class="intrude-less">
+		<header id="header" class="inner">
+			<div class="profilepic">
+				<img lazy-src="/avatar.jpg" class="js-avatar">
+			</div>
+			<hgroup>
+			  <h1 class="header-author">Zerohuan</h1>
+			</hgroup>
+			
+			<p class="header-subtitle">我在路上</p>
+			
+			<nav class="header-menu">
+				<ul>
+				
+					<li><a href="/">主页</a></li>
+		        
+					<li><a href="/archives">所有文章</a></li>
+		        
+		        <div class="clearfix"></div>
+				</ul>
+			</nav>
+			<nav class="header-nav">
+				<div class="social">
+					
+						<a class="github" target="_blank" href="https://github.com/zerohuan" title="github">github</a>
+			        
+						<a class="weibo" target="_blank" href="/#" title="weibo">weibo</a>
+			        
+						<a class="zhihu" target="_blank" href="http://www.zhihu.com/people/yan-jin-heng" title="zhihu">zhihu</a>
+			        
+						<a class="mail" target="_blank" href="mailto:yanjinheng@qq.com" title="mail">mail</a>
+			        
+				</div>
+			</nav>
+		</header>				
+	</div>
+</nav>
+      <div class="body-wrap"><article id="post-基于WebSocket，Spring开发消息系统后台" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/02/基于WebSocket，Spring开发消息系统后台/" class="article-date">
+  	<time datetime="2015-12-02T05:19:32.000Z" itemprop="datePublished">2015-12-02</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      基于WebSocket，Spring开发消息系统后台
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/思考和求解/">思考和求解</a></li></ul>
+	</div>
+
+        
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="1-_为什么需要WebSocket：">1. 为什么需要WebSocket：</h2><p>回答这个首先需要知道一些历史，我们知道HTTP是客户端向服务器请求获取数据的普遍方式，但是它是一种被动性的通信机制。request=response，服务器只有在接受到客户端请求的时候才可能向客户端发送数据。但有时候服务器需要告诉客户端有新的数据应该接受，比如消息，即时聊天等功能，也就是说我们应该需要一种全双工的通信方式，而HTTP的被动性使得这一问题很难解决。</p>
+<p>你可能会问webSocket很新啊，在这之前是如果实现类似的功能的呢？下面介绍几种技术用来在在“单连接的HTTP中模拟全双工”的：</p>
+<h3 id="解决方案一：频繁轮询：">解决方案一：频繁轮询：</h3><p>客户端以较短的时间间隔向服务器请求新的数据，比如1秒：<br>那么请求过程可能是这样的：</p>
+<pre><code>client： GET/ajaxEndponit 有没有新数据
+server： <span class="number">200</span> OK Content-Length:<span class="number">123</span> 有，给你
+<span class="number">1</span>s...
+client： GET/ajaxEndponit 有没有新数据
+server： <span class="number">200</span> OK Content-Length:<span class="number">0</span> 没有。。。
+<span class="number">1</span>s...
+client： GET/ajaxEndponit 有没有新数据
+server： <span class="number">200</span> OK Content-Length:<span class="number">0</span> 没有。。。
+<span class="number">1</span>s...
+...n秒后
+client： GET/ajaxEndponit 有没有新数据
+server： <span class="number">200</span> OK Content-Length:<span class="number">123</span> 有，给你
+</code></pre><p>显然这种方案产生了大量的请求，其中很多请求是无意义的，造成了大量的浪费。这时你可能会想：要是可以减少连接数就好了，这就是长轮询。</p>
+<h3 id="解决方案二：长轮询：">解决方案二：长轮询：</h3><p>HTTP是被动性的，因此想要减少连接数量只能增长连接的时间否则你无法及时返回新的数据。客户端发起一个超时时间较长（比如20秒）的请求，服务器在没有数据的时候并不立即返回，而是以某种方式阻塞（使用阻塞队列神马的），当有数据的时候在返回，或者在时间超时时返回无数据。<br>那么请求过程可能是这样的：</p>
+<pre><code>clinet：GET/longPollEndpoint
+server：<span class="number">200</span> OK Content-Length:<span class="number">123</span>有，给你
+client：GET/longPollEndpoint 
+server检查没有数据，阻塞等待
+.
+. <span class="number">20</span>秒
+.
+server：<span class="number">200</span> OK Content-Length:<span class="number">0</span> 没有数据。。。
+client：GET/longPollEndpoint 
+.
+. <span class="number">15</span>秒
+.
+server：<span class="number">200</span> OK Content-Length:<span class="number">123</span>有，给你
+</code></pre><p>可以看到，连接的数量大大减少了，但是存在连接几乎一直存在啊，这样会不会有什么问题？有，首先，HTTP/1.1规范中对同一主机名的访问是有数量限制的：不超过2个，也就是我们少了一半可以请求其他数据的连接资源。。。再有，如果在服务器没有数据阻塞的时候客户端又有新数据要请求时怎么办，只能另起一个并行的请求去做了。</p>
+<h3 id="解决方案三：分块编码：">解决方案三：分块编码：</h3><p>这个方案可能是为了解决浏览器长时间等待而创建的，一直等待响应对浏览器来说并不友好，但我觉得这个方案有些奇葩，分块的思想大致是这样的，既然我发现有很多时间都是在等待，那我有数据的时候就不一次性返回给客户端了，把它分割分几次返回给客户端，这样看上去浏览不就是一直在请求和获取数据吗。。。这个方法并没有什么本质上的改观，如果某些时候需要返回的数据大量产生呢，那我们是不是需要动态维护块的大小适应数据流，显然这是一件不简单的事情，又需要额外的成本。</p>
+<h3 id="解决方案四：Applet和Adobe_Flash：">解决方案四：Applet和Adobe Flash：</h3><p>Java applet是一个“久远”的概念，它是一种内嵌在浏览器中的Java 小程序和Flash一样，它们不再使用HTTP，而是TCP套接字来实现全双工的通信，但是它们并不安全，没有构建什么安全协议，而写资源消耗，你懂的。。。尤其是移动互联网出现后很多移动端的浏览器并不支持它们，所以。。。</p>
+<h1 id="2-_WekSocket简介：">2. WekSocket简介：</h1><p>说了这么多，你应当发现这是个难搞的问题啊，是的，HTTP的被动性本质使得在它的框架内我们无法实现真正的全双工通信。WebSocket正是解决这一问题的方案。<br>那么如何从一个HTTP连接机制中的通信环境发起一个WebSocket连接呢？</p>
+<p>利用HTTP/1.1的升级特性迁移到WebSocket协议：</p>
+<pre><code>GET /chat HTTP/<span class="number">1.1</span>
+<span class="label">Host:</span> server.example.com
+<span class="label">Upgrade:</span> websocket
+<span class="label">Connection:</span> Upgrade
+<span class="keyword">Sec</span>-WebSocket-Key: x3JJHMbDL1EzLkh9GBhXDw==
+<span class="keyword">Sec</span>-WebSocket-Protocol: chat, superchat
+<span class="keyword">Sec</span>-WebSocket-Version: <span class="number">13</span>
+<span class="label">Origin:</span> http://example.com
+<span class="label">Connection:</span> Upgrade表示我要升级成其他的协议；
+<span class="label">Upgrade:</span>websocket表示我要升级层websocket，服务器你支持不？
+<span class="keyword">Sec</span>-WebSocket-Key，客户端随机生成的，服务器之后会拿这个进行加密作为标识之一。
+<span class="keyword">Sec</span>-WebSocket-Protocol：区分同一URL下需要使用的不同协议。
+<span class="keyword">Sec</span>-WebSokcet-Version：版本号。
+服务器会返回：
+HTTP/<span class="number">1.1</span> <span class="number">101</span> Switching Protocols
+<span class="label">Upgrade:</span> websocket
+<span class="label">Connection:</span> Upgrade
+<span class="keyword">Sec</span>-WebSocket-Accept: HSmrc0sMlYUkAGmm5OPpG2HaGWk=
+<span class="keyword">Sec</span>-WebSocket-Protocol: chat
+<span class="keyword">Sec</span>-WebSocket-Accept：看我加密了你发来的随机码，你认识我了吧！
+<span class="keyword">Sec</span>-WebSocket-Protocol：我支持chat协议；
+</code></pre><p>注意，HTTP的状态码是101, Switch Protocols，ok，到这里，我们从原来的HTTP协议已经建立了一个持久的、全双工的TCP套接字协议，</p>
+<p>PS：有些时候，服务器的特定资源只接受HTTP升级请求，这时如果请求为发起升级，会返回426 Upgrade Required；如果客户端不支持就返回400咯。</p>
+<h3 id="那WebSocket到底有什么好处呢？">那WebSocket到底有什么好处呢？</h3><p>在握手之后，信道已经建立起来了，ws和wss分别对应与http和https（看我们已经可以使用新的协议了）。<br>这时已经是一个全双工，持久的信道了，它有这些优点：<br>（1）使用HTTP来进行握手，可以很方便的继承与浏览器和HTTP服务器中；<br>（2）ws和wss与http和https一样同样对应与80和443端口，一般防火墙是不会阻止的；<br>（3）心跳机制，一般用来保持连接的，两边都不说话时，也通过心跳包来保持连接～；<br>（4）不再收到2个连接的限制了；<br>（5）可以安全进行跨域连接了，HTTP的origin会限制ajax和XMLHttpRequest跨域；<br>值得一提的是使用webSocket提供高清视频流更为强大；</p>
+<h1 id="3-_Java中的WebSocket：">3. Java中的WebSocket：</h1><p>当然使用H5中的js的webSocket api是浏览器的方法，这里为了演示我就只介绍Java的WebSocket API了，同样分为客户端和服务端两部分。</p>
+<p>maven依赖：</p>
+<pre><code><span class="tag">&lt;<span class="title">dependency</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>javax.websocket<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>javax.websocket-api<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">version</span>&gt;</span>1.1<span class="tag">&lt;/<span class="title">version</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">scope</span>&gt;</span>provided<span class="tag">&lt;/<span class="title">scope</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">dependency</span>&gt;</span>
+</code></pre><p>集成了客户端和服务端，如果你只需要客户端可以使用 javax.websocket-client-api。<br>这里使用的是provided，显然和其他J2EE规范一样我们在开发时也只需要使用api面向接口开发，tomcat8.0中提供了websocket的实现。</p>
+<h2 id="3-1_WebSocket_API：">3.1 WebSocket API：</h2><p><strong>客户端API：</strong><br>有几个关键的接口：<br><strong>ContainerProvider</strong>：这是服务提供者接口，不同的实现者可以通过实现该接口来构建服务（webSocket）的提供者，通过提供者注册接口来提供具体的服务，如果你不清楚这种模式可以参看《Effective Java》中的第一条；<br><strong>WebSocketContainer</strong>：这就我们需要的webSocket“服务”了，通过ContainerProvider.getContainer获得，通过他的connectToServer方法可以返回Session；<br><strong>Session</strong>：使用session我们一发送数据，关闭会话；<br><strong>RemoteEndPoint</strong>：我的理解是一个回调接口，它代表的实例由WebContainer管理，就像Servlet和Servlet容器一样；</p>
+<p><strong>服务器API：</strong><br>serverContainer继承了WebSocketContainer，你可以通过ServletContext.getArribute(“javax.websocket.ServerContainer”)来获取它，但你并不需要这么做，你只需要在POJO上添加一个@ServerEndpoint，webSocket会扫面它创建实例，默认是每一个连接都会创建一个EndPoint实例，理解这一点很重要，因为在和Spring的自动注入结合后会产生问题（如果你不是用Spring WebSocket配置的话）。</p>
+<p>EndPoint有四个回调方法：@OnOpen，@OnMessage，@OnClose，@OnError，你可以通过注解在POJO中标注。</p>
+<h1 id="4-_基于Spring_webSocket开发消息系统：">4. 基于Spring webSocket开发消息系统：</h1><h2 id="4-1_服务端实现：">4.1 服务端实现：</h2><pre><code><span class="annotation">@ServerEndpoint</span>(value = <span class="string">"/message/{userId}"</span>, configurator = SpringConfigurator.class)
+<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MessageServer</span> <span class="keyword">implements</span> <span class="title">DisposableBean</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">static</span> Map&lt;Long, Session&gt; userSessions = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();
+    <span class="keyword">private</span> <span class="keyword">static</span> ObjectMapper mapper = <span class="keyword">new</span> ObjectMapper();
+    <span class="keyword">private</span> <span class="keyword">static</span> Logger logger = LogManager.getLogger();
+
+    <span class="annotation">@Inject</span>
+    <span class="keyword">private</span> MessageService messageService;
+
+    <span class="annotation">@Override</span>
+    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>{
+        userSessions.clear();
+        userSessions = <span class="keyword">null</span>;
+    }
+
+    <span class="comment">/**
+     * Get unread messages by userId when session opened.
+     *
+     * <span class="doctag">@param</span> session session get from WebSocketContain.connectToServer
+     * <span class="doctag">@param</span> userId user's ID
+     */</span>
+    <span class="annotation">@OnOpen</span>
+    <span class="keyword">public</span> <span class="keyword">void</span> onOpen(Session session, <span class="annotation">@PathParam</span>(<span class="string">"userId"</span>) <span class="keyword">long</span> userId) {
+        logger.debug(<span class="string">"open session: userId:"</span> + userId + <span class="string">" sessionId"</span> + session.getId());
+
+        List&lt;BMessageEntity&gt; unReadMessages =
+                <span class="keyword">this</span>.messageService.getMessageByIsRead(userId, BMessageState.UNREAD);
+
+        <span class="keyword">if</span>(unReadMessages.size() &gt; <span class="number">0</span>) {
+            <span class="keyword">this</span>.sendJsonMessage(session, userId, unReadMessages);
+        }
+
+        userSessions.put(userId, session);
+    }
+
+    <span class="comment">/**
+     * client should send new BMessageEntity to this server, and opMessage() save data to dataBase
+     *
+     * <span class="doctag">@param</span> session session get from WebSocketContain.connectToServer
+     * <span class="doctag">@param</span> byteBuffer accept messages
+     */</span>
+    <span class="annotation">@OnMessage</span>
+    <span class="keyword">public</span> <span class="keyword">void</span> onMessage(Session session, ByteBuffer byteBuffer,
+                          <span class="annotation">@PathParam</span>(<span class="string">"userId"</span>) <span class="keyword">long</span> userId) {
+        CharBuffer charBuffer = Charset.forName(<span class="string">"utf8"</span>).decode(byteBuffer);
+        String message = charBuffer.toString();
+
+        <span class="keyword">try</span> {
+            MessageJson messageJson = mapper.readValue(message, MessageJson.class);
+
+            <span class="keyword">long</span> replyUserId = messageJson.getReplyUserId();
+
+            <span class="comment">//save new message</span>
+            BMessageEntity messageEntity = <span class="keyword">this</span>.messageService.saveMessage(userId, replyUserId, messageJson.getMessage());
+            <span class="keyword">if</span>(messageEntity != <span class="keyword">null</span>) {
+                <span class="comment">//send</span>
+                Session replySession = userSessions.get(replyUserId);
+                <span class="keyword">if</span>(replySession != <span class="keyword">null</span>) {
+                    <span class="keyword">this</span>.sendJsonMessage(replySession, userId, messageEntity);
+                }
+            }
+        } <span class="keyword">catch</span> (IOException e) {
+            logger.<span class="keyword">error</span>(e);
+        }
+    }
+
+    <span class="annotation">@OnError</span>
+    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">onError</span><span class="params">(Session session, Throwable e)</span> </span>{
+        logger.<span class="keyword">error</span>(<span class="string">"sessionId:"</span> + session.getId() + <span class="string">" "</span> + e);
+    }
+
+    <span class="annotation">@OnClose</span>
+    <span class="keyword">public</span> <span class="keyword">void</span> onClose(Session session, <span class="annotation">@PathParam</span>(<span class="string">"userId"</span>) <span class="keyword">long</span> userId) {
+        Session session1 = userSessions.get(userId);
+        <span class="keyword">if</span>(session1 != <span class="keyword">null</span>) {
+            <span class="keyword">try</span> {
+                <span class="keyword">if</span>(session1.isOpen())
+                    session1.close();
+            } <span class="keyword">catch</span> (IOException e) {
+                logger.<span class="keyword">error</span>(e);
+            } <span class="keyword">finally</span> {
+                userSessions.remove(userId);
+            }
+        }
+    }
+
+    <span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">sendJsonMessage</span><span class="params">(Session session, <span class="keyword">long</span> userId, Object object)</span> </span>{
+        <span class="keyword">try</span> {
+            session.getBasicRemote()
+                    .sendText(MessageServer.mapper.writeValueAsString(object));
+        } <span class="keyword">catch</span> (IOException e) {
+            <span class="keyword">this</span>.handleException(e, userId);
+        }
+    }
+
+    <span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">handleException</span><span class="params">(Throwable throwable, <span class="keyword">long</span> userId)</span> </span>{
+        <span class="keyword">try</span>(Session session = userSessions.get(userId)) {
+            session.close(<span class="keyword">new</span> CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION, throwable.toString()));
+        } <span class="keyword">catch</span> (IOException e) {
+            logger.<span class="keyword">error</span>(e);
+        } <span class="keyword">finally</span> {
+            userSessions.remove(userId);
+        }
+    }
+
+    <span class="comment">/**
+     * custom configurator, TODO collect some require, then use this configurator
+     */</span>
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">EndpointConfigurator</span> <span class="keyword">extends</span> <span class="title">SpringConfigurator</span> </span>{
+
+    }
+}
+</code></pre><p>首先，使用了configurator = SpringConfigurator.class，SpringConfigurator取代了默认的Configurator，它将使得我们可以正确使用Spring进行实例化和注入，如果没有这个设置，你会得到NullPointException，因为它是有WebSocket实现实例化，它并不会帮我们注入哦，这也是上面提到的问题。</p>
+<pre><code>@<span class="function"><span class="title">ServerEndpoint</span><span class="params">(value = <span class="string">"/message/{userId}"</span>, configurator = SpringConfigurator.class)</span></span>
+</code></pre><p>定义一个HashMap存放session，用来向指定的user发送消息，ObjectMapper是用来转换json格式的。</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">static</span> Map&lt;<span class="keyword">Long</span>, Session&gt; userSessions = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();
+<span class="keyword">private</span> <span class="keyword">static</span> ObjectMapper mapper = <span class="keyword">new</span> ObjectMapper();
+</code></pre><p>打开连接是，我从数据库中取出未读消息，返回给客户端，并将session存到map中：</p>
+<pre><code><span class="keyword">@OnOpen</span>
+<span class="keyword">public</span> <span class="keyword">void</span> onOpen(Session session, <span class="keyword">@PathParam</span>(<span class="string">"userId"</span>) <span class="built_in">long</span> userId) {
+    logger.<span class="keyword">debug</span>(<span class="string">"open session: userId:"</span> + userId + <span class="string">" sessionId"</span> + session.getId());
+
+    List&lt;BMessageEntity&gt; unReadMessages =
+            <span class="keyword">this</span>.messageService.getMessageByIsRead(userId, BMessageState.UNREAD);
+
+    <span class="keyword">if</span>(unReadMessages.size() &gt; <span class="number">0</span>) {
+        <span class="keyword">this</span>.sendJsonMessage(session, userId, unReadMessages);
+    }
+
+    userSessions.put(userId, session);
+}
+</code></pre><p>接受到消息后，保存消息到数据库，然后在map中查找对方的session，如果存在的话（对方有可能不在线哦），将这条消息发送给他。</p>
+<pre><code><span class="annotation">@OnMessage</span>
+<span class="keyword">public</span> <span class="keyword">void</span> onMessage(Session session, ByteBuffer byteBuffer,
+                      <span class="annotation">@PathParam</span>(<span class="string">"userId"</span>) <span class="keyword">long</span> userId) {
+    CharBuffer charBuffer = Charset.forName(<span class="string">"utf8"</span>).decode(byteBuffer);
+    String message = charBuffer.toString();
+
+    <span class="keyword">try</span> {
+        MessageJson messageJson = mapper.readValue(message, MessageJson.class);
+
+        <span class="keyword">long</span> replyUserId = messageJson.getReplyUserId();
+
+        <span class="comment">//save new message</span>
+        BMessageEntity messageEntity = <span class="keyword">this</span>.messageService.saveMessage(userId, replyUserId, messageJson.getMessage());
+        <span class="keyword">if</span>(messageEntity != <span class="keyword">null</span>) {
+            <span class="comment">//send</span>
+            Session replySession = userSessions.get(replyUserId);
+            <span class="keyword">if</span>(replySession != <span class="keyword">null</span>) {
+                <span class="keyword">this</span>.sendJsonMessage(replySession, userId, messageEntity);
+            }
+        }
+    } <span class="keyword">catch</span> (IOException e) {
+        logger.<span class="keyword">error</span>(e);
+    }
+}
+</code></pre><p>PS：这时，还是有WebSocket实现来创建它的，依然是一个连接一个实例，它也并不在Spring的单例bean注册表中，因此我们也无法将它注入到其他bean中，但是你可以在@Configuration配置中添加一个单例：</p>
+<pre><code><span class="annotation">@Bean</span>
+<span class="keyword">public</span> <span class="function">MessageServer <span class="title">messageServer</span><span class="params">()</span> </span>{
+    <span class="keyword">return</span> <span class="keyword">new</span> MessageServer();
+}
+</code></pre><p> 这样也很省资源呢，但是注意线程安全。</p>
+<h2 id="4-2_客户端实现：">4.2 客户端实现：</h2><p>我这里使用了两个Servlet实例来模拟两个客户端，实现@ClientEndpoint，注意@ClientEndpoint并不会有websocket实例化，因此我们可以放心的在servlet上直接添加：</p>
+<pre><code><span class="annotation">@ClientEndpoint</span>
+<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ClientServlet</span> <span class="keyword">extends</span> <span class="title">HttpServlet</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">static</span> Logger logger = LogManager.getLogger();
+
+    <span class="keyword">private</span> <span class="keyword">static</span> ObjectMapper mapper = <span class="keyword">new</span> ObjectMapper();
+
+    <span class="keyword">private</span> Session session;
+    <span class="keyword">private</span> <span class="keyword">long</span> userId;
+
+    <span class="keyword">private</span> <span class="keyword">static</span> ObjectMapper objectMapper = <span class="keyword">new</span> ObjectMapper();
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span> <span class="keyword">throws</span> ServletException </span>{
+        userId = Long.valueOf(<span class="keyword">this</span>.getInitParameter(<span class="string">"userId"</span>));
+
+        String path = <span class="keyword">this</span>.getServletContext().getContextPath() + <span class="string">"/message/"</span> +
+                userId;
+
+        logger.debug(path);
+
+        <span class="keyword">try</span> {
+            URI uri = <span class="keyword">new</span> URI(<span class="string">"ws"</span>, <span class="string">"localhost:8080"</span>, path, <span class="keyword">null</span>, <span class="keyword">null</span>);
+            <span class="keyword">this</span>.session = ContainerProvider.getWebSocketContainer()
+                    .connectToServer(<span class="keyword">this</span>, uri);
+            logger.debug(session.getId());
+        } <span class="keyword">catch</span> (IOException | URISyntaxException | DeploymentException e) {
+            <span class="keyword">throw</span> <span class="keyword">new</span> ServletException(<span class="string">"Cannot connect to "</span> + path + <span class="string">"."</span> + e);
+        }
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> </span>{
+        <span class="keyword">try</span> {
+            <span class="keyword">this</span>.session.close();
+        } <span class="keyword">catch</span> (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span> <span class="keyword">throws</span> ServletException, IOException </span>{
+        MessageJson messageJson = <span class="keyword">new</span> MessageJson();
+        messageJson.setMessage(req.getParameter(<span class="string">"message"</span>));
+        messageJson.setReplyUserId(Long.valueOf(req.getParameter(<span class="string">"replyUserId"</span>)));
+
+        <span class="keyword">try</span>(OutputStream outputStream = <span class="keyword">this</span>.session.getBasicRemote().getSendStream()) {
+            mapper.writeValue(outputStream, messageJson);
+            outputStream.flush();
+        }
+        resp.getWriter().append(<span class="string">"OK"</span>);
+    }
+
+    <span class="annotation">@OnMessage</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onMessage</span><span class="params">(String message)</span> </span>{
+        System.out.println(message);
+    }
+
+    <span class="annotation">@OnClose</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClose</span><span class="params">(CloseReason reason)</span> </span>{
+        CloseReason.CloseCode code = reason.getCloseCode();
+
+
+    }
+}
+</code></pre><p>在部署描述符中，部署两个实例，它们分别有初始化参数，userId，代表两个用户～：</p>
+<pre><code><span class="variable">&lt;servlet&gt;</span>
+        <span class="variable">&lt;servlet-name&gt;</span>Client1<span class="variable">&lt;/servlet-name&gt;</span>
+        <span class="variable">&lt;servlet-class&gt;</span>com.yjh.cg.site.server.ClientServlet<span class="variable">&lt;/servlet-class&gt;</span>
+        <span class="variable">&lt;init-param&gt;</span>
+            <span class="variable">&lt;param-name&gt;</span><span class="keyword">user</span>Id<span class="variable">&lt;/param-name&gt;</span>
+            <span class="variable">&lt;param-value&gt;</span><span class="number">1</span><span class="variable">&lt;/param-value&gt;</span>
+        <span class="variable">&lt;/init-param&gt;</span>
+    <span class="variable">&lt;/servlet&gt;</span>
+    <span class="variable">&lt;servlet-mapping&gt;</span>
+        <span class="variable">&lt;servlet-name&gt;</span>Client1<span class="variable">&lt;/servlet-name&gt;</span>
+        <span class="variable">&lt;url-pattern&gt;</span>/client1<span class="variable">&lt;/url-pattern&gt;</span>
+    <span class="variable">&lt;/servlet-mapping&gt;</span>
+
+    <span class="variable">&lt;servlet&gt;</span>
+        <span class="variable">&lt;servlet-name&gt;</span>Client2<span class="variable">&lt;/servlet-name&gt;</span>
+        <span class="variable">&lt;servlet-class&gt;</span>com.yjh.cg.site.server.ClientServlet<span class="variable">&lt;/servlet-class&gt;</span>
+        <span class="variable">&lt;init-param&gt;</span>
+            <span class="variable">&lt;param-name&gt;</span><span class="keyword">user</span>Id<span class="variable">&lt;/param-name&gt;</span>
+            <span class="variable">&lt;param-value&gt;</span><span class="number">2</span><span class="variable">&lt;/param-value&gt;</span>
+        <span class="variable">&lt;/init-param&gt;</span>
+    <span class="variable">&lt;/servlet&gt;</span>
+    <span class="variable">&lt;servlet-mapping&gt;</span>
+        <span class="variable">&lt;servlet-name&gt;</span>Client2<span class="variable">&lt;/servlet-name&gt;</span>
+        <span class="variable">&lt;url-pattern&gt;</span>/client2<span class="variable">&lt;/url-pattern&gt;</span>
+    <span class="variable">&lt;/servlet-mapping&gt;</span>
+</code></pre><p>在servlet初始化的时候，我们向服务器请求建立连接，获取session对象：</p>
+<pre><code>URI uri = <span class="keyword">new</span> URI(<span class="string">"ws"</span>, <span class="string">"localhost:8080"</span>, path, <span class="literal">null</span>, <span class="literal">null</span>);
+          <span class="keyword">this</span>.session = ContainerProvider.getWebSocketContainer()
+                  .connectToServer(<span class="keyword">this</span>, uri);
+</code></pre><p>在doGet方法中我将http请求“包装”成websocket消息发送到服务器，当然这只是为了模拟：</p>
+<pre><code><span class="annotation">@Override</span>
+<span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span> <span class="keyword">throws</span> ServletException, IOException </span>{
+    MessageJson messageJson = <span class="keyword">new</span> MessageJson();
+    messageJson.setMessage(req.getParameter(<span class="string">"message"</span>));
+    messageJson.setReplyUserId(Long.valueOf(req.getParameter(<span class="string">"replyUserId"</span>)));
+
+    <span class="keyword">try</span>(OutputStream outputStream = <span class="keyword">this</span>.session.getBasicRemote().getSendStream()) {
+        mapper.writeValue(outputStream, messageJson);
+        outputStream.flush();
+    }
+    resp.getWriter().append(<span class="string">"OK"</span>);
+}
+</code></pre><h1 id="5-_模拟：">5. 模拟：</h1><p>user2发送消息给user1：<br><a href="http://localhost:8080/client2?message=我是谁&amp;replyUserId=2" target="_blank" rel="external">http://localhost:8080/client2?message=我是谁&amp;replyUserId=2</a></p>
+<p>user1收到消息：我是谁</p>
+<p>user1回复：Zerohuan<br><a href="http://localhost:8080/client1?message=Zerohuan&amp;replyUserId=1" target="_blank" rel="external">http://localhost:8080/client1?message=Zerohuan&amp;replyUserId=1</a></p>
+<p>好了，控制台的log我就不一一贴了，碎觉去了。。。</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2015/12/02/Java基础知识总结（五）——安全/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption"><</strong>
+      <div class="article-nav-title">
+        
+          Java基础知识总结（五）——安全
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/12/01/Java网络编程小记/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Java基础知识总结（六）——网络编程</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<div class="share">
+	<!-- JiaThis Button BEGIN -->
+	<div class="jiathis_style">
+		<span class="jiathis_txt">分享到：</span>
+		<a class="jiathis_button_tsina"></a>
+		<a class="jiathis_button_cqq"></a>
+		<a class="jiathis_button_douban"></a>
+		<a class="jiathis_button_weixin"></a>
+		<a class="jiathis_button_tumblr"></a>
+		<a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jtico jtico_jiathis" target="_blank"></a>
+	</div>
+	<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=1405949716054953" charset="utf-8"></script>
+	<!-- JiaThis Button END -->
+</div>
+
+
+
+<div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="基于WebSocket，Spring开发消息系统后台" data-title="基于WebSocket，Spring开发消息系统后台" data-url="http://blog.ssearch.cn/2015/12/02/基于WebSocket，Spring开发消息系统后台/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"true"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+
+
+</div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info">
+    	<div class="footer-left">
+    		&copy; 2015 Zerohuan
+    	</div>
+      	<div class="footer-right">
+      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
+      	</div>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+
+<script>
+	var yiliaConfig = {
+		fancybox: true,
+		mathjax: true,
+		animate: true,
+		isHome: false,
+		isPost: true,
+		isArchive: false,
+		isTag: false,
+		isCategory: false,
+		open_in_new: true
+	}
+</script>
+<script src="http://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js" type="text/javascript"></script>
+<script src="/js/main.js" type="text/javascript"></script>
+
+
+
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  </div>
+</body>
+</html>
