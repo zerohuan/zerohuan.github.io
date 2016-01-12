@@ -114,7 +114,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/JVM/" style="font-size: 12.5px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java并发/" style="font-size: 15px;">Java并发</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12.5px;">TCP/IP</a> <a href="/tags/思考和求解/" style="font-size: 17.5px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
+						<a href="/tags/JVM/" style="font-size: 12px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 14px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java并发/" style="font-size: 16px;">Java并发</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12px;">TCP/IP</a> <a href="/tags/思考和求解/" style="font-size: 18px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
 					</div>
 				</section>
 				
@@ -195,6 +195,622 @@
 	</div>
 </nav>
       <div class="body-wrap">
+  
+    <article id="post-Java基础知识总结（二）——NIO" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/02/Java基础知识总结（二）——NIO/" class="article-date">
+  	<time datetime="2015-12-02T07:10:05.000Z" itemprop="datePublished">2015-12-02</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/02/Java基础知识总结（二）——NIO/">Java基础知识总结（二）——NIO</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>关于NIO这部分，除了《Java编程思想》中的介绍还有两份资料我觉得很好：一是《深入Java Web技术内幕》第2章的部分，二是并发编程网上Jakob JenkovNIO系列教程翻译，读完之后受益匪浅。</p>
+<h1 id="1-_NIO是什么：">1. NIO是什么：</h1><p>java.nio是JDK1.4之后加入的，它新颖的特点在于：（1）面向缓存；（2）非阻塞；（3）直接内存；<br>首先来看看它的整体结构：一个完整的NIO程序体系应该包括Selector，Channel，Buffer，它们是NIO最核心的3个关键部分；</p>
+<p>非阻塞IO是NIO的一大特点，那它是怎么实现的呢，Selector和它的名字所反映的一样起到选择和调度的作用，它所调度的就是Channel（通道），Channel包括：<br>FileChannel，<br>SocketChannel，ServerSocketChannel，<br>DatagramChannel，<br>管道；<br>它们负责对指定的资源进行访问读写，其中除了FileChannel都具有非阻塞的功能，ServerSocketChannel相当于一个服务器程序，它有accept方法监听和接受客户端的请求，而SocketChannel则对应于一个具体的Socket连接，它可以通过ServerSocketChannel的accept方法来得到，我们可以通过read和write对该连接信道进行读写，DatagramChannel是UDP数据报通信方式。在传统的IO中，accept，read，write方法都是阻塞的方式进行的，也就是说accept方法负责接受一个客户端请求，在未接受到一个请求之前线程就会阻塞在此处不能进行，因此要同时打开多个ServerSocketChannel必须要有多个线程支持，在非阻塞模式下，accept，read，write可以在直接返回，让其他任务可以执行，这样我们可以在一个线程中同时处理多个Channel，那你可能会问，accept直接返回了，请求来的时候如何在去调用accept接受呢，这就需要Selector来调度了，Selector的select()方法是阻塞的，它可以同时监听对Channel的操作请求，将请求转发到对应的channel中，从总体上看，把每个Channel中阻塞等待的行为统一移到了Selector，从而我们可以在单线程中同时处理多个信道的读写任务。Buffer缓存则是我们对Channel进行读写的工具，它还提供了Char，Int等多种不同的视图让我们可以以不同的方式读写数据，也提供了Heap和Direct直接内存两种缓存存储方式。<br>下面我们对这3个关键的“部件”进行详细的分析，当然我们应当明白不同的技术有不同的使用场景，这里为了突出NIO的特点我们集中于单线程（或少量线程）非阻塞的方式，它使用与高并发数据量处理少而简单的场景。</p>
+<p>#2. Selector：<br>结合上面的论述，可以看到Selector起到了代替多个Channel监听感兴趣事件发生的作用，这让我很容易想起一个设计模式——观察者模式，在这里Selector是Obserable，Channel是Observer，Channel要向Selector注册自己对哪些事情感兴趣，当事件发生时，Selector通知对应的Channel。<br>这里注册有个两个部分：哪个channel和指定的事件，SelectionKey包含了注册的要素：</p>
+<h2 id="2-1_SelectionKey（注册感兴趣的事，监听返回准备好的事，它关联一个Selector和Channel，我为什么忍不住想到迪米特法则，中毒太深…）：">2.1 SelectionKey（注册感兴趣的事，监听返回准备好的事，它关联一个Selector和Channel，我为什么忍不住想到迪米特法则，中毒太深…）：</h2><p>操作事件：<br>SelectionKey.OP_CONNECT<br>SelectionKey.OP_ACCEPT<br>SelectionKey.OP_READ<br>SelectionKey.OP_WRITE<br>因为SelectionKey包含5个部分：<br>（1）interest集合和ready集合一样包含有一些方便判断的方法，可以看api或源码；<br>（2）ready集合；<br>（3）channel引用；<br>（4）Selector引用；<br>（5）attach附加对象（可选）；</p>
+<h2 id="2-2_Selector的重要方法：">2.2 Selector的重要方法：</h2><p>（1）select方法：包括select()，selectNow(非阻塞)，select(long timeout)返回int，有多个个ready的Channel；<br>（2）selectedKeys方法：返回ready的Channel的selectionKey集合，遍历它们，根据readyOps集合处理对应事件；<br>（3）wakeUp方法：从select阻塞中唤醒；<br>（4）close方法：是所用selectionKey无效，也就释放了对Channel们的引用不影响垃圾回收啦；</p>
+<h2 id="2-3_Selector使用示例：">2.3 Selector使用示例：</h2><pre><code>public class <span class="type">SelectorSample</span> {
+    private <span class="type">List</span>&lt;<span class="type">SelectableChannel</span>&gt; channels;
+    private boolean isListening = <span class="literal">true</span>;
+
+    public <span class="type">SelectorSample</span>(<span class="type">List</span>&lt;<span class="type">SelectableChannel</span>&gt; channels) {
+        this.channels = channels;
+    }
+
+    public <span class="type">void</span> doHandle() {
+        <span class="keyword">try</span>(<span class="type">Selector</span> selector = <span class="type">Selector</span>.open()) {
+            <span class="keyword">for</span>(<span class="type">SelectableChannel</span> channel : channels) {
+                channel.configureBlocking(<span class="literal">false</span>); //非阻塞
+                channel.register(selector, <span class="type">SelectionKey</span>.<span class="type">OP_ACCEPT</span> | <span class="type">SelectionKey</span>.<span class="type">OP_CONNECT</span>
+                        | <span class="type">SelectionKey</span>.<span class="type">OP_READ</span> | <span class="type">SelectionKey</span>.<span class="type">OP_WRITE</span>);
+            }
+            <span class="keyword">while</span>(isListening) {
+                <span class="type">int</span> ready = selector.select();
+                <span class="keyword">if</span>(ready == <span class="number">0</span>) <span class="keyword">continue</span>;
+                <span class="type">Set</span>&lt;<span class="type">SelectionKey</span>&gt; selectionKeys = selector.selectedKeys();
+                <span class="keyword">for</span>(<span class="type">Iterator</span>&lt;<span class="type">SelectionKey</span>&gt; <span class="keyword">iterator</span> = selectionKeys.<span class="keyword">iterator</span>(); <span class="keyword">iterator</span>.hasNext();) {
+                    <span class="type">SelectionKey</span> key = <span class="keyword">iterator</span>.next();
+                    <span class="keyword">if</span>(key.isAcceptable()) {
+                        <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"doSomething when be acceptable"</span>);
+                    } <span class="keyword">else</span> <span class="keyword">if</span>(key.isConnectable()) {
+                        <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"doSomething when be able to connect"</span>);
+                    } <span class="keyword">else</span> <span class="keyword">if</span>(key.isReadable()) {
+                        <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"doSomething when be readable"</span>);
+                    } <span class="keyword">else</span> <span class="keyword">if</span>(key.isWritable()) {
+                        <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"doSomething when be writable"</span>);
+                    }
+                    <span class="keyword">iterator</span>.remove(); //注意要从就绪集合中删除，下次就绪有selector添加
+                }
+            }
+        } catch (<span class="type">IOException</span> e) {
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre><h1 id="2-_Channel_：">2. Channel ：</h1><p>Channel的体系中有：SelectableChannel和InterruptiableChannel，前者继承自后者，之前说过FileChannel是不可以非阻塞的它属于InterruptiableChannel，而其他3种进一步属于SelectableChannel。</p>
+<h2 id="2-1_如何打开通道：">2.1 如何打开通道：</h2><p>ServerSocketChannel，SocketChannel，DatagramChannel都有open方法，可以用来打开通道，它们都属于网络编程，底层是要依赖操作系统层对应网络模块的实现，在Java中这3个通道和管道都是通过SelectorProvider来创建的，该Provider在不同平台上有不同的实现，JVM有一个“system-wide”的默认实现，它是单例的。<br>而FileChannel是对应于文件系统的，基于Java I/O，我们可以从FileInputStream，FileOutputStream，RandomAccessFile来获取一个对应于特定文件的通道。</p>
+<p>我们进一步看看这四个具体的Channel实现那些接口，来分析它们各自有什么功能：</p>
+<h2 id="2-2_ServerSocketChannel：">2.2 ServerSocketChannel：</h2><p>线程安全；</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">ServerSocketChannel</span>
+    <span class="keyword">extends</span> <span class="title">AbstractSelectableChannel</span>
+    <span class="keyword">implements</span> <span class="title">NetworkChannel</span>
+ 它的主要功能就是监听的某个地址和端口上的套接字请求，并打开<span class="title">SocketChannel</span>；</span>
+</code></pre><h2 id="2-3_SocketChannel：">2.3 SocketChannel：</h2><p>线程安全，read/write都进行了同步控制；</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">SocketChannel</span>
+    <span class="keyword">extends</span> <span class="title">AbstractSelectableChannel</span>
+    <span class="keyword">implements</span> <span class="title">ByteChannel</span>, <span class="title">ScatteringByteChannel</span>, <span class="title">GatheringByteChannel</span>, <span class="title">NetworkChannel</span></span>
+</code></pre><p> ByteChannel实现了WritableChannel和ReadableChannel，因此它是可读写的；<br>Scatter/Gatther分别实现了将一个channel的内容读到多个buffer（一个Buffer满了才能读到下一个）和多个Buffer写到一个Channel的功能；<br>NetworkChannel：绑定到地址/端口的能力；<br>我们可以通过它来进行一个端到端的，有连接的套接字通信；</p>
+<h2 id="2-4_DatagramChannel：">2.4 DatagramChannel：</h2><p>线程安全的；</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">DatagramChannel</span>
+    <span class="keyword">extends</span> <span class="title">AbstractSelectableChannel</span>
+    <span class="keyword">implements</span> <span class="title">ByteChannel</span>, <span class="title">ScatteringByteChannel</span>, <span class="title">GatheringByteChannel</span>, <span class="title">MulticastChannel</span></span>
+</code></pre><p> 与SocketChannel接口上的不同在与MulticastChannel，它是NetworkChannel子类；增加了多播的功能，使得我们可以使用基于UDP套接字的多播功能；</p>
+<h2 id="2-5_Pipe：">2.5 Pipe：</h2><p>管道一般可以在两个线程中进行单向的数据传输，它有两个嵌套类：SinkChannel和SourceChannel，分别负责在一个线程（发送者）写入和在另一个线程中读取：<br>    public static abstract class SinkChannel<br>            extends AbstractSelectableChannel<br>            implements WritableByteChannel, GatheringByteChannel</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">SourceChannel</span>
+        <span class="keyword">extends</span> <span class="title">AbstractSelectableChannel</span>
+        <span class="keyword">implements</span> <span class="title">ReadableByteChannel</span>, <span class="title">ScatteringByteChannel</span></span>
+</code></pre><p> 基于上面的论述，相信已经可以很清除的明白它们各自有什么功能了：都可以非阻塞，一个负责写，并且可以将多个Buffer一起写入，一个负责读，可以从Channel中将数据读入多个Buffer；</p>
+<h2 id="2-6_FileChannel：">2.6 FileChannel：</h2><p>这个Channel是阻塞的，是操作磁盘文件一种方式，它和之前几个Channel大不相同，所以我要将它和下面要介绍的DirectByteBuffer（MappedByteBuffer）一起讨论。</p>
+<h1 id="3-_Buffer：">3. Buffer：</h1><p>总的来说，具体工作中使用Buffer的次数要远远多与Selector和Channel，我们通过它对Channel进行具体的读写操作。<br>之前说过NIO的特点之一就是面向缓存，我们在使用Buffer时都是基于一块分配指定的大小的固定内存进行操作的，只有两种分配方式：Heap和Direct，它们的区别下面会详细说明。无论我们进行视图转换（CharBuffer/IntBuffer等等），还是compact压缩，还是duplicate复制、slice切片，都是最初的allocate分配那一块内存。</p>
+<h2 id="3-1_Buffer的基本属性和重要方法：">3.1 Buffer的基本属性和重要方法：</h2><p>capacity：容量；<br>limit：可操作的限制位置；<br>position：下一个操作位置；<br>mark：标记；<br>address：使用direct内存时的内存地址；<br>capacity，limit，position这3个属性是我们进行操作最关键和常用的，结合操作方法我们来看看它们的使用细节：<br>flip：limit=position，position=0；这个方法通常在从通道中读取数据后使用，这样我们可以再从Buffer中读取数据；或者在Buffer写入数据后调用，让通道写入；<br>rewind：position=0,mark=-1；<br>clear：position=0，limit=capacity，mark=-1；通常在重新从<br>remaining：limit-position；用于检查是否还有数据；<br>mark和reset：mark标记，mark=position；reset复位，position=mark（mark&gt;0时），注意它并不会修改mark值；<br>compact：将原来（limit-position）未处理完的数据复制到开头，再将position移到数据的下一个位置，limit=capacity，这个方法是进行压缩，去掉已处理过的数据，主要   为了接下来将数据写入Buffer，注意，它只是在原数组上进行复制的，没有新分配空间；<br>另一个你可能需要注意的是equals方法和compareTo方法，它们比较的是limit-position之间的大小；</p>
+<h2 id="3-2_Buffer的体系结构：">3.2 Buffer的体系结构：</h2><p>首先，重要的事先说说：Buffer并不是线程安全的。<br>来看看Buffer的体系：</p>
+<p>Channel都是基于字节的，我们一般也从ByteBuffer开始；</p>
+<h3 id="ByteBuffer具体实现（分配）：">ByteBuffer具体实现（分配）：</h3><p>ByteBuffer有两个分配方法（它们返回<strong>HeapByteBuffer</strong>和<strong>DirectByteBuffer</strong>都是default包权限，我们无法直接使用它们）：<br><strong>allocate</strong>：<strong>HeapByteBuffer</strong>，从JVM堆中分配，收到JVM垃圾回收处理机制管理，实际上就是为了一个固定的byte[]；<br><strong>allocateDirect</strong>：<strong>DirectByteBuffer</strong>，使用JNI在native内存中分配，那怎么回收直接内存呢，DirectBuffer（DirectByteBuffer的接口），可以返回<strong>Cleaner</strong>，通过它我们可以释放直接内存，否则你就只能等待Full GC的发生来释放它了，依赖JNI响应的回收方法和堆中DirectByteBuffer对象的回收；<br>Buffer的视图：</p>
+<p>在类图中我们可以看到有CharBuffer，IntBuffer，另外还有FloatBuffer，DoubleBuffer，ShortBuffer，LongBuffer以及MappedBuffer（特别的，内存映射）；<br>它们实际上都是由ByteBuffer而产生，操作同一块内存，只是读取的方式不一样，以HeapByteBuffer和CharBuffer为例我们来看看它们是怎么完成“视图”的使命的。<br>转换方法：<br>ByteBuffer.asCharBuffer();<br>HeapByteBuffer中是这样实现的：</p>
+<pre><code><span class="function"><span class="keyword">public</span> CharBuffer <span class="title">asCharBuffer</span><span class="params">()</span> </span>{
+        <span class="keyword">int</span> size = <span class="keyword">this</span>.remaining() &gt;&gt; <span class="number">1</span>;
+        <span class="keyword">int</span> off = offset + position();
+        <span class="keyword">return</span> (bigEndian
+                ? (CharBuffer)(<span class="keyword">new</span> ByteBufferAsCharBufferB(<span class="keyword">this</span>,
+                                                               -<span class="number">1</span>,
+                                                               <span class="number">0</span>,
+                                                               size,
+                                                               size,
+                                                               off))
+                : (CharBuffer)(<span class="keyword">new</span> ByteBufferAsCharBufferL(<span class="keyword">this</span>,
+                                                               -<span class="number">1</span>,
+                                                               <span class="number">0</span>,
+                                                               size,
+                                                               size,
+                                                               off)));
+    }
+</code></pre><p> 考虑到字顺这里有两个实现，新建一个ByteBufferAsCharBufferB还是操作那一块内存，只是我们换了一组capacity，limit，mark，position来操作；<br>而在具体的get/put方法中：</p>
+<pre><code><span class="keyword">public</span> <span class="function"><span class="keyword">char</span> <span class="title">get</span><span class="params">()</span> </span>{
+        <span class="keyword">return</span> Bits.getCharB(bb, ix(nextGetIndex()));
+    }
+</code></pre><p> 是通过Bits这个工具类来进行不同基本类型的读取和操作。整个事情就是这样，基于字节ByteBuffer，考虑字顺用不同的方式去读写同一块内存；<br>PS：对于CharBuffer和ByteBuffer之间的转换，涉及到编解码，Charset有ByteBuffer = encode(CharBuffer)和CharBuffer = decode(ByteBuffer)；</p>
+<h1 id="4-_FileChannel">4. FileChannel</h1><p>同样它也是线程安全的。</p>
+<h1 id="4-1_打开FileChannel：">4.1 打开FileChannel：</h1><p>之前我们已经提到了它可通过FileInputStream、FileOutputStream和RandomAccessFile获得，但是它们具有不同的读写权限：<br>RandomAccessFile：rw</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="function">FileChannel <span class="title">getChannel</span><span class="params">()</span> </span>{
+        <span class="keyword">synchronized</span> (<span class="keyword">this</span>) {
+            <span class="keyword">if</span> (channel == <span class="keyword">null</span>) {
+                channel = FileChannelImpl.open(fd, path, <span class="keyword">true</span>, rw, <span class="keyword">this</span>);
+            }
+            <span class="keyword">return</span> channel;
+        }
+    }
+</code></pre><p>FileOutputStream：</p>
+<pre><code><span class="keyword">public</span> FileChannel getChannel() {
+        <span class="keyword">synchronized</span> (<span class="keyword">this</span>) {
+            <span class="keyword">if</span> (channel == <span class="keyword">null</span>) {
+                channel = FileChannelImpl.<span class="built_in">open</span>(fd, path, <span class="keyword">false</span>, <span class="keyword">true</span>, <span class="built_in">append</span>, <span class="keyword">this</span>);
+            }
+            <span class="keyword">return</span> channel;
+        }
+    }
+</code></pre><p>FileInputStream：</p>
+<pre><code><span class="keyword">public</span> <span class="function">FileChannel <span class="title">getChannel</span><span class="params">()</span> </span>{
+        <span class="keyword">synchronized</span> (<span class="keyword">this</span>) {
+            <span class="keyword">if</span> (channel == <span class="keyword">null</span>) {
+                channel = FileChannelImpl.open(fd, path, <span class="keyword">true</span>, <span class="keyword">false</span>, <span class="keyword">this</span>);
+            }
+            <span class="keyword">return</span> channel;
+        }
+    }
+</code></pre><p> 正如RandomAccessFile（可以seek方式前后读写文件），FileInputStream和FileOutputStream本身的差异一样，它们也具有不同的特点；</p>
+<h2 id="4-2_FileChannel的独特的方法：">4.2 FileChannel的独特的方法：</h2><p>写，读，关闭和其他Channel使用方式是一样的，我们来看看它对文件还有什么其他操作：<br>FileChannel.position(long)：移到文件的特定位置，接下来你可以从这个位置写/读，你可以在文件结束符之后写入，这和我们在Unix中一样，它也可能会造成<strong>文件空洞</strong>。<br>FileChannel.truncate(long)：截取前多少字节的数据；<br>FileChannel.size()：返回关联文件大小；<br>FileChannel.force()：将缓存内（操作系统为了提高性能）的数据强制写入磁盘；</p>
+<h2 id="4-3_transfer：">4.3 transfer：</h2><p>如果你需要在WritableChannel之间传递数据，使用transferTo和transferFrom是一个非常好的选择；<br>因为这种方式不需要将磁盘数据从内核空间复制到应用用户空间在传到另一个内核空间，而是直接在内核空间中通过“通道传输”；</p>
+<h2 id="4-4_FileChannel中的内存映射：">4.4 FileChannel中的内存映射：</h2><p>为了显示内存映射到底是怎么存储，可以看看创建MapByteBuffer的源码：</p>
+<pre><code><span class="keyword">static</span> <span class="function">MappedByteBuffer <span class="title">newMappedByteBuffer</span><span class="params">(<span class="keyword">int</span> var0, <span class="keyword">long</span> var1, FileDescriptor var3, Runnable var4)</span> </span>{
+        <span class="keyword">if</span>(directByteBufferConstructor == <span class="keyword">null</span>) {
+            initDBBConstructor();
+        }
+
+        <span class="keyword">try</span> {
+            MappedByteBuffer var5 = (MappedByteBuffer)directByteBufferConstructor.newInstance(<span class="keyword">new</span> Object[]{<span class="keyword">new</span> Integer(var0), <span class="keyword">new</span> Long(var1), var3, var4});
+            <span class="keyword">return</span> var5;
+        } <span class="keyword">catch</span> (IllegalAccessException | InvocationTargetException | InstantiationException var7) {
+            <span class="keyword">throw</span> <span class="keyword">new</span> InternalError(var7);
+        }
+    }
+</code></pre><p> 这里可以看到显然是通过直接内存的方式，但是这段代码是在FileChannel的map方法中调用的，它和allocateDirect是有区别的；要理解直接内存和内存映射中的原理需要一些重要的基础知识，才能真正弄清楚HeapByteBuffer，DirectByteBuffer，和map之间的区别。<br><strong>（1）为什么FileInputStream和HeapByteBuffer相对要慢很多呢？</strong><br>Java中读取文件要依赖于内核的系统调用，将文件数据从磁盘读取到内核IO缓存区（内存中），再转到JVM堆中（上面已经看到了HeapByteBuffer中new byte[]）。首先要明白为什么要建立内核IO缓冲区，就是为了减少磁盘的访问次数，因为磁盘IO效率很低，读到内核IO缓存区转到JVM堆又需要调用native方法，依赖系统调用，系统调用的开销有比较大，因为我们可以BufferedInputStream和HeapByteBuffer来建立缓冲区减少系统调用。尽管我们通过内核IO缓冲区和Java应用缓冲区两层缓存分别减少了耗时的磁盘IO和系统调用，但是仍然不能避免内核态切换到用户态，内核空间复制到用户空间这样的耗时操作。</p>
+<p><strong>（2）为什么allocateDirect要比传统方式快？</strong><br>如果你看了DirectByteBuffer的源码你就会发现其中并没有new byte[]这样在JVM Heap中分配的行为，用的是address（Buffer中定义，long，64位）。实际上DirectMemory使用的是native堆，因此避免了向JVM堆复制的开销，但是需要注意的一点是，allocateDirect方法本身的开销比allocate方法大，因为它依赖系统调用，因此我们使用时应该避免频繁调用它分配小块内存。<br>设置：JVM参数中，-XX:MaxDirectMemorySize可以控制它的大小，默认值为-Xmx的大小；<br>回收：FULL CG（JNI的回收方法和DirectByteBuffer对象的回收）和我们手动通过Cleaner去释放；</p>
+<p>PS：2015/10/24 补充<br>allocateDirect存在于内核空间，如果所有的操作都存在与内核空间中，可以减少内核空间向用户空间复制，因此很快，但是如果频繁的分配小的直接内存，系统调用的开销会抵消减少复制的好处；另外如果我们用很小的直接内存读取磁盘数据到内存（也就是从ByteBuffer中get出来使用）还是会产生复制，性能并不会有太大改善。</p>
+<p><strong>（3）为什么内存映射更快呢？</strong><br>简单的说，内存映射并没有上面的分配行为，既不需要native堆也不需要JVM堆，它是以Java进程直接将需要读写的文件映射为虚拟内存，以内存的方式进行读写，这样读写自然要比它们要快的多。同时它也是线程间进行通信的一种方式，两个进程映射同一块虚拟内存，共享内存的方式进行通信。<br>通过FileChannel.map可以对指定文件或其部分进行内存映射，有三种模式：READ_ONLY, READ_WRITE, PRIVATE。</p>
+<h2 id="4-5_不同读取方式的对比：">4.5 不同读取方式的对比：</h2><pre><code><span class="keyword">public</span> class DirectMemoryTest {
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">String</span> TEST_FILE = <span class="string">"/home/yjh/test.file"</span>;
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> testNormal(<span class="keyword">String</span> TEST_FILE) {
+        System.out.<span class="built_in">print</span>(<span class="string">"Normal "</span>);
+        <span class="keyword">try</span>(FileInputStream inputStream = <span class="keyword">new</span> FileInputStream(TEST_FILE);
+            FileChannel fileChannel = inputStream.getChannel()) {
+            ByteBuffer buffer = ByteBuffer.allocate(<span class="number">1024</span>);
+            <span class="keyword">while</span>(fileChannel.read(buffer) != -<span class="number">1</span>) {
+                buffer.flip();
+                buffer.<span class="built_in">clear</span>();
+            }
+        } <span class="keyword">catch</span> (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> testDirect(<span class="keyword">String</span> TEST_FILE) {
+        System.out.<span class="built_in">print</span>(<span class="string">"Direct "</span>);
+        <span class="keyword">try</span>(FileInputStream inputStream = <span class="keyword">new</span> FileInputStream(TEST_FILE);
+            FileChannel fileChannel = inputStream.getChannel()) {
+            ByteBuffer buffer = ByteBuffer.allocateDirect(<span class="number">1024</span>);
+            <span class="keyword">while</span>(fileChannel.read(buffer) != -<span class="number">1</span>) {
+                buffer.flip();
+                buffer.<span class="built_in">clear</span>();
+            }
+        } <span class="keyword">catch</span> (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> testMapped(<span class="keyword">String</span> TEST_FILE) {
+        System.out.<span class="built_in">print</span>(<span class="string">"Mapped "</span>);
+        <span class="keyword">try</span>(FileInputStream inputStream = <span class="keyword">new</span> FileInputStream(TEST_FILE);
+            FileChannel fileChannel = inputStream.getChannel()) {
+            MappedByteBuffer buffer = fileChannel.<span class="built_in">map</span>(FileChannel.MapMode.READ_ONLY, <span class="number">0</span>, fileChannel.<span class="built_in">size</span>());
+            <span class="built_in">byte</span>[] b = <span class="keyword">new</span> <span class="built_in">byte</span>[<span class="number">1024</span>];
+            <span class="keyword">while</span>(buffer.<span class="built_in">get</span>(b).position() &lt; buffer.limit()) {
+
+            }
+        } <span class="keyword">catch</span> (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> test(Consumer&lt;<span class="keyword">String</span>&gt; consumer) {
+        <span class="keyword">long</span> startTime = System.currentTimeMillis();
+
+        consumer.accept(TEST_FILE);
+
+        <span class="keyword">long</span> endTime = System.currentTimeMillis();
+
+        System.out.<span class="built_in">println</span>(<span class="string">"Time consume: "</span> + (endTime - startTime));
+    }
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> main(<span class="keyword">String</span>[] args) {
+        test(DirectMemoryTest::testNormal);
+        test(DirectMemoryTest::testDirect);
+        test(DirectMemoryTest::testMapped);
+    }
+}
+</code></pre><p>我对三种方式分别读取整个test文件的内容，该文件大小为500M，运行结果（单位：ms）：<br>Normal Time consume: 930<br>Direct Time consume: 800<br>Mapped Time consume: 222</p>
+<p>在这个例子中，allocateDirect的直接内存同样读取了很多次（500MB / 1024B）磁盘数据，调用了很多次系统调用，因此和传统方式的效率并不有太大提升。</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-Java基础知识总结（四）——异常与异常处理表" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/02/Java基础知识总结（四）——异常与异常处理表/" class="article-date">
+  	<time datetime="2015-12-02T05:19:32.000Z" itemprop="datePublished">2015-12-02</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/02/Java基础知识总结（四）——异常与异常处理表/">Java基础知识总结（四）——异常与异常处理表</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>要想弄清楚异常的一些知识点，比如try/finally的return，异常的丢失等等，光记住“形式”是不够的，不从字节码异常表的层面分析是很难真正的将一些问题弄明白。</p>
+<h2 id="先吃两个栗子">先吃两个栗子</h2><p>（1）判断程序的返回值：</p>
+<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">hasException</span><span class="params">()</span> </span>{
+        <span class="keyword">int</span> x;
+        <span class="keyword">try</span> {
+            x = <span class="number">1</span>;
+            <span class="keyword">return</span> x;
+        } <span class="keyword">catch</span> (Exception e) {
+            x = <span class="number">2</span>;
+            <span class="keyword">return</span> x;
+        } finally {
+            x = <span class="number">3</span>;
+        }
+    }
+</code></pre><p>结果：<br>（1）未发生异常，返回1；<br>（2）发生Exception异常返回2；<br>（3）发生其他异常，没有返回值；</p>
+<p>以正常返回为例分析：<br>Java中返回值实际上是由一个returnValue变量保存的，编译器会将finally中的逻辑查到return之前，通过查看字节码可以知道，变量x等于1时，赋值给了returnValue变量，之后才赋值为3的，因此最后返回3。</p>
+<pre><code><span class="number">0</span>: iconst_1 <span class="comment">//常量1压入操作数栈</span>
+<span class="number">1</span>: istore_1 <span class="comment">//x=1,保存到局部变量表slot 1</span>
+<span class="number">2</span>: iload_1 <span class="comment">//局部变量表slot 1也就是x压入操作数栈</span>
+<span class="number">3</span>: istore_2 <span class="comment">//栈顶值“1”保存到slot 2，returnValue = 1</span>
+<span class="number">4</span>: iconst_3 <span class="comment">//常量3压入操作数栈</span>
+<span class="number">5</span>: istore_1 <span class="comment">//栈顶值“3”保存到局部变量表slot 1, x=3</span>
+<span class="number">6</span>: iload_2 <span class="comment">//returnValue压入操作数栈</span>
+<span class="number">7</span>: ireturn <span class="comment">//返回栈顶元素，returnValue的值</span>
+</code></pre><p>（2） finally中的return：</p>
+<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">finallyReturn</span><span class="params">()</span> </span>{
+    <span class="keyword">int</span> x;
+    <span class="keyword">try</span> {
+        x = <span class="number">1</span>;
+        <span class="keyword">return</span> x;
+    } <span class="keyword">catch</span>(Exception e) {
+        x = <span class="number">2</span>;
+        <span class="keyword">return</span> x;
+    } finally {
+        x = <span class="number">3</span>;
+        <span class="keyword">return</span> <span class="number">3</span>;
+    }
+}
+</code></pre><p>结果：<br>正常返回或者Exception异常或者其他异常都返回3；</p>
+<p>分析：<br>正如前叙，编译器会将finally中的逻辑插入各个分支之中。因此try和catch中的return都不会执行到（被编译器忽略了）。查看字节码：</p>
+<pre><code><span class="number">6</span>: iconst_3 <span class="comment">//常量3压入操作数栈</span>
+<span class="number">7</span>: ireturn <span class="comment">//返回栈顶元素3</span>
+</code></pre><p>PS：<br>能看懂字节码，很多问题轻松弄明白。<br>上述字节码使用javap -verbose -private xxxx输出查看。<br>后面finally子句小节中有更系统的解释。</p>
+<h2 id="1-_异常体系">1. 异常体系</h2><p><strong>基类</strong>：Throwable；<br><strong>子类划分</strong>：Error（内部错误/资源耗尽错误），Exception（又又子类RuntimeException）；</p>
+<p><strong>是否为受检查异常：</strong><br><strong>checked异常</strong>：Exception，因为为一些不可预测的情况导致的异常，checked的目的是为了让我们能够给出相应的恢复手段；<br><strong>unchecked异常</strong>：Error和RunntimeException，后者一般是“程序员自己的问题导致的”；</p>
+<h3 id="声明checked异常：">声明checked异常：</h3><p>throws关键字；<br>class文件中可以通过方法表的Exceptions属性查看（这是javap输出的，实际上Exceptions中保存的是异常类全限定名在常量池中的索引）：</p>
+<pre><code>Exceptions:
+throws java<span class="class">.io</span><span class="class">.IOException</span>, java<span class="class">.sql</span><span class="class">.SQLException</span>
+</code></pre><h3 id="声明异常与继承：">声明异常与继承：</h3><p> 子类重写父类方法，如果父类方法声明了异常，子类方法可以：<br> （1）不声明异常；<br> （2）声明父类方法中异常或其子类异常；</p>
+<pre><code><span class="keyword">private</span> static <span class="class"><span class="keyword">class</span> <span class="title">SuperClass</span> {</span>
+    <span class="keyword">protected</span> void f() <span class="keyword">throws</span> <span class="type">IOException</span> {}
+}
+
+<span class="keyword">private</span> static <span class="class"><span class="keyword">class</span> <span class="title">SubClass1</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">SuperClass</span> {</span>
+    <span class="annotation">@Override</span>
+    <span class="keyword">protected</span> void f() <span class="keyword">throws</span> <span class="type">ZipException</span> {}
+}
+
+<span class="keyword">private</span> static <span class="class"><span class="keyword">class</span> <span class="title">SubClass2</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">SuperClass</span> {</span>
+    <span class="annotation">@Override</span>
+    <span class="keyword">protected</span> void f() {}
+}
+</code></pre><h2 id="2-_捕获异常">2. 捕获异常</h2><p>在catch语句中重新包装异常，通过设置initCause的方式保证不丢失原始异常：</p>
+<pre><code><span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">catchAndThrowNew</span><span class="params">()</span> <span class="keyword">throws</span> Throwable </span>{
+    <span class="keyword">try</span> {
+        <span class="keyword">throw</span> <span class="keyword">new</span> SQLException();
+    } <span class="keyword">catch</span> (SQLException e) {
+        Throwable se = <span class="keyword">new</span> ServletException();
+        se.initCause(e);
+        <span class="keyword">throw</span> se;
+    }
+}
+</code></pre><h3 id="finally子句：">finally子句：</h3><h4 id="（1）与return的关系：">（1）与return的关系：</h4><p>正如开头的例子：<br>当try子句中有return语句，编译器将产生一个中间变量“returnValue”，保存try中return语句中变量在try语句中的最后赋值；<br>当finally子句中有return语句，将“覆盖”try中的return；<br>当finally子句中没有return语句，try中的return因为有returnValue值，不会受finally的影响；</p>
+<h4 id="（2）嵌套的finally子句：">（2）嵌套的finally子句：</h4><p>（1）如果不同层次的finally子句中包含return，内层的return语句将被忽略，最外层的return才有效；<br>（2）如果一个内层的finally子句中包含return，外层还有finally子句（没有return），编译器同样会生成一个“returnValue”中间变量，保证内层的return逻辑，可见Java设计的思想在于保证“可见”逻辑的正确性；<br>（3）执行顺序是先内后外；</p>
+<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">nestedTryCatch</span><span class="params">()</span> </span>{
+    <span class="keyword">int</span> x;
+    <span class="keyword">try</span> {
+        <span class="keyword">try</span> {
+            x = <span class="number">2</span>;
+        } finally {
+            x = <span class="number">3</span>;
+            <span class="keyword">return</span> x;
+        }
+    } finally {
+        x = <span class="number">4</span>;
+        <span class="keyword">return</span> x;
+    }
+}
+</code></pre><h4 id="（3）finally子句与AutoClosable接口：">（3）finally子句与AutoClosable接口：</h4><p>JSE 7中提供了“try-with-resources”的简化形式：</p>
+<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">tryWithResources</span>(<span class="params"></span>) throws IOException </span>{
+    <span class="keyword">try</span>(InputStream <span class="keyword">in</span> = <span class="keyword">new</span> ByteArrayInputStream(<span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">10</span>])) {
+        <span class="keyword">try</span> (Reader reader = <span class="keyword">new</span> BufferedReader(<span class="keyword">new</span> InputStreamReader(<span class="keyword">in</span>))) {
+
+        }
+    }
+}
+</code></pre><p><strong>注意：带资源的try语句也可以有自己的catch和finally，但是要在资源关闭之后执行。</strong></p>
+<h4 id="（4）finally与丢失异常：">（4）finally与丢失异常：</h4><p>情形1：finally中的新异常：</p>
+<pre><code><span class="keyword">try</span> {
+    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();
+} <span class="keyword">finally</span> {
+    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException();
+}
+</code></pre><p>情形2：finally中的return：</p>
+<pre><code><span class="keyword">try</span> {
+    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();
+} <span class="keyword">finally</span> {
+    <span class="keyword">return</span>;
+} 
+</code></pre><p>情形3：finally中没有新异常和return：</p>
+<pre><code><span class="keyword">try</span> {
+    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();
+} <span class="keyword">finally</span> {
+    <span class="keyword">int</span> x = <span class="number">3</span>;
+}
+</code></pre><h4 id="字节码分析：">字节码分析：</h4><p>首先，athrow指令是将栈顶异常引用抛出：<br>（1）情况1的字节码：</p>
+<pre><code>Code:
+  <span class="built_in">stack</span>=<span class="number">2</span>, locals=<span class="number">2</span>, args_size=<span class="number">1</span>
+     <span class="number">0</span>: <span class="keyword">new</span>           <span class="preprocessor">#<span class="number">21</span>                 <span class="comment">// class java/lang/IllegalArgumentException</span></span>
+     <span class="number">3</span>: dup
+     <span class="number">4</span>: invokespecial <span class="preprocessor">#<span class="number">22</span>                 <span class="comment">// Method java/lang/IllegalArgumentException."&lt;init&gt;":()V</span></span>
+     <span class="number">7</span>: athrow
+     <span class="number">8</span>: astore_1
+     <span class="number">9</span>: <span class="keyword">new</span>           <span class="preprocessor">#<span class="number">23</span>                 <span class="comment">// class java/lang/IllegalStateException</span></span>
+    <span class="number">12</span>: dup
+    <span class="number">13</span>: invokespecial <span class="preprocessor">#<span class="number">24</span>                 <span class="comment">// Method java/lang/IllegalStateException."&lt;init&gt;":()V</span></span>
+    <span class="number">16</span>: athrow
+  Exception table:
+     from    to  target type
+         <span class="number">0</span>     <span class="number">9</span>     <span class="number">8</span>   any
+</code></pre><p>分析：<br>从异常表中可以看到，0到9行中如果有任何的异常出现，转到8行进行处理，第8行之后就是finally之后的逻辑重新抛出了新的异常；</p>
+<p>（2）情形3字节码分析：</p>
+<pre><code>Code:
+  <span class="built_in">stack</span>=<span class="number">2</span>, locals=<span class="number">3</span>, args_size=<span class="number">1</span>
+     <span class="number">0</span>: <span class="keyword">new</span>           <span class="preprocessor">#<span class="number">21</span>                 <span class="comment">// class java/lang/IllegalArgumentException</span></span>
+     <span class="number">3</span>: dup
+     <span class="number">4</span>: invokespecial <span class="preprocessor">#<span class="number">22</span>                 <span class="comment">// Method java/lang/IllegalArgumentException."&lt;init&gt;":()V</span></span>
+     <span class="number">7</span>: athrow
+     <span class="number">8</span>: astore_1
+     <span class="number">9</span>: iconst_3
+    <span class="number">10</span>: istore_2
+    <span class="number">11</span>: aload_1
+    <span class="number">12</span>: athrow
+  Exception table:
+     from    to  target type
+         <span class="number">0</span>     <span class="number">9</span>     <span class="number">8</span>   any
+</code></pre><p>分析：异常表的逻辑和情形1是相同的，但是finally的逻辑对应的字节码将局部变量表中的异常引用取出执行了athrow；</p>
+<h3 id="因此，可以说finally的return和异常覆盖内层或者try中的return和异常">因此，可以说finally的return和异常覆盖内层或者try中的return和异常</h3><h2 id="3-_堆栈跟踪">3. 堆栈跟踪</h2><p>（1） Throwable的方法：printStackTrace和getStackTrace；<br>（2）Thread.getAllStackTraces()；</p>
+<h2 id="4-_异常使用技巧">4. 异常使用技巧</h2><p>（1）不能用异常处理代替逻辑判断，因为异常处理的性能开销较大；<br>（2）不要过分细化异常及处理；<br>（3）不要压制异常，异常要么声明，要么正确在该方法内处理；<br>（4）设计具有意义的自定义异常体系；</p>
+<p>PS：其他一些好的做法向《Efftive Java》中说的很详细。</p>
+<h2 id="5-_关于Java中的断言和日志">5. 关于Java中的断言和日志</h2><p>就我的经验来看，还是使用开源的框架中的断言（比如Spring Framework中的断言）和日志（比如Log4j）比较合适。</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-关于Java类初始化和实例化中的2个“雷区”" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/02/关于Java类初始化和实例化中的2个“雷区”/" class="article-date">
+  	<time datetime="2015-12-02T05:19:32.000Z" itemprop="datePublished">2015-12-02</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/02/关于Java类初始化和实例化中的2个“雷区”/">关于Java类初始化和实例化中的2个“雷区”</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在考虑类初始化时，我们都知道进行子类初始化时，如果父类没有初始化要先初始化子类。然而事情并没有一句话这么简单。</p>
+<p><strong>首先看看Java中初始化触发的条件：</strong><br>（1）在使用new实例化对象，访问静态数据和方法时，也就是遇到指令：new，getstatic/putstatic和invokestatic时；<br>（2）使用反射对类进行调用时；<br>（3）当初始化一个类时，父类如果没有进行初始化，先触发父类的初始化；<br>（4）执行入口main方法所在的类；<br>（5）JDK1.7动态语言支持中方法句柄所在的类，如果没有初始化触发起初始化；</p>
+<p>经过编译后生成一个<code>&lt;clinit&gt;</code>方法，类的初始化就在这个方法中进行，该方法只执行，由JVM保证这一点，并进行同步控制；</p>
+<p>其中条件（3），从方法调用的角度来看，是子类的<code>&lt;clinit&gt;</code>会在开始时递归的调用父类的<code>&lt;clinit&gt;</code>，这类似与我们在子类构造器中必须首先调用父类的构造器；</p>
+<p>但需要注意的是“触发”并不是完成初始化，这意味着有可能子类的初始化会提前于父类初始化结束，这就是“危险”的所在。</p>
+<h2 id="1-_一个类初始化的例子：">1. 一个类初始化的例子：</h2><p>这个例子我使用一个外围类包含2个有继承关系的静态成员类，因为外围类的初始化和静态成员类没有因果关系，因此这样展示是安全和方便的；<br>父类A和子类B分别包含main函数，由上面的触发条件（4）可知，通过分别调用这个两个main函数来触发不同的类初始化路径；<br>这个例子的问题在于父类包含子类的static引用并在定义处进行初始化的问题：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">WrapperClass</span> {
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title">A</span> {
+        <span class="keyword">static</span> {
+            System.<span class="keyword">out</span>.println(<span class="string">"类A初始化开始..."</span>);
+        }
+        <span class="comment">//父类包含子类的static引用</span>
+        <span class="keyword">private</span> <span class="keyword">static</span> B b = <span class="keyword">new</span> B();
+        <span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">int</span> aInt = <span class="number">9</span>;
+
+        <span class="keyword">static</span> {
+            System.<span class="keyword">out</span>.println(<span class="string">"类A初始化结束..."</span>);
+        }
+
+        <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
+
+        }
+    }
+
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title">B</span> <span class="title">extends</span> <span class="title">A</span> {
+        <span class="keyword">static</span> {
+            System.<span class="keyword">out</span>.println(<span class="string">"类B初始化开始..."</span>);
+        }
+        <span class="comment">//子类的域依赖于父类的域</span>
+        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> bInt = <span class="number">9</span> + A.aInt;
+
+        <span class="function"><span class="keyword">public</span> <span class="title">B</span>(<span class="params"></span>) </span>{
+            <span class="comment">//构造器依赖类的static域</span>
+            System.<span class="keyword">out</span>.println(<span class="string">"类B的构造器调用 "</span> + <span class="string">"bInt的值"</span> + bInt);
+        }
+
+        <span class="keyword">static</span> {
+            System.<span class="keyword">out</span>.println(<span class="string">"类B初始化结束... "</span> + <span class="string">"aInt的值："</span> + bInt);
+        }
+
+        <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
+
+        }
+    }
+}
+</code></pre><p>情景一：入口为类B的main函数时输出结果：</p>
+<pre><code>/<span class="keyword">*</span><span class="keyword">*</span>
+ <span class="keyword">*</span> 类A初始化开始...
+ <span class="keyword">*</span> 类B的构造器调用 bInt的值0
+ <span class="keyword">*</span> 类A初始化结束...
+ <span class="keyword">*</span> 类B初始化开始...
+ <span class="keyword">*</span> 类B初始化结束... aInt的值：18
+ <span class="keyword">*</span>/
+</code></pre><p><strong>分析</strong>：可以看到，main函数的调用触发了类B的初始化，进入类B的<code>&lt;clinit&gt;</code>方法，类A作为其父类先开始初始化进入了A的<code>&lt;clinit&gt;</code>方法，其中有一个语句<code>new B();</code>这时会进行B的实例化，这是已经在类B的<code>&lt;clinit&gt;</code>中了，main线程已经获得锁开始执行类B的<code>&lt;clinit&gt;</code>，我们开头说过JVM会保证一个类的初始化方法只被执行一次，JVM收到new指令后不会再进入类B的<code>&lt;clinit&gt;</code>方法而是直接进行实例化，但是此时类B还没有完成类初始化，所以可以看到bInt的值为0（这个0是类加载中准备阶段分配方法区内存后进行的置零初始化）；<br>因此，可以得出，再父类中包含子类类型的static域并进行赋值动作，会可能导致子类实例化在类初始化完成前进行；</p>
+<p>情景二：入口为类A的main函数时输出结果：</p>
+<pre><code>/<span class="keyword">*</span><span class="keyword">*</span>
+ <span class="keyword">*</span> 类A初始化开始...
+ <span class="keyword">*</span> 类B初始化开始...
+ <span class="keyword">*</span> 类B初始化结束... aInt的值：9
+ <span class="keyword">*</span> 类B的构造器调用 bInt的值9
+ <span class="keyword">*</span> 类A初始化结束...
+ <span class="keyword">*</span>/
+</code></pre><p><strong>分析</strong>：经过情景一的分析，我们知道，由类B的初始化触发类A的初始化，会导致类A中类变量b的实例化在类B初始化完成前进行，那如果先初始化类A是不是就可以在类变量实例化的时候先触发类B的初始化，从而使得初始化在实例化前呢？答案是肯定的，但是这仍然有问题。<br>根据输出，可以看到，类B的初始化在类A的初始化完成前进行了，这导致了像类变量aInt的变量在类B初始化完成后才进行初始化，所以类B中的域bInt获取到的aInt的值是“0”，而不是我们预期的“18”；</p>
+<h2 id="结论：">结论：</h2><p>综上，可以得出，在父类中包含子类类型的类变量，并在定义出进行实例化是非常危险的行为，具体情况可能不会向例子一样直白，调用方法在定义处赋值一样隐含着危险，即使要包含子类类型的static域，也应该通过static方法进行赋值，因为JVM可以保证在static方法调用前完成所有的初始化动作（当然这种保证也是你不应该包含static B b = new B();这样的初始化行为）；</p>
+<h1 id="2-_一个实例化的例子：">2. 一个实例化的例子：</h1><p>首先需要知道对象创建的过程：<br>（1）遇到new指令，检查类是否完成了加载，验证，准备，解析，初始化（解析过程就是符号引用解析成直接引用，比如方法名就是一个符号引用，可以在初始化完成后使用这个符号引用的时候进行，正是为了支持动态绑定），没有完成先进行这些过程；<br>（2）分配内存，采用空闲列表或者指针碰撞的方法，并将新分配的内存“置零”，因此所有的实例变量在此环节都进行了一次默认初始化为0（引用为null）的过程；<br>（3）执行<code>&lt;init&gt;</code>方法，包括检查调用父类的<code>&lt;init&gt;</code>方法（构造器），实例变量定义出的赋值动作，实例化器顺序执行，最后调用构造器中的动作。</p>
+<p>这个例子可能更为大家所熟知，也就是它违反了“不要在构造器，clone方法和readObject方法中调用可被覆盖的方法”。其原因就在于Java中的多态，也就是动态绑定。<br>父类A的构造器中包含一个protected方法，类B是其子类。</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WrongInstantiation</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>{
+        <span class="function"><span class="keyword">public</span> <span class="title">A</span><span class="params">()</span> </span>{
+            doSomething();
+        }
+
+    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span> </span>{
+        System.out.println(<span class="string">"A's doSomething"</span>);
+    }
+}
+
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">B</span> <span class="keyword">extends</span> <span class="title">A</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">int</span> bInt = <span class="number">9</span>;
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span> </span>{
+        System.out.println(<span class="string">"B's doSomething, bInt: "</span> + bInt);
+    }
+}
+
+<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
+    B b = <span class="keyword">new</span> B();
+}
+</code></pre><p>}<br>输出结果：</p>
+<pre><code>/<span class="keyword">*</span><span class="keyword">*</span>
+ <span class="keyword">*</span> B's doSomething, bInt: 0
+ <span class="keyword">*</span>/
+</code></pre><p><strong>分析</strong>：首先需要知道，在没有显示提供构造器时Java编译器会生成默认构造器，并在开始处调用父类的构造器，因此类B的构造器开始会先调用类A的构造器。<br>类A中调用了protected方法doSomething，从输出结果中我们看到实际上调用的是子类的方法实现，而此时子类的实例化还未开始，因此bInt并没有如“预期”那样是9,而是0；</p>
+<p>这就是由于动态绑定，doSomething是一个protected方法，因此它是通过invokevirtual指令调用的，该指令根据对象实例的类型找到对应的方法实现（这里就是B的实例对象，对应方法就是类B的方法实现）执行，故而有此结果。</p>
+<h2 id="结论">结论</h2><p>正如前面说的“不要在构造器，clone方法和readObject方法中调用可被覆盖的方法”；<br>PS：在构造器中调用可被覆盖的方法的另一个风险是造成对象在构造过程中“逸出”，导致线程不安全；</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/思考和求解/">思考和求解</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
   
     <article id="post-基于wait和nofity的生产者和消费者模式版本" class="article article-type-post" itemscope itemprop="blogPost">
   
@@ -451,211 +1067,6 @@ aes.init(mode, <span class="variable">key</span>);
 </code></pre><h4 id="密码流">密码流</h4><p>使用CiperInputStream和CiperOutputStream可以屏蔽<code>update</code>和<code>doFinal</code>等细节；</p>
 <hr>
 <h3 id="附：policy，config语法小记：">附：policy，config语法小记：</h3><p>grant：codeBase，principal，signedBy（加alias）；<br>Login1 {LoginModule}：登录上下文定义；</p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
-    <article id="post-Java基础知识总结（四）——异常与异常处理表" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/12/02/Java基础知识总结（四）——异常与异常处理表/" class="article-date">
-  	<time datetime="2015-12-02T05:19:32.000Z" itemprop="datePublished">2015-12-02</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/02/Java基础知识总结（四）——异常与异常处理表/">Java基础知识总结（四）——异常与异常处理表</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>要想弄清楚异常的一些知识点，比如try/finally的return，异常的丢失等等，光记住“形式”是不够的，不从字节码异常表的层面分析是很难真正的将一些问题弄明白。</p>
-<h2 id="先吃两个栗子">先吃两个栗子</h2><p>（1）判断程序的返回值：</p>
-<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">hasException</span><span class="params">()</span> </span>{
-        <span class="keyword">int</span> x;
-        <span class="keyword">try</span> {
-            x = <span class="number">1</span>;
-            <span class="keyword">return</span> x;
-        } <span class="keyword">catch</span> (Exception e) {
-            x = <span class="number">2</span>;
-            <span class="keyword">return</span> x;
-        } finally {
-            x = <span class="number">3</span>;
-        }
-    }
-</code></pre><p>结果：<br>（1）未发生异常，返回1；<br>（2）发生Exception异常返回2；<br>（3）发生其他异常，没有返回值；</p>
-<p>以正常返回为例分析：<br>Java中返回值实际上是由一个returnValue变量保存的，编译器会将finally中的逻辑查到return之前，通过查看字节码可以知道，变量x等于1时，赋值给了returnValue变量，之后才赋值为3的，因此最后返回3。</p>
-<pre><code><span class="number">0</span>: iconst_1 <span class="comment">//常量1压入操作数栈</span>
-<span class="number">1</span>: istore_1 <span class="comment">//x=1,保存到局部变量表slot 1</span>
-<span class="number">2</span>: iload_1 <span class="comment">//局部变量表slot 1也就是x压入操作数栈</span>
-<span class="number">3</span>: istore_2 <span class="comment">//栈顶值“1”保存到slot 2，returnValue = 1</span>
-<span class="number">4</span>: iconst_3 <span class="comment">//常量3压入操作数栈</span>
-<span class="number">5</span>: istore_1 <span class="comment">//栈顶值“3”保存到局部变量表slot 1, x=3</span>
-<span class="number">6</span>: iload_2 <span class="comment">//returnValue压入操作数栈</span>
-<span class="number">7</span>: ireturn <span class="comment">//返回栈顶元素，returnValue的值</span>
-</code></pre><p>（2） finally中的return：</p>
-<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">finallyReturn</span><span class="params">()</span> </span>{
-    <span class="keyword">int</span> x;
-    <span class="keyword">try</span> {
-        x = <span class="number">1</span>;
-        <span class="keyword">return</span> x;
-    } <span class="keyword">catch</span>(Exception e) {
-        x = <span class="number">2</span>;
-        <span class="keyword">return</span> x;
-    } finally {
-        x = <span class="number">3</span>;
-        <span class="keyword">return</span> <span class="number">3</span>;
-    }
-}
-</code></pre><p>结果：<br>正常返回或者Exception异常或者其他异常都返回3；</p>
-<p>分析：<br>正如前叙，编译器会将finally中的逻辑插入各个分支之中。因此try和catch中的return都不会执行到（被编译器忽略了）。查看字节码：</p>
-<pre><code><span class="number">6</span>: iconst_3 <span class="comment">//常量3压入操作数栈</span>
-<span class="number">7</span>: ireturn <span class="comment">//返回栈顶元素3</span>
-</code></pre><p>PS：<br>能看懂字节码，很多问题轻松弄明白。<br>上述字节码使用javap -verbose -private xxxx输出查看。<br>后面finally子句小节中有更系统的解释。</p>
-<h2 id="1-_异常体系">1. 异常体系</h2><p><strong>基类</strong>：Throwable；<br><strong>子类划分</strong>：Error（内部错误/资源耗尽错误），Exception（又又子类RuntimeException）；</p>
-<p><strong>是否为受检查异常：</strong><br><strong>checked异常</strong>：Exception，因为为一些不可预测的情况导致的异常，checked的目的是为了让我们能够给出相应的恢复手段；<br><strong>unchecked异常</strong>：Error和RunntimeException，后者一般是“程序员自己的问题导致的”；</p>
-<h3 id="声明checked异常：">声明checked异常：</h3><p>throws关键字；<br>class文件中可以通过方法表的Exceptions属性查看（这是javap输出的，实际上Exceptions中保存的是异常类全限定名在常量池中的索引）：</p>
-<pre><code>Exceptions:
-throws java<span class="class">.io</span><span class="class">.IOException</span>, java<span class="class">.sql</span><span class="class">.SQLException</span>
-</code></pre><h3 id="声明异常与继承：">声明异常与继承：</h3><p> 子类重写父类方法，如果父类方法声明了异常，子类方法可以：<br> （1）不声明异常；<br> （2）声明父类方法中异常或其子类异常；</p>
-<pre><code><span class="keyword">private</span> static <span class="class"><span class="keyword">class</span> <span class="title">SuperClass</span> {</span>
-    <span class="keyword">protected</span> void f() <span class="keyword">throws</span> <span class="type">IOException</span> {}
-}
-
-<span class="keyword">private</span> static <span class="class"><span class="keyword">class</span> <span class="title">SubClass1</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">SuperClass</span> {</span>
-    <span class="annotation">@Override</span>
-    <span class="keyword">protected</span> void f() <span class="keyword">throws</span> <span class="type">ZipException</span> {}
-}
-
-<span class="keyword">private</span> static <span class="class"><span class="keyword">class</span> <span class="title">SubClass2</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">SuperClass</span> {</span>
-    <span class="annotation">@Override</span>
-    <span class="keyword">protected</span> void f() {}
-}
-</code></pre><h2 id="2-_捕获异常">2. 捕获异常</h2><p>在catch语句中重新包装异常，通过设置initCause的方式保证不丢失原始异常：</p>
-<pre><code><span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">catchAndThrowNew</span><span class="params">()</span> <span class="keyword">throws</span> Throwable </span>{
-    <span class="keyword">try</span> {
-        <span class="keyword">throw</span> <span class="keyword">new</span> SQLException();
-    } <span class="keyword">catch</span> (SQLException e) {
-        Throwable se = <span class="keyword">new</span> ServletException();
-        se.initCause(e);
-        <span class="keyword">throw</span> se;
-    }
-}
-</code></pre><h3 id="finally子句：">finally子句：</h3><h4 id="（1）与return的关系：">（1）与return的关系：</h4><p>正如开头的例子：<br>当try子句中有return语句，编译器将产生一个中间变量“returnValue”，保存try中return语句中变量在try语句中的最后赋值；<br>当finally子句中有return语句，将“覆盖”try中的return；<br>当finally子句中没有return语句，try中的return因为有returnValue值，不会受finally的影响；</p>
-<h4 id="（2）嵌套的finally子句：">（2）嵌套的finally子句：</h4><p>（1）如果不同层次的finally子句中包含return，内层的return语句将被忽略，最外层的return才有效；<br>（2）如果一个内层的finally子句中包含return，外层还有finally子句（没有return），编译器同样会生成一个“returnValue”中间变量，保证内层的return逻辑，可见Java设计的思想在于保证“可见”逻辑的正确性；<br>（3）执行顺序是先内后外；</p>
-<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">nestedTryCatch</span><span class="params">()</span> </span>{
-    <span class="keyword">int</span> x;
-    <span class="keyword">try</span> {
-        <span class="keyword">try</span> {
-            x = <span class="number">2</span>;
-        } finally {
-            x = <span class="number">3</span>;
-            <span class="keyword">return</span> x;
-        }
-    } finally {
-        x = <span class="number">4</span>;
-        <span class="keyword">return</span> x;
-    }
-}
-</code></pre><h4 id="（3）finally子句与AutoClosable接口：">（3）finally子句与AutoClosable接口：</h4><p>JSE 7中提供了“try-with-resources”的简化形式：</p>
-<pre><code><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">tryWithResources</span>(<span class="params"></span>) throws IOException </span>{
-    <span class="keyword">try</span>(InputStream <span class="keyword">in</span> = <span class="keyword">new</span> ByteArrayInputStream(<span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">10</span>])) {
-        <span class="keyword">try</span> (Reader reader = <span class="keyword">new</span> BufferedReader(<span class="keyword">new</span> InputStreamReader(<span class="keyword">in</span>))) {
-
-        }
-    }
-}
-</code></pre><p><strong>注意：带资源的try语句也可以有自己的catch和finally，但是要在资源关闭之后执行。</strong></p>
-<h4 id="（4）finally与丢失异常：">（4）finally与丢失异常：</h4><p>情形1：finally中的新异常：</p>
-<pre><code><span class="keyword">try</span> {
-    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();
-} <span class="keyword">finally</span> {
-    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException();
-}
-</code></pre><p>情形2：finally中的return：</p>
-<pre><code><span class="keyword">try</span> {
-    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();
-} <span class="keyword">finally</span> {
-    <span class="keyword">return</span>;
-} 
-</code></pre><p>情形3：finally中没有新异常和return：</p>
-<pre><code><span class="keyword">try</span> {
-    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();
-} <span class="keyword">finally</span> {
-    <span class="keyword">int</span> x = <span class="number">3</span>;
-}
-</code></pre><h4 id="字节码分析：">字节码分析：</h4><p>首先，athrow指令是将栈顶异常引用抛出：<br>（1）情况1的字节码：</p>
-<pre><code>Code:
-  <span class="built_in">stack</span>=<span class="number">2</span>, locals=<span class="number">2</span>, args_size=<span class="number">1</span>
-     <span class="number">0</span>: <span class="keyword">new</span>           <span class="preprocessor">#<span class="number">21</span>                 <span class="comment">// class java/lang/IllegalArgumentException</span></span>
-     <span class="number">3</span>: dup
-     <span class="number">4</span>: invokespecial <span class="preprocessor">#<span class="number">22</span>                 <span class="comment">// Method java/lang/IllegalArgumentException."&lt;init&gt;":()V</span></span>
-     <span class="number">7</span>: athrow
-     <span class="number">8</span>: astore_1
-     <span class="number">9</span>: <span class="keyword">new</span>           <span class="preprocessor">#<span class="number">23</span>                 <span class="comment">// class java/lang/IllegalStateException</span></span>
-    <span class="number">12</span>: dup
-    <span class="number">13</span>: invokespecial <span class="preprocessor">#<span class="number">24</span>                 <span class="comment">// Method java/lang/IllegalStateException."&lt;init&gt;":()V</span></span>
-    <span class="number">16</span>: athrow
-  Exception table:
-     from    to  target type
-         <span class="number">0</span>     <span class="number">9</span>     <span class="number">8</span>   any
-</code></pre><p>分析：<br>从异常表中可以看到，0到9行中如果有任何的异常出现，转到8行进行处理，第8行之后就是finally之后的逻辑重新抛出了新的异常；</p>
-<p>（2）情形3字节码分析：</p>
-<pre><code>Code:
-  <span class="built_in">stack</span>=<span class="number">2</span>, locals=<span class="number">3</span>, args_size=<span class="number">1</span>
-     <span class="number">0</span>: <span class="keyword">new</span>           <span class="preprocessor">#<span class="number">21</span>                 <span class="comment">// class java/lang/IllegalArgumentException</span></span>
-     <span class="number">3</span>: dup
-     <span class="number">4</span>: invokespecial <span class="preprocessor">#<span class="number">22</span>                 <span class="comment">// Method java/lang/IllegalArgumentException."&lt;init&gt;":()V</span></span>
-     <span class="number">7</span>: athrow
-     <span class="number">8</span>: astore_1
-     <span class="number">9</span>: iconst_3
-    <span class="number">10</span>: istore_2
-    <span class="number">11</span>: aload_1
-    <span class="number">12</span>: athrow
-  Exception table:
-     from    to  target type
-         <span class="number">0</span>     <span class="number">9</span>     <span class="number">8</span>   any
-</code></pre><p>分析：异常表的逻辑和情形1是相同的，但是finally的逻辑对应的字节码将局部变量表中的异常引用取出执行了athrow；</p>
-<h3 id="因此，可以说finally的return和异常覆盖内层或者try中的return和异常">因此，可以说finally的return和异常覆盖内层或者try中的return和异常</h3><h2 id="3-_堆栈跟踪">3. 堆栈跟踪</h2><p>（1） Throwable的方法：printStackTrace和getStackTrace；<br>（2）Thread.getAllStackTraces()；</p>
-<h2 id="4-_异常使用技巧">4. 异常使用技巧</h2><p>（1）不能用异常处理代替逻辑判断，因为异常处理的性能开销较大；<br>（2）不要过分细化异常及处理；<br>（3）不要压制异常，异常要么声明，要么正确在该方法内处理；<br>（4）设计具有意义的自定义异常体系；</p>
-<p>PS：其他一些好的做法向《Efftive Java》中说的很详细。</p>
-<h2 id="5-_关于Java中的断言和日志">5. 关于Java中的断言和日志</h2><p>就我的经验来看，还是使用开源的框架中的断言（比如Spring Framework中的断言）和日志（比如Log4j）比较合适。</p>
 
       
     </div>
@@ -1055,156 +1466,6 @@ HTTP/<span class="number">1.1</span> <span class="number">101</span> Switching P
 <p>user1收到消息：我是谁</p>
 <p>user1回复：Zerohuan<br><a href="http://localhost:8080/client1?message=Zerohuan&amp;replyUserId=1" target="_blank" rel="external">http://localhost:8080/client1?message=Zerohuan&amp;replyUserId=1</a></p>
 <p>好了，控制台的log我就不一一贴了，碎觉去了。。。</p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/思考和求解/">思考和求解</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
-    <article id="post-关于Java类初始化和实例化中的2个“雷区”" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/12/02/关于Java类初始化和实例化中的2个“雷区”/" class="article-date">
-  	<time datetime="2015-12-02T05:19:32.000Z" itemprop="datePublished">2015-12-02</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/02/关于Java类初始化和实例化中的2个“雷区”/">关于Java类初始化和实例化中的2个“雷区”</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>在考虑类初始化时，我们都知道进行子类初始化时，如果父类没有初始化要先初始化子类。然而事情并没有一句话这么简单。</p>
-<p><strong>首先看看Java中初始化触发的条件：</strong><br>（1）在使用new实例化对象，访问静态数据和方法时，也就是遇到指令：new，getstatic/putstatic和invokestatic时；<br>（2）使用反射对类进行调用时；<br>（3）当初始化一个类时，父类如果没有进行初始化，先触发父类的初始化；<br>（4）执行入口main方法所在的类；<br>（5）JDK1.7动态语言支持中方法句柄所在的类，如果没有初始化触发起初始化；</p>
-<p>经过编译后生成一个<code>&lt;clinit&gt;</code>方法，类的初始化就在这个方法中进行，该方法只执行，由JVM保证这一点，并进行同步控制；</p>
-<p>其中条件（3），从方法调用的角度来看，是子类的<code>&lt;clinit&gt;</code>会在开始时递归的调用父类的<code>&lt;clinit&gt;</code>，这类似与我们在子类构造器中必须首先调用父类的构造器；</p>
-<p>但需要注意的是“触发”并不是完成初始化，这意味着有可能子类的初始化会提前于父类初始化结束，这就是“危险”的所在。</p>
-<h2 id="1-_一个类初始化的例子：">1. 一个类初始化的例子：</h2><p>这个例子我使用一个外围类包含2个有继承关系的静态成员类，因为外围类的初始化和静态成员类没有因果关系，因此这样展示是安全和方便的；<br>父类A和子类B分别包含main函数，由上面的触发条件（4）可知，通过分别调用这个两个main函数来触发不同的类初始化路径；<br>这个例子的问题在于父类包含子类的static引用并在定义处进行初始化的问题：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">WrapperClass</span> {
-    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title">A</span> {
-        <span class="keyword">static</span> {
-            System.<span class="keyword">out</span>.println(<span class="string">"类A初始化开始..."</span>);
-        }
-        <span class="comment">//父类包含子类的static引用</span>
-        <span class="keyword">private</span> <span class="keyword">static</span> B b = <span class="keyword">new</span> B();
-        <span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">int</span> aInt = <span class="number">9</span>;
-
-        <span class="keyword">static</span> {
-            System.<span class="keyword">out</span>.println(<span class="string">"类A初始化结束..."</span>);
-        }
-
-        <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
-
-        }
-    }
-
-    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title">B</span> <span class="title">extends</span> <span class="title">A</span> {
-        <span class="keyword">static</span> {
-            System.<span class="keyword">out</span>.println(<span class="string">"类B初始化开始..."</span>);
-        }
-        <span class="comment">//子类的域依赖于父类的域</span>
-        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> bInt = <span class="number">9</span> + A.aInt;
-
-        <span class="function"><span class="keyword">public</span> <span class="title">B</span>(<span class="params"></span>) </span>{
-            <span class="comment">//构造器依赖类的static域</span>
-            System.<span class="keyword">out</span>.println(<span class="string">"类B的构造器调用 "</span> + <span class="string">"bInt的值"</span> + bInt);
-        }
-
-        <span class="keyword">static</span> {
-            System.<span class="keyword">out</span>.println(<span class="string">"类B初始化结束... "</span> + <span class="string">"aInt的值："</span> + bInt);
-        }
-
-        <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
-
-        }
-    }
-}
-</code></pre><p>情景一：入口为类B的main函数时输出结果：</p>
-<pre><code>/<span class="keyword">*</span><span class="keyword">*</span>
- <span class="keyword">*</span> 类A初始化开始...
- <span class="keyword">*</span> 类B的构造器调用 bInt的值0
- <span class="keyword">*</span> 类A初始化结束...
- <span class="keyword">*</span> 类B初始化开始...
- <span class="keyword">*</span> 类B初始化结束... aInt的值：18
- <span class="keyword">*</span>/
-</code></pre><p><strong>分析</strong>：可以看到，main函数的调用触发了类B的初始化，进入类B的<code>&lt;clinit&gt;</code>方法，类A作为其父类先开始初始化进入了A的<code>&lt;clinit&gt;</code>方法，其中有一个语句<code>new B();</code>这时会进行B的实例化，这是已经在类B的<code>&lt;clinit&gt;</code>中了，main线程已经获得锁开始执行类B的<code>&lt;clinit&gt;</code>，我们开头说过JVM会保证一个类的初始化方法只被执行一次，JVM收到new指令后不会再进入类B的<code>&lt;clinit&gt;</code>方法而是直接进行实例化，但是此时类B还没有完成类初始化，所以可以看到bInt的值为0（这个0是类加载中准备阶段分配方法区内存后进行的置零初始化）；<br>因此，可以得出，再父类中包含子类类型的static域并进行赋值动作，会可能导致子类实例化在类初始化完成前进行；</p>
-<p>情景二：入口为类A的main函数时输出结果：</p>
-<pre><code>/<span class="keyword">*</span><span class="keyword">*</span>
- <span class="keyword">*</span> 类A初始化开始...
- <span class="keyword">*</span> 类B初始化开始...
- <span class="keyword">*</span> 类B初始化结束... aInt的值：9
- <span class="keyword">*</span> 类B的构造器调用 bInt的值9
- <span class="keyword">*</span> 类A初始化结束...
- <span class="keyword">*</span>/
-</code></pre><p><strong>分析</strong>：经过情景一的分析，我们知道，由类B的初始化触发类A的初始化，会导致类A中类变量b的实例化在类B初始化完成前进行，那如果先初始化类A是不是就可以在类变量实例化的时候先触发类B的初始化，从而使得初始化在实例化前呢？答案是肯定的，但是这仍然有问题。<br>根据输出，可以看到，类B的初始化在类A的初始化完成前进行了，这导致了像类变量aInt的变量在类B初始化完成后才进行初始化，所以类B中的域bInt获取到的aInt的值是“0”，而不是我们预期的“18”；</p>
-<h2 id="结论：">结论：</h2><p>综上，可以得出，在父类中包含子类类型的类变量，并在定义出进行实例化是非常危险的行为，具体情况可能不会向例子一样直白，调用方法在定义处赋值一样隐含着危险，即使要包含子类类型的static域，也应该通过static方法进行赋值，因为JVM可以保证在static方法调用前完成所有的初始化动作（当然这种保证也是你不应该包含static B b = new B();这样的初始化行为）；</p>
-<h1 id="2-_一个实例化的例子：">2. 一个实例化的例子：</h1><p>首先需要知道对象创建的过程：<br>（1）遇到new指令，检查类是否完成了加载，验证，准备，解析，初始化（解析过程就是符号引用解析成直接引用，比如方法名就是一个符号引用，可以在初始化完成后使用这个符号引用的时候进行，正是为了支持动态绑定），没有完成先进行这些过程；<br>（2）分配内存，采用空闲列表或者指针碰撞的方法，并将新分配的内存“置零”，因此所有的实例变量在此环节都进行了一次默认初始化为0（引用为null）的过程；<br>（3）执行<code>&lt;init&gt;</code>方法，包括检查调用父类的<code>&lt;init&gt;</code>方法（构造器），实例变量定义出的赋值动作，实例化器顺序执行，最后调用构造器中的动作。</p>
-<p>这个例子可能更为大家所熟知，也就是它违反了“不要在构造器，clone方法和readObject方法中调用可被覆盖的方法”。其原因就在于Java中的多态，也就是动态绑定。<br>父类A的构造器中包含一个protected方法，类B是其子类。</p>
-<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WrongInstantiation</span> </span>{
-    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>{
-        <span class="function"><span class="keyword">public</span> <span class="title">A</span><span class="params">()</span> </span>{
-            doSomething();
-        }
-
-    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span> </span>{
-        System.out.println(<span class="string">"A's doSomething"</span>);
-    }
-}
-
-<span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">B</span> <span class="keyword">extends</span> <span class="title">A</span> </span>{
-    <span class="keyword">private</span> <span class="keyword">int</span> bInt = <span class="number">9</span>;
-
-    <span class="annotation">@Override</span>
-    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span> </span>{
-        System.out.println(<span class="string">"B's doSomething, bInt: "</span> + bInt);
-    }
-}
-
-<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
-    B b = <span class="keyword">new</span> B();
-}
-</code></pre><p>}<br>输出结果：</p>
-<pre><code>/<span class="keyword">*</span><span class="keyword">*</span>
- <span class="keyword">*</span> B's doSomething, bInt: 0
- <span class="keyword">*</span>/
-</code></pre><p><strong>分析</strong>：首先需要知道，在没有显示提供构造器时Java编译器会生成默认构造器，并在开始处调用父类的构造器，因此类B的构造器开始会先调用类A的构造器。<br>类A中调用了protected方法doSomething，从输出结果中我们看到实际上调用的是子类的方法实现，而此时子类的实例化还未开始，因此bInt并没有如“预期”那样是9,而是0；</p>
-<p>这就是由于动态绑定，doSomething是一个protected方法，因此它是通过invokevirtual指令调用的，该指令根据对象实例的类型找到对应的方法实现（这里就是B的实例对象，对应方法就是类B的方法实现）执行，故而有此结果。</p>
-<h2 id="结论">结论</h2><p>正如前面说的“不要在构造器，clone方法和readObject方法中调用可被覆盖的方法”；<br>PS：在构造器中调用可被覆盖的方法的另一个风险是造成对象在构造过程中“逸出”，导致线程不安全；</p>
 
       
     </div>
@@ -1981,125 +2242,6 @@ prepareBeanFactory(beanFactory);</span>
       
 	<div class="article-tag tagcloud">
 		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Spring/">Spring</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
-    <article id="post-Java中的final参数-变量-匿名内部类" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/11/29/Java中的final参数-变量-匿名内部类/" class="article-date">
-  	<time datetime="2015-11-29T13:50:42.000Z" itemprop="datePublished">2015-11-29</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/11/29/Java中的final参数-变量-匿名内部类/">Java中的final参数/变量+匿名内部类的字节码分析，以及Java 8中的使用</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>在Java 8之前一个常识就是如果要在方法中定义一个匿名内部类并使用该方法内的局部变量（包括参数），需要使用final关键字修饰。网上也有很多对这种机制的解释和说明，但是大部分都是一种抽象的认识。如果能够分析一下字节码，这个问题其实很清楚。</p>
-<p>显然的一个事实是局部变量（称为变量a）是保存在栈帧的局部变量表中的（引用或基本类型），这里把定义匿名内部类的方法称为方法A，匿名内部类的中使用这个局部变量的方法（称为方法B）经过编译后保存在class文件的方法表中，方法体保存在Code属性中。运行时经过类加载，验证存储到方法区中。在执行匿名内部类中，JVM创建的是方法B的栈帧。它显然和方法A的栈帧没有直接的关系，甚至方法B执行时，方法A的栈帧已经被回收了，那JVM如何保证方法B能够正确的使用变量a指向的值呢？</p>
-<p>下面就通过查看字节码来看看Java编译器和JVM是如何做到这一点的，基于Oracle JDK8编译；</p>
-<p>#1. 字节码分析：</p>
-<p>外围类：FinalParameter<br>定义一个派生自A的匿名内部类，其中使用方法testFinal的局部变量a和参数bytes；</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">FinalParameter</span> </span>{
-    <span class="class"><span class="keyword">interface</span> <span class="title">A</span> </span>{
-        <span class="function"><span class="keyword">void</span> <span class="title">test</span><span class="params">()</span></span>;
-    }
-    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">testFinal</span><span class="params">(<span class="keyword">final</span> <span class="keyword">byte</span>[] bytes)</span> </span>{
-        <span class="keyword">final</span> <span class="keyword">int</span> a = <span class="number">10</span>;
-        <span class="keyword">new</span> A() {
-            <span class="annotation">@Override</span>
-            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test</span><span class="params">()</span> </span>{
-                System.out.println(a + <span class="string">" "</span> + bytes.length);
-            }
-        };
-    }
-}
-</code></pre><p>根据内部类命名规则我们知道这个匿名内部类的类名是FinalParameter$1；<br>使用javap -verbose FinalParameter\$1，查看该类的字节码，Unix环境下注意不要忘了转义”\$”。<br>我截取了字段表部分：</p>
-<pre><code>final int val<span class="variable">$a</span>;
-  descriptor: I
-  flags: ACC_FINAL, ACC_SYNTHETIC
-
-final byte[] val<span class="variable">$bytes</span>;
-  descriptor: [B
-  flags: ACC_FINAL, ACC_SYNTHETIC
-
-final com.jvm.showByteCode.FinalParameter this<span class="variable">$0</span>;
-  descriptor: Lcom/jvm/showByteCode/FinalParameter;
-  flags: ACC_FINAL, ACC_SYNTHETIC
-</code></pre><p>可以看到编译器为我们添加了3个字段，分别是：<br><strong>val\$a，val\$bytes，this\$0；</strong><br>其中this\$0是指向外围类对象实例的引用，而前两个正是从外围类方法局部变量bytes和a生成而来的，并且它们是final的。<br>再来看看FinalParameter\$1类的<init>()方法：<br>描述符：</init></p>
-<pre><code><span class="label">descriptor:</span> (Lcom/jvm/showByteCode/FinalParameter<span class="comment">;I[B)V</span>
-</code></pre><p><strong>Code属性（方法实现）</strong>：</p>
-<pre><code>Code:
-      <span class="built_in">stack</span>=<span class="number">2</span>, locals=<span class="number">4</span>, args_size=<span class="number">4</span>
-         <span class="number">0</span>: aload_0
-         <span class="number">1</span>: aload_1
-         <span class="number">2</span>: putfield      <span class="preprocessor">#<span class="number">1</span>                  <span class="comment">// Field this$0:Lcom/jvm/showByteCode/FinalParameter;</span></span>
-         <span class="number">5</span>: aload_0
-         <span class="number">6</span>: iload_2
-         <span class="number">7</span>: putfield      <span class="preprocessor">#<span class="number">2</span>                  <span class="comment">// Field val$a:I</span></span>
-        <span class="number">10</span>: aload_0
-        <span class="number">11</span>: aload_3
-        <span class="number">12</span>: putfield      <span class="preprocessor">#<span class="number">3</span>                  <span class="comment">// Field val$bytes:[B</span></span>
-        <span class="number">15</span>: aload_0
-        <span class="number">16</span>: invokespecial <span class="preprocessor">#<span class="number">4</span>                  <span class="comment">// Method java/lang/Object."&lt;init&gt;":()V</span></span>
-        <span class="number">19</span>: <span class="keyword">return</span>
-</code></pre><p>外围类中testFinal方法中调用匿名内部类的部分：</p>
-<pre><code><span class="number">10</span>: invokespecial <span class="preprocessor">#<span class="number">3</span>                  <span class="comment">// Method com/jvm/showByteCode/FinalParameter$1."&lt;init&gt;":(Lcom/jvm/showByteCode/FinalParameter;I[B)V</span></span>
-</code></pre><p>这里我们就可以清楚看到以下事实：<br><strong>（1）<init>方法有4个参数，其中第一个是this，另外三个分别类型分别FinalParameter，int，byte数组；<br>（2）它们参数被赋值给了对应的final字段（this$0，val$a，val$bytes）；<br>（3）外围类将当前实例对象引用，a数值，bytes数组引用传递给了FinalParameter$1的<init>()方法；</init></init></strong></p>
-<p>因此，我们可以知道，在匿名内部类中使用外围类方法的局部变量，实际上是使用对应值（引用）的final成员变量。<br>内部类中使用的是该局部变量的<strong>副本</strong>，因此如果要在语义上保证<strong>局部变量和副本的一致性</strong>，就应当使<strong>用final来保证该局部变量不变</strong>。</p>
-<p>#2. Java 8中“改进”：</p>
-<p>下段代码通过了基于JDK8的编译，但是如果将注释去掉，仍然不能通过编译，看来只是在写法上“省力”了。<br>也就是说，Java中对于内部类使用局部变量的设计思想还要要保证这两个变量（一是局部变量，而是内部类的成员变量）一致性；<br>如果你不想保证这样的一致性，我觉得可以有以下方案：<br><strong>（1）可以创建一个抽象类，添加一个构造器，通过构造器传入局部变量的值；<br>（2）编写一个一个工厂方法（或工厂类），局部变量传入工厂方法（工厂方法的对应参数是final的）返回一个内部类实例；</strong><br>这样你就不用给局部变量设置为final；<br>因此，Java设计团队的设计思想是程序员在内部类中使用了局部变量，这种情况应该默认为需要保持两个变量的一致性。</p>
-<pre><code><span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">testFinal</span><span class="params">(<span class="keyword">byte</span>[] bytes)</span> </span>{
-        <span class="keyword">int</span> a = <span class="number">10</span>;
-        <span class="keyword">new</span> A() {
-            <span class="annotation">@Override</span>
-            <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">test</span><span class="params">()</span> </span>{
-                System.out.println(a + <span class="string">" "</span> + bytes.length);
-            }
-        };
-<span class="comment">//        a = 11;</span>
-<span class="comment">//        bytes = null;</span>
-    }
-</code></pre>
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li></ul>
 	</div>
 
       

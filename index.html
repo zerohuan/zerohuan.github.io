@@ -114,7 +114,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/JVM/" style="font-size: 12.5px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java并发/" style="font-size: 15px;">Java并发</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12.5px;">TCP/IP</a> <a href="/tags/思考和求解/" style="font-size: 17.5px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
+						<a href="/tags/JVM/" style="font-size: 12px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 14px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java并发/" style="font-size: 16px;">Java并发</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12px;">TCP/IP</a> <a href="/tags/思考和求解/" style="font-size: 18px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
 					</div>
 				</section>
 				
@@ -731,6 +731,113 @@ boolean <span class="keyword">red</span>;
 <h1 id="1-_ConcurrentHashMap">1. ConcurrentHashMap</h1><h2 id="1-1_要点">1.1 要点</h2><p>分段锁，弱一致性迭代器（支持并发修改）；size/isEmpty也具有非实时性<br>不支持独占加锁访问；<br>红黑树；</p>
 <h2 id="1-2_结构和操作">1.2 结构和操作</h2><p>ConcurrentHashMap的一些基本功能和HashMap实现基本相同，HashMap也已经总结过了，这里重点分析并发相关的控制；<br><a href="http://blog.zerohuan.com/2015/12/12/Java%208%E9%9B%86%E5%90%88%E6%A1%86%E6%9E%B6%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94HashMap/">Java 8集合框架源码学习——HashMap </a></p>
 <h3 id="重要的常量值">重要的常量值</h3>
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java并发/">Java并发</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-Java并发（七）——内存模型" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/11/Java并发（七）——内存模型/" class="article-date">
+  	<time datetime="2015-12-11T06:48:41.000Z" itemprop="datePublished">2015-12-11</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/11/Java并发（七）——内存模型/">Java并发（七）——内存模型</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>心得：<br>内存模型的就是为了在现代计算机平台中保证程序可以正确性的执行，但是不同的平台实现是不同的，比如重排序，x86中只会对Store-Load可能重排序，ia64可以在不存在数据依赖性的操作之间重排序。JMM就是为了屏蔽底层的细节，在不同平台JVM采用不同的实现，保证正确性的基础上，追求效率。<br>在理解了锁语义，volatile语义，final语义在内存模型中的定义后，对DCL的发展和演进有了更清晰的认识。</p>
+<p>学习参考资料：<br>（1）《Java并发编程实战》；<br>（2）《深入理解Java虚拟机》；<br>（3）jls8；<br>（4）jvms8；<br>（5）<a href="http://www.infoq.com/cn/minibooks/java_memory_model" target="_blank" rel="external">深入理解Java内存模型</a></p>
+<h1 id="1-_为什么需要Java内存模型">1. 为什么需要Java内存模型</h1><h2 id="编译/运行环境对可见性/原子性的影响：">编译/运行环境对可见性/原子性的影响：</h2><p>（1）编译器中生成的指令顺序，可以与源代码中的顺序不同；<br>（2）编译器可能把变量保存在寄存器而不是内存中；<br>（3）处理器可以采用乱序或并行等方式来执行指令；<br>（4）缓存可能会改变将写入变量提交到主内存的次序；<br>（5）保存在处理器本地缓存中的值，对其他处理器是不可见的；</p>
+<blockquote>
+<p>缓存的存在就是为了减少CPU的停顿，减少IO的次数，减少CPU等待I/O的时间。通过批处理的方式刷新写缓冲区，以及合并写缓冲区对同一内存地址的多次写。</p>
+<p>重排序，多核（并行性提升），CPU时钟频率的提升，多级缓存等等，编译器也进行指令重排，全局寄存器分配算法等可以大大提升计算性能；但这些可能会影响程序的正确性，那么必须要要保证的正确性的执行次序，JMM正是规定了JVM必须遵循的一组最小保证。</p>
+<p><strong>“次序”</strong>的正确是一个关键问题；</p>
+<p>并发编程需要处理两个关键问题是：线程之间如何<strong>通信</strong>及线程之间如何<strong>同步</strong>；命令式编程中，线程之间的通信机制有两种：<strong>共享内存</strong>和<strong>消息传递</strong>；</p>
+</blockquote>
+<h3 id="平台的内存模型">平台的内存模型</h3><p>提高CPU主频来提升计算性能出现了瓶颈，多核处理器是一个新的主要方向（也是是Amadhl定律为什么很重要的原因）；</p>
+<p>在多核处理器环境下，每个处理器有自己的缓存，定期与主内存进行协调。<strong>高速缓存</strong>的使用为了解决处理器速度和内存读取速度的矛盾（存储器越小，速度越快，价格越高。高速缓存的一个核心原理就是<strong>局部性原理</strong>，这也是为什么这种小块缓存方案可行的原因）。<br>当然也就需要解决<strong>缓存一致性</strong>的问题，比如在<strong>操作系统层面</strong>，有MESI，MSI等等协议，来保证程序执行在多核处理器环境下的正确性。<br>但Java是一款“一次编译到处运行”的语言，那JMM（Java内存模型）就是JVM需要保证的模型，屏蔽底层OS的差异（JVM规范对JMM的定义委托给了Java语言规范）。</p>
+<h3 id="重排序">重排序</h3><p>这里可以将：<br>（1）处理器的乱序执行，CPU将不存在数据依赖性的指令重叠执行（到流水线）；<br>（2）处理器并行执行，由于缓存和读/写缓冲区导致的行为上乱序；<br>（3）编译器的指令重排序；<br>使得为同步的程序的执行顺序的推断变“乱”的这些原因，统称为重排序；</p>
+<p>不同处理器平台上允许的重排序类型列表：<br>|    平台      | load-load|load-store|store-store|store-load |数据依赖  |<br>|:——-:|:——–:|:——–:|:———:|:———:|:——-:|<br>|sparc-TSO| N        |N            |N            |Y            |N          |<br>|x86      | N        |N            |N            |Y            |N          |<br>|ia64      | Y        |Y            |Y            |Y            |N          |<br>|PowerPC  | Y        |Y            |Y            |Y            |N          |<br>注：x86包括x64和AMD64；</p>
+<p><strong>内存屏障的类型</strong>：<br>（1）<strong>LoadLoad</strong>：load1; LoadLoad; load2;<br>（2）<strong>StoreStore</strong> ；<br>（3）<strong>LoadStore</strong>；<br>（4）<strong>StoreLoad</strong>：使得该屏障之前的所有内存访问指令（装载和存储）完成后，才执行屏障之后的内存访问指令；<br>StoreLoad，写读屏障是“全能屏障”，大多数处理器平台都支持这一屏障。该屏障的开销较大，因为要将缓存全部刷新到主存（LoadLoad和LoadStore只要保证顺序就好了）；</p>
+<h4 id="数据依赖性和as-if-serial语义（单线程内的正确性）">数据依赖性和as-if-serial语义（单线程内的正确性）</h4><p><strong>单个处理器</strong>指令执行序列中，如果两个操作访问同一个变量，并且有一个操作是写操作，那就存在数据依赖性，具有编译器和处理器不会改变存在数据依赖关系的两个操作的执行顺序。<br>注意是单个处理器，不同处理器并行就需要另外的保证了。</p>
+<p><strong>as-if-serial语义</strong>：<br>不管怎么重排序，（单线程）程序的执行结果不能被改变。as-if-serial语义可以保证单线程程序执行的正确性，但是并行情形下，这个是不够的。</p>
+<h4 id="内存屏障（内存可见性的“底层”实现手段）">内存屏障（内存可见性的“底层”实现手段）</h4><p>内存屏障</p>
+<h1 id="2-_Java内存模型的内容">2. Java内存模型的内容</h1><p>JMM决定一个线程对共享变量的写入何时对另一个线程可见。定义了线程（工作内存或本地内存）和主内存之间的抽象关系（当然这只是一种<strong>抽象</strong>的定义）。</p>
+<p>每个线程有自己的私有本地内存，存储主内存中共享变量的副本；这里的变量包括实例域，静态域，数组元素。<br>线程之间的内存互相不可见，只能通过主内存来传递。JMM通过定义<strong>缓存一致性协议</strong>来保证必要的<strong>可见性</strong>和<strong>原子性</strong>。</p>
+<h4 id="重排序和程序顺序规则（Happens-Before）">重排序和程序顺序规则（Happens-Before）</h4><p>上面说了as-if-serial可以保证在单线程环境下的正确性，但对于java程序来说这是远远不够的。</p>
+<p>JMM规定了一种偏序关系，也就是Happens-Before（具有反对称，自反，传递属性）；两个操作之间不存在Happends-Before关系，JVM可以进行任意地重排序。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a = <span class="number">1</span>; <span class="comment">//操作A</span></span><br><span class="line"><span class="keyword">int</span> b = <span class="number">2</span>; <span class="comment">//操作B</span></span><br><span class="line"><span class="keyword">int</span> c = a + b; <span class="comment">//操作C</span></span><br></pre></td></tr></table></figure></p>
+<p>操作A，C之间，B，C之间存在Happens-Before关系，不能进行重排序（无论是否在同一个线程）；<br>操作A，B之间不存在Happens-Before关系，因此可以重排序，并行等；</p>
+<p><strong>Happens-Before的规则有（8个）：</strong><br>（1）<strong>程序顺序规则</strong>：在一个线程内，书写在前面的操作先行发生于书写在后面的操作（主要考虑控制流顺序）；<br>（2）<strong>监视器锁规则</strong>：内置锁上的解锁操作必须先于发生于后面在同一个锁上的加锁操作；（之前我们总结过显式锁和内置锁具有相同的内存语义，后面是指绝对<strong>时间上</strong>先后）<br>（3）<strong>volatile变量规则</strong>：对volatile变量的写入操作必须先行发生于后面对该变量的读入操作（原子变量和volatile变量在读写操作上有相同的语义，后面同样是指时间上先后）；也就是说，如果在时间上，写操作发生在先面，那它的结果一定要被后面发生的读操作看到，无论是否在同一线程内，这就是可见性保证。<br>（4）<strong>线程启动规则</strong>：线程上对Thread.start()必须先行发生于对该线程中任务操作之前；<br>（5）<strong>线程终止规则</strong>：线程中所有操作必须先行发生于对此线程的终止检测；也就是说Thread.join()和Thread.alive()不可能在线程操作结束之前分别返回和返回true；<br>（6）<strong>线程中断规则</strong>：线程interrupt()方法的调用先行发生于被中断线程代码检测到中断事件的发生，保证Thread.interrupted()和Thread.currentThread().isInterruted()方法的正确性；<br>（7）<strong>终结器规则</strong>：对象的构造函数必须在启动它的终结器（finalize()方法）之前执行完成；<br>（8）<strong>传递性</strong>；</p>
+<blockquote>
+<p>as-if-serial语义保证了单线程内的正确性，Happens-Before更包含了并行环境下的正确性。</p>
+</blockquote>
+<h3 id="JMM和顺序一致性内存模型">JMM和顺序一致性内存模型</h3><p>首先说明JMM并不保证顺序一致性，所谓的顺序一致性内存模型保证一个线程的所有操作必须按照程序的顺序来执行；所有线程都只能看到一个单一的操作执行顺序，每个操作都必须原子执行且立刻对所有线程可见。</p>
+<p>所以顺序一致性内存模型是一个很严格的规定，在每个线程存在缓存的情况下保证每个操作对所有线程立即可见需要很大的代价。</p>
+<p>而JMM并不像这样严格，根据上面的8个Happens-Before，我们可以知道，在保证正确同步时，临界区是可以重排序的（当然要保证as-if-serial语义）：<br><img src="http://cdn2.infoqstatic.com/statics_s2_20160105-0313u5/resource/articles/java-memory-model-3/zh/resources/4.png" alt=""><br>（图片来源于info）</p>
+<blockquote>
+<p>所以JMM的目的在于保证程序执行正确性下，可以尽可能的利用并行，重排序等优化手段。</p>
+</blockquote>
+<p>对于未同步程序的执行特性，JMM只提供最小安全性：线程执行时读取到的值，要么是之前某个线程写入的值，要么是默认值（这也是为啥分配对象内存要清零初始化了）。</p>
+<p>虽然JMM不支持顺序一致性模型，但通过对比也可以更好的理解JMM。</p>
+<h3 id="long和double操作规则">long和double操作规则</h3><p>JMM要求<strong>lock</strong>，<strong>unlock</strong>，<strong>read</strong>，<strong>write</strong>，<strong>assign</strong>，<strong>use</strong>，<strong>load</strong>，<strong>store</strong>这8个操作具有原子性，对于64位的long和double来说，如果没有被volatile修饰，那可以鼓励但不保证原子性（可以划分为两个32位操作）。</p>
+<p>这样规定是处于对不同OS实现考虑的，对于32位处理器，总线宽度是32位，64位数据的原子性读写开销较大。因此如果分成2个32位分配到不同的总线事务（单个总线事务中内存读写具有原子性），那就不再具有原子性。<br><img src="http://cdn2.infoqstatic.com/statics_s2_20160105-0313u5/resource/articles/java-memory-model-3/zh/resources/6.png" alt=""></p>
+<blockquote>
+<p>但是大部分商业JVM实现都保证了long和double的原子性。</p>
+</blockquote>
+<h3 id="volatile语义">volatile语义</h3><p><strong>写-读内存语义</strong>：<br><strong>写语义：</strong><br>当写一个volatile变量时，JMM会把该线程对应的本地内存中的共享变量刷新到主内存。</p>
+<p><strong>读语义：</strong><br>主存更新后，当读一个volatile变量时，JMM会把该线程对应的本地内存置为无效，线程接下来将从主内存中读取共享变量。</p>
+<p><strong>JMM volatile语义实现和作用</strong>：<br>（1）<strong>保证可见性</strong>（之前的总结系列中也说过依赖当前值或者和其他变量组成不变性条件需要同步控制保证原子性）；<br>（2）<strong>禁止部分重排序</strong><br>|    是否能重排序    |    第二个操作    |            |            |<br>| :———— | :————:| :——–:|:———:|<br>|    第一个操作    |    普通读/写        |volatile读    | volatile写    |<br>|    普通读/写         |                |            |    NO        |<br>|    volatile读    |    NO            |    NO        |    NO        |<br>|    volatile写    |                 |    NO        |    NO        |</p>
+<p><strong>volatile和内存屏障：</strong><br>编译器在生成字节码时，JMM在指令序列中插入内存屏障来禁止特定类型的处理器重排序：<br>（1）在volatile变量写之前，插入一个StoreStore，之后插入一个StoreLoad；<br>（2）在volatile变量读之前，插入一个LoadLoad和LoadStore；<br>这是一种严格的保守规定，不同的处理器平台可以根据自己的特点进行设计，只要保证语义正确性就可以：<br>比如x86只规定在写操作之后插入一个StoreLoad就可以了，因为x86中只有Store-Load前后指令才可以重排序，所以其他3个Barrier实际没有必要。</p>
+<p>还有一个需要注意地方：如果写操作之后直接是return指令，也要保证插入一个StoreLoad，因为并不能确定之后的语句是什么；</p>
+<p>PS：<br>（1）JSR-133之前的内存模型并不禁止普通变量的读写和volatile变量之间的重排序，因此JDK1.5之前的双检锁是有问题的。JSR-133将volatile的内存可见性语义“升级”的和监视器锁一样，解决这个问题，但是volatile是保证单个变量，而后者是整个临界区。<br>（2）不同的处理器平台实现volatile语义的具体方式不一样，比如IA-32处理器和Intel 64处理器通过MESI（修改，独占，共享，失效）保证对volatile的写入刷新到主内存，其他处理器通过嗅探到更新使得自己的对应缓存行失效，这样保证下一次读取的时候从主存中读取新的值。</p>
+<p><strong>volatile语义和双检锁：</strong><br>之所以要使用双检锁就是为了减少同步的开销，提高效率，但是这要求检测到<code>helper != null</code> 时对象处于一致的状态。</p>
+<p>PS：当前比较好的做法是使用枚举或者静态内部类的方式实现，随着JDK1.6以来对synchronized的优化，这种简单判断语句同步与否没有那么耸人听闻，不过追求“最优”总是一件有意义的事。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Foo</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> Helper helper;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> Helper <span class="title">getHelper</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Helper result = helper;</span><br><span class="line">        <span class="keyword">if</span> (result == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">synchronized</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">                result = helper;</span><br><span class="line">                <span class="keyword">if</span> (result == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    helper = result = <span class="keyword">new</span> Helper();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// other functions and members...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在JDK 1.5之前会有问题，前面说过JDK1.5之前volatile语义和普通变量读写之间可以被重排序，因此<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">helper = result = <span class="keyword">new</span> Helper();</span><br></pre></td></tr></table></figure></p>
+<p>这里构造器中的读写操作可能逸出到构造函数返回对象引用之后的，这样另一个线程判断到<code>helper != null</code>时，对象可能存在不一致的状态中，而JSR-133增强了volatile的语义，解决这个问题。</p>
+<p>PS：这里使用一个本地变量result是为了减少volatile的访问，根据《Effective Java》（第2版）的说法，这样可以提高25%的效率。</p>
+<h3 id="final语义">final语义</h3><p><strong>final域与重排序规则</strong>：<br>（1）构造函数内对一个final域的写入，与随后把个被构造的引用赋给一个引用变量之间不能重排序；<br>在<strong>写入final指令</strong>和<strong>构造函数结束</strong>之间插入一个<strong>StoreStore</strong>屏障，防止写入final域逸出到构造函数之外，保证其他线程得到对象引用的时候，final域一定写入过了；<br>（2）初次读入一个包含final域的的对象引用和初次读入这个被包含的final域之间，不能重排序；<br>在<strong>读取final域之前</strong>插入一个<strong>LoadLoad</strong>屏障，这样可以保证获得一个非null的对象引用时，结合规则（1）已经初始化完成，在读取final域一定是正确的；<br>（3）如果final域是引用类型，构造函数内对final引用对象的成员域的写入和被构造对象的引用赋值给一个变量的，这两个操作之间不能重排序；</p>
+<p><strong>final语义与双检锁：</strong><br>基于JSR-133对final语义的加强，可以通过下面的方式实现安全的双检锁：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FinalWrapper</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> T value;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">FinalWrapper</span><span class="params">(T value)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.value = value;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Foo</span> </span>&#123;</span><br><span class="line">   <span class="keyword">private</span> FinalWrapper&lt;Helper&gt; helperWrapper;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">public</span> Helper <span class="title">getHelper</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      FinalWrapper&lt;Helper&gt; wrapper = helperWrapper;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span> (wrapper == <span class="keyword">null</span>) &#123;</span><br><span class="line">          <span class="keyword">synchronized</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">              <span class="keyword">if</span> (helperWrapper == <span class="keyword">null</span>) &#123;</span><br><span class="line">                  helperWrapper = <span class="keyword">new</span> FinalWrapper&lt;Helper&gt;(<span class="keyword">new</span> Helper());</span><br><span class="line">              &#125;</span><br><span class="line">              wrapper = helperWrapper;</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">return</span> wrapper.value;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>因为对构造器中对final域写不能“逸出”构造器，所以当<code>wrapper</code>不为null时，helperWrapper引用的对象已经被完成了正确的初始化了，所以不会在判断<code>wapper != null</code>时对象处于不一致的状态；</p>
+
       
     </div>
     
@@ -1606,124 +1713,6 @@ E elementData(<span class="keyword">int</span> <span class="keyword">index</span
     <div class="article-info article-info-index">
       
       
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
-    <article id="post-final变量+匿名内部类的字节码分析，以及Java 8中的使用" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/12/09/final变量+匿名内部类的字节码分析，以及Java 8中的使用/" class="article-date">
-  	<time datetime="2015-12-09T08:38:24.000Z" itemprop="datePublished">2015-12-09</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/09/final变量+匿名内部类的字节码分析，以及Java 8中的使用/">Java中的final参数/变量+匿名内部类的字节码分析，以及Java 8中的使用</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>在Java 8之前一个常识就是如果要在方法中定义一个匿名内部类并使用该方法内的局部变量（包括参数），需要使用final关键字修饰。网上也有很多对这种机制的解释和说明，但是大部分都是一种抽象的认识。如果能够分析一下字节码，这个问题其实很清楚。</p>
-<p>显然的一个事实是局部变量（称为变量a）是保存在栈帧的局部变量表中的（引用或基本类型），这里把定义匿名内部类的方法称为方法A，匿名内部类的中使用这个局部变量的方法（称为方法B）经过编译后保存在class文件的方法表中，方法体保存在Code属性中。运行时经过类加载，验证存储到方法区中。在执行匿名内部类中，JVM创建的是方法B的栈帧。它显然和方法A的栈帧没有直接的关系，甚至方法B执行时，方法A的栈帧已经被回收了，那JVM如何保证方法B能够正确的使用变量a指向的值呢？</p>
-<p>下面就通过查看字节码来看看Java编译器和JVM是如何做到这一点的，基于Oracle JDK8编译；</p>
-<p>##1. 字节码分析：</p>
-<p>外围类：FinalParameter<br>定义一个派生自A的匿名内部类，其中使用方法testFinal的局部变量a和参数bytes；</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">FinalParameter</span> </span>{
-    <span class="class"><span class="keyword">interface</span> <span class="title">A</span> </span>{
-        <span class="function"><span class="keyword">void</span> <span class="title">test</span><span class="params">()</span></span>;
-    }
-    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">testFinal</span><span class="params">(<span class="keyword">final</span> <span class="keyword">byte</span>[] bytes)</span> </span>{
-        <span class="keyword">final</span> <span class="keyword">int</span> a = <span class="number">10</span>;
-        <span class="keyword">new</span> A() {
-            <span class="annotation">@Override</span>
-            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test</span><span class="params">()</span> </span>{
-                System.out.println(a + <span class="string">" "</span> + bytes.length);
-            }
-        };
-    }
-}
-</code></pre><p>根据内部类命名规则我们知道这个匿名内部类的类名是FinalParameter\$1；<br>使用javap -verbose FinalParameter\$1，查看该类的字节码，Unix环境下注意不要忘了转义”\$”。<br>我截取了字段表部分：</p>
-<pre><code>final int val<span class="variable">$a</span>;
-  descriptor: I
-  flags: ACC_FINAL, ACC_SYNTHETIC
-
-final byte[] val<span class="variable">$bytes</span>;
-  descriptor: [B
-  flags: ACC_FINAL, ACC_SYNTHETIC
-
-final com.jvm.showByteCode.FinalParameter this<span class="variable">$0</span>;
-  descriptor: Lcom/jvm/showByteCode/FinalParameter;
-  flags: ACC_FINAL, ACC_SYNTHETIC
-</code></pre><p>可以看到编译器为我们添加了3个字段，分别是：<br><code>val$a，val$bytes，this$0</code>；<br>其中<code>this$0</code>是指向外围类对象实例的引用，而前两个正是从外围类方法局部变量bytes和a生成而来的，并且它们是final的。<br>再来看看<code>FinalParameter$1</code>类的<code>&lt;init&gt;()</code>方法：<br>描述符：</p>
-<pre><code><span class="label">descriptor:</span> (Lcom/jvm/showByteCode/FinalParameter<span class="comment">;I[B)V</span>
-</code></pre><p>Code属性（方法实现）：</p>
-<pre><code>Code:
-      <span class="built_in">stack</span>=<span class="number">2</span>, locals=<span class="number">4</span>, args_size=<span class="number">4</span>
-         <span class="number">0</span>: aload_0
-         <span class="number">1</span>: aload_1
-         <span class="number">2</span>: putfield      <span class="preprocessor">#<span class="number">1</span>                  <span class="comment">// Field this$0:Lcom/jvm/showByteCode/FinalParameter;</span></span>
-         <span class="number">5</span>: aload_0
-         <span class="number">6</span>: iload_2
-         <span class="number">7</span>: putfield      <span class="preprocessor">#<span class="number">2</span>                  <span class="comment">// Field val$a:I</span></span>
-        <span class="number">10</span>: aload_0
-        <span class="number">11</span>: aload_3
-        <span class="number">12</span>: putfield      <span class="preprocessor">#<span class="number">3</span>                  <span class="comment">// Field val$bytes:[B</span></span>
-        <span class="number">15</span>: aload_0
-        <span class="number">16</span>: invokespecial <span class="preprocessor">#<span class="number">4</span>                  <span class="comment">// Method java/lang/Object."&lt;init&gt;":()V</span></span>
-        <span class="number">19</span>: <span class="keyword">return</span>
-</code></pre><p>外围类中testFinal方法中调用匿名内部类的部分：</p>
-<pre><code><span class="number">10</span>: invokespecial <span class="preprocessor">#<span class="number">3</span>                  <span class="comment">// Method com/jvm/showByteCode/FinalParameter$1."&lt;init&gt;":(Lcom/jvm/showByteCode/FinalParameter;I[B)V</span></span>
-</code></pre><p>这里我们就可以清楚看到以下事实：<br>（1）<code>&lt;init&gt;()</code>方法有4个参数，其中第一个是this，另外三个分别类型分别FinalParameter，int，byte数组；<br>（2）它们参数被赋值给了对应的final字段<code>（this$0，val$a，val$bytes）</code>；<br>（3）外围类将当前实例对象引用，a数值，bytes数组引用传递给了<code>FinalParameter$1</code>的<code>&lt;init&gt;()</code>方法；</p>
-<p>因此，我们可以知道，在匿名内部类中使用外围类方法的局部变量，实际上是使用对应值（引用）的final成员变量。<br>内部类中使用的是该局部变量的副本，因此如果要在语义上保证局部变量和副本的一致性，就应当使用final来保证该局部变量不变。</p>
-<h1 id="2-_Java_8中“改进”：">2. Java 8中“改进”：</h1><p>下段代码通过了基于JDK8的编译，但是如果将注释去掉，仍然不能通过编译，看来只是在写法上“省力”了。<br>也就是说，Java中对于内部类使用局部变量的设计思想还要要保证这两个变量（一是局部变量，而是内部类的成员变量）一致性；<br>如果你不想保证这样的一致性，我觉得可以有以下方案：<br>（1）可以创建一个抽象类，添加一个构造器，通过构造器传入局部变量的值；<br>（2）编写一个一个工厂方法（或工厂类），局部变量传入工厂方法（工厂方法的对应参数是final的）返回一个内部类实例；<br>这样你就不用给局部变量设置为final；<br>因此，Java设计团队的设计思想是程序员在内部类中使用了局部变量，这种情况应该默认为需要保持两个变量的一致性。</p>
-<pre><code><span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">testFinal</span><span class="params">(<span class="keyword">byte</span>[] bytes)</span> </span>{
-        <span class="keyword">int</span> a = <span class="number">10</span>;
-        <span class="keyword">new</span> A() {
-            <span class="annotation">@Override</span>
-            <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">test</span><span class="params">()</span> </span>{
-                System.out.println(a + <span class="string">" "</span> + bytes.length);
-            }
-        };
-<span class="comment">//        a = 11; //ERROR</span>
-<span class="comment">//        bytes = null; //ERROR</span>
-    }
-</code></pre>
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/思考和求解/">思考和求解</a></li></ul>
-	</div>
-
       
 
       
