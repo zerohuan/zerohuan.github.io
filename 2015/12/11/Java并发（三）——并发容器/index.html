@@ -3,22 +3,30 @@
 <head>
   <meta charset="utf-8">
   
-  <title>对JVM的理解和JVM体系结构详解 | Zerohuan的博客</title>
+  <title>Java并发（三）——并发容器 | Zerohuan的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Java虚拟机是Java运行的平台和基础。通过字节码技术和JVM才有了Java平台无关性的实现。Java虚拟机是Java运行的平台和基础。通过字节码技术和JVM才有了Java平台无关性的实现。一个Java进程是一个JVM实例，它本身建立在操作系统和磁盘，内存中的堆栈，本地CPU和指令集基础之上，但是Java进程所占的资源又被抽象成了JVM，Java字节码指令（JIT除外）正是。
-1. 对JVM的理">
+  <meta name="description" content="Queue BlocingQueue
+ConcurrentMap
+ConcurrentSkipListMap——&amp;gt;SortedMap（TreeMap）ConcurrentSkipListSet——&amp;gt;SortedSet（TreeSet）
+CopyOnWriteArrayList/Set
+Java 5之后提供了很多并发容器类。相对与同步容器：（1）同步容器是锁整个容器的，因此竞争的概率更大">
 <meta property="og:type" content="article">
-<meta property="og:title" content="对JVM的理解和JVM体系结构详解">
-<meta property="og:url" content="http://blog.zerohuan.com/2015/11/29/2015-08-08-我学JVM——对JVM的理解和JVM内存管理/index.html">
+<meta property="og:title" content="Java并发（三）——并发容器">
+<meta property="og:url" content="http://blog.zerohuan.com/2015/12/11/Java并发（三）——并发容器/index.html">
 <meta property="og:site_name" content="Zerohuan的博客">
-<meta property="og:description" content="Java虚拟机是Java运行的平台和基础。通过字节码技术和JVM才有了Java平台无关性的实现。Java虚拟机是Java运行的平台和基础。通过字节码技术和JVM才有了Java平台无关性的实现。一个Java进程是一个JVM实例，它本身建立在操作系统和磁盘，内存中的堆栈，本地CPU和指令集基础之上，但是Java进程所占的资源又被抽象成了JVM，Java字节码指令（JIT除外）正是。
-1. 对JVM的理">
-<meta property="og:image" content="https://zerohuan.github.io/images/jvm-memory-structure.png">
-<meta property="og:updated_time" content="2015-12-03T13:02:39.000Z">
+<meta property="og:description" content="Queue BlocingQueue
+ConcurrentMap
+ConcurrentSkipListMap——&amp;gt;SortedMap（TreeMap）ConcurrentSkipListSet——&amp;gt;SortedSet（TreeSet）
+CopyOnWriteArrayList/Set
+Java 5之后提供了很多并发容器类。相对与同步容器：（1）同步容器是锁整个容器的，因此竞争的概率更大">
+<meta property="og:updated_time" content="2015-12-26T11:48:47.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="对JVM的理解和JVM体系结构详解">
-<meta name="twitter:description" content="Java虚拟机是Java运行的平台和基础。通过字节码技术和JVM才有了Java平台无关性的实现。Java虚拟机是Java运行的平台和基础。通过字节码技术和JVM才有了Java平台无关性的实现。一个Java进程是一个JVM实例，它本身建立在操作系统和磁盘，内存中的堆栈，本地CPU和指令集基础之上，但是Java进程所占的资源又被抽象成了JVM，Java字节码指令（JIT除外）正是。
-1. 对JVM的理">
+<meta name="twitter:title" content="Java并发（三）——并发容器">
+<meta name="twitter:description" content="Queue BlocingQueue
+ConcurrentMap
+ConcurrentSkipListMap——&amp;gt;SortedMap（TreeMap）ConcurrentSkipListSet——&amp;gt;SortedSet（TreeSet）
+CopyOnWriteArrayList/Set
+Java 5之后提供了很多并发容器类。相对与同步容器：（1）同步容器是锁整个容器的，因此竞争的概率更大">
   
     <link rel="alternative" href="/atom.xml" title="Zerohuan的博客" type="application/atom+xml">
   
@@ -199,11 +207,11 @@
 		</header>				
 	</div>
 </nav>
-      <div class="body-wrap"><article id="post-2015-08-08-我学JVM——对JVM的理解和JVM内存管理" class="article article-type-post" itemscope itemprop="blogPost">
+      <div class="body-wrap"><article id="post-Java并发（三）——并发容器" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2015/11/29/2015-08-08-我学JVM——对JVM的理解和JVM内存管理/" class="article-date">
-  	<time datetime="2015-11-29T08:42:04.000Z" itemprop="datePublished">2015-11-29</time>
+      <a href="/2015/12/11/Java并发（三）——并发容器/" class="article-date">
+  	<time datetime="2015-12-11T06:48:41.000Z" itemprop="datePublished">2015-12-11</time>
 </a>
     </div>
   
@@ -216,7 +224,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      对JVM的理解和JVM体系结构详解
+      Java并发（三）——并发容器
     </h1>
   
 
@@ -225,7 +233,7 @@
       <div class="article-info article-info-post">
         
 	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li></ul>
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java并发/">Java并发</a></li></ul>
 	</div>
 
         
@@ -236,21 +244,14 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>Java虚拟机是Java运行的平台和基础。通过字节码技术和JVM才有了Java平台无关性的实现。Java虚拟机是Java运行的平台和基础。通过字节码技术和JVM才有了Java平台无关性的实现。一个Java进程是一个JVM实例，它本身建立在操作系统和磁盘，内存中的堆栈，本地CPU和指令集基础之上，但是Java进程所占的资源又被抽象成了JVM，Java字节码指令（JIT除外）正是。</p>
-<h1 id="1-_对JVM的理解">1. 对JVM的理解</h1><p>JVM，顾名思义，它是对计算机的抽象。<br>现代计算机的计算功能有：<strong>指令集，计算单元，存储单元，寻址方式，寄存器</strong>定义组成。对应于JVM，也有自己的指令集，同样有自己的内存布局（存储单元），执行引擎（计算单元和寄存器），通过引用（符号引用和直接引用）来定位资源。</p>
-<p>JVM同样具有<strong>公有设计和私有实现</strong>的特性：JVM规范定义了公有的必须实现的规范，各个厂商可以在此规范下具体的实现，每一个Java进程基于一个JVM实例。</p>
-<h2 id="1-2_JVM的体系架构">1.2 JVM的体系架构</h2><p>JVM的体系架构包括4个部分：</p>
-<ol>
-<li><strong>类加载器</strong>；</li>
-<li><strong>执行引擎</strong>；</li>
-<li><strong>内存区域：运行时数据区域</strong>；</li>
-<li><strong>本地方法调用</strong>；</li>
-</ol>
-<p><img src="https://zerohuan.github.io/images/jvm-memory-structure.png" alt="JVM"></p>
-<h3 id="1-2-1_运行时常量池">1.2.1 运行时常量池</h3><p>JVM内存划分几个不同的部分，类加载和线程都是动态分配内存的；类加载器加载class文件（广义上的二进制字节码流）经过加载，连接（验证，准备，解析），类型信息及Class对象到了<strong>方法区</strong>，对象实例到了<strong>堆</strong>，常量到了<strong>运行时常量池（在方法区中）</strong>，线程对应一个执行引擎的实例分配一个<strong>虚拟机栈</strong>，每个方法对一个<strong>栈帧</strong>，每个栈都包含一个<strong>PC寄存器</strong>，本地方法对应<strong>本地方法栈</strong>，而对象实例则保存到了<strong>堆</strong>中。</p>
-<p><strong>（1）PC寄存器（PC Register）</strong>：<br>每个线程有自己的PC寄存器。<br>PC寄存器指向下一行字节码指令的地址（这个地址是基于方法Code属性的行号，一个方法的Code_length是u4，实际不能超过65535；还是内存的虚拟地址）。<br>方法调用/返回的关系：<br>（1）方法正常返回时，调用者方法的寄存器值可以作为被调用者的方法返回地址，被调用者正常返回时，栈帧回收，返回值压入被调用者栈帧的操作数栈，PC寄存器可以用这个返回地址恢复到指向调用者方法的下一个字节码指令地址；<br>（2）方法异常返回时，返回地址通过异常表确定。<br>（3）如果是调用natvie方法，PC寄存器中保存值为空（undefined）；</p>
-<p><strong>（2）Java虚拟机栈</strong></p>
-
+        <p>Queue BlocingQueue</p>
+<p>ConcurrentMap</p>
+<p>ConcurrentSkipListMap——&gt;SortedMap（TreeMap）<br>ConcurrentSkipListSet——&gt;SortedSet（TreeSet）</p>
+<p>CopyOnWriteArrayList/Set</p>
+<p>Java 5之后提供了很多并发容器类。<br>相对与同步容器：<br>（1）同步容器是锁整个容器的，因此竞争的概率更大，随着容器包含的元素越多，竞争的概率，阻塞的时间可能越长，可伸缩性差，并且对容器状态访问都是串行化；<br>（2）并发容器利用分段锁，事实不可变对象，volatile可见性，克隆副本等方式提供并发访问设计，比如ConcurrentHashMap的读完全支持任意线程数量的并发，支持一定数量线程并发写；可伸缩性强；</p>
+<h1 id="1-_ConcurrentHashMap">1. ConcurrentHashMap</h1><h2 id="1-1_要点">1.1 要点</h2><p>分段锁，弱一致性迭代器（支持并发修改）；size/isEmpty也具有非实时性<br>不支持独占加锁访问；<br>红黑树；</p>
+<h2 id="1-2_结构和操作">1.2 结构和操作</h2><p>ConcurrentHashMap的一些基本功能和HashMap实现基本相同，HashMap也已经总结过了，这里重点分析并发相关的控制；<br><a href="http://blog.zerohuan.com/2015/12/12/Java%208%E9%9B%86%E5%90%88%E6%A1%86%E6%9E%B6%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94HashMap/">Java 8集合框架源码学习——HashMap </a></p>
+<h3 id="重要的常量值">重要的常量值</h3>
       
     </div>
     
@@ -259,15 +260,20 @@
     
 <nav id="article-nav">
   
-    <a href="/2015/11/29/2015-11-28-Java基础知识总结（三）——类和接口/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2015/12/12/TCP-IP学习笔记（二）——链路层/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption"><</strong>
       <div class="article-nav-title">
         
-          Java基础知识总结（三）——类和接口
+          TCP/IP学习笔记（二）——链路层
         
       </div>
     </a>
   
+  
+    <a href="/2015/12/11/Java并发（一）——线程安全基础/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Java并发（一）——线程安全基础</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
   
 </nav>
 
@@ -294,7 +300,7 @@
 
 <div class="duoshuo">
 	<!-- 多说评论框 start -->
-	<div class="ds-thread" data-thread-key="2015-08-08-我学JVM——对JVM的理解和JVM内存管理" data-title="对JVM的理解和JVM体系结构详解" data-url="http://blog.zerohuan.com/2015/11/29/2015-08-08-我学JVM——对JVM的理解和JVM内存管理/"></div>
+	<div class="ds-thread" data-thread-key="Java并发（三）——并发容器" data-title="Java并发（三）——并发容器" data-url="http://blog.zerohuan.com/2015/12/11/Java并发（三）——并发容器/"></div>
 	<!-- 多说评论框 end -->
 	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
 	<script type="text/javascript">

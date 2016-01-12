@@ -9,7 +9,7 @@
 显然的一个事实是局部变量（称为变量a）是保存在栈帧的局部变量表中的（引用或基本类型），这里把定义匿名内部类的方法称为方法A，匿名内部类的中使用这个局部变量的方">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Java中的final参数/变量+匿名内部类的字节码分析，以及Java 8中的使用">
-<meta property="og:url" content="http://blog.ssearch.cn/2015/12/09/final变量+匿名内部类的字节码分析，以及Java 8中的使用/index.html">
+<meta property="og:url" content="http://blog.zerohuan.com/2015/12/09/final变量+匿名内部类的字节码分析，以及Java 8中的使用/index.html">
 <meta property="og:site_name" content="Zerohuan的博客">
 <meta property="og:description" content="在Java 8之前一个常识就是如果要在方法中定义一个匿名内部类并使用该方法内的局部变量（包括参数），需要使用final关键字修饰。网上也有很多对这种机制的解释和说明，但是大部分都是一种抽象的认识。如果能够分析一下字节码，这个问题其实很清楚。
 显然的一个事实是局部变量（称为变量a）是保存在栈帧的局部变量表中的（引用或基本类型），这里把定义匿名内部类的方法称为方法A，匿名内部类的中使用这个局部变量的方">
@@ -43,7 +43,7 @@
 		</hgroup>
 
 		
-		<p class="header-subtitle">我在路上</p>
+		<p class="header-subtitle">Talk is cheap, show me the code!</p>
 		
 
 		
@@ -118,7 +118,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/JVM/" style="font-size: 12.5px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12.5px;">TCP/IP</a> <a href="/tags/思考和求解/" style="font-size: 17.5px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
+						<a href="/tags/JVM/" style="font-size: 12.5px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java并发/" style="font-size: 15px;">Java并发</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12.5px;">TCP/IP</a> <a href="/tags/思考和求解/" style="font-size: 17.5px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
 					</div>
 				</section>
 				
@@ -170,7 +170,7 @@
 			  <h1 class="header-author">Zerohuan</h1>
 			</hgroup>
 			
-			<p class="header-subtitle">我在路上</p>
+			<p class="header-subtitle">Talk is cheap, show me the code!</p>
 			
 			<nav class="header-menu">
 				<ul>
@@ -308,18 +308,18 @@ final com.jvm.showByteCode.FinalParameter this<span class="variable">$0</span>;
     
 <nav id="article-nav">
   
-    <a href="/2015/12/09/反射工具——运行时打印对象状态（包括数组域）/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2015/12/11/Java基础知识总结（九）——序列化/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption"><</strong>
       <div class="article-nav-title">
         
-          反射工具——运行时打印对象状态（包括数组域）
+          Java基础知识总结（九）——序列化
         
       </div>
     </a>
   
   
-    <a href="/2015/12/09/NIO与select和enpoll/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">NIO与select和enpoll</div>
+    <a href="/2015/12/09/反射工具——运行时打印对象状态（包括数组域）/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">反射工具——运行时打印对象状态（包括数组域）</div>
       <strong class="article-nav-caption">></strong>
     </a>
   
@@ -348,7 +348,7 @@ final com.jvm.showByteCode.FinalParameter this<span class="variable">$0</span>;
 
 <div class="duoshuo">
 	<!-- 多说评论框 start -->
-	<div class="ds-thread" data-thread-key="final变量+匿名内部类的字节码分析，以及Java 8中的使用" data-title="Java中的final参数/变量+匿名内部类的字节码分析，以及Java 8中的使用" data-url="http://blog.ssearch.cn/2015/12/09/final变量+匿名内部类的字节码分析，以及Java 8中的使用/"></div>
+	<div class="ds-thread" data-thread-key="final变量+匿名内部类的字节码分析，以及Java 8中的使用" data-title="Java中的final参数/变量+匿名内部类的字节码分析，以及Java 8中的使用" data-url="http://blog.zerohuan.com/2015/12/09/final变量+匿名内部类的字节码分析，以及Java 8中的使用/"></div>
 	<!-- 多说评论框 end -->
 	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
 	<script type="text/javascript">
@@ -373,7 +373,7 @@ final com.jvm.showByteCode.FinalParameter this<span class="variable">$0</span>;
   <div class="outer">
     <div id="footer-info">
     	<div class="footer-left">
-    		&copy; 2015 Zerohuan
+    		&copy; 2016 Zerohuan
     	</div>
       	<div class="footer-right">
       		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten

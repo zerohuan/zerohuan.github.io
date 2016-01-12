@@ -8,7 +8,7 @@
   <meta name="description" content="1. 为什么需要WebSocket：回答这个首先需要知道一些历史，我们知道HTTP是客户端向服务器请求获取数据的普遍方式，但是它是一种被动性的通信机制。request=response，服务器只有在接受到客户端请求的时候才可能向客户端发送数据。但有时候服务器需要告诉客户端有新的数据应该接受，比如消息，即时聊天等功能，也就是说我们应该需要一种全双工的通信方式，而HTTP的被动性使得这一问题很难解决。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="基于WebSocket，Spring开发消息系统后台">
-<meta property="og:url" content="http://blog.ssearch.cn/2015/12/02/基于WebSocket，Spring开发消息系统后台/index.html">
+<meta property="og:url" content="http://blog.zerohuan.com/2015/12/02/基于WebSocket，Spring开发消息系统后台/index.html">
 <meta property="og:site_name" content="Zerohuan的博客">
 <meta property="og:description" content="1. 为什么需要WebSocket：回答这个首先需要知道一些历史，我们知道HTTP是客户端向服务器请求获取数据的普遍方式，但是它是一种被动性的通信机制。request=response，服务器只有在接受到客户端请求的时候才可能向客户端发送数据。但有时候服务器需要告诉客户端有新的数据应该接受，比如消息，即时聊天等功能，也就是说我们应该需要一种全双工的通信方式，而HTTP的被动性使得这一问题很难解决。">
 <meta property="og:updated_time" content="2015-12-21T07:44:52.000Z">
@@ -40,7 +40,7 @@
 		</hgroup>
 
 		
-		<p class="header-subtitle">我在路上</p>
+		<p class="header-subtitle">Talk is cheap, show me the code!</p>
 		
 
 		
@@ -115,7 +115,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/JVM/" style="font-size: 12.5px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12.5px;">TCP/IP</a> <a href="/tags/思考和求解/" style="font-size: 17.5px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
+						<a href="/tags/JVM/" style="font-size: 12.5px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java并发/" style="font-size: 15px;">Java并发</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12.5px;">TCP/IP</a> <a href="/tags/思考和求解/" style="font-size: 17.5px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
 					</div>
 				</section>
 				
@@ -167,7 +167,7 @@
 			  <h1 class="header-author">Zerohuan</h1>
 			</hgroup>
 			
-			<p class="header-subtitle">我在路上</p>
+			<p class="header-subtitle">Talk is cheap, show me the code!</p>
 			
 			<nav class="header-menu">
 				<ul>
@@ -586,18 +586,18 @@ HTTP/<span class="number">1.1</span> <span class="number">101</span> Switching P
     
 <nav id="article-nav">
   
-    <a href="/2015/12/02/Java基础知识总结（五）——安全/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2015/12/02/Java基础知识总结（四）——异常与异常处理表/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption"><</strong>
       <div class="article-nav-title">
         
-          Java基础知识总结（五）——安全
+          Java基础知识总结（四）——异常与异常处理表
         
       </div>
     </a>
   
   
-    <a href="/2015/12/01/Java网络编程小记/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">Java基础知识总结（六）——网络编程</div>
+    <a href="/2015/12/02/关于Java类初始化和实例化中的2个“雷区”/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">关于Java类初始化和实例化中的2个“雷区”</div>
       <strong class="article-nav-caption">></strong>
     </a>
   
@@ -626,7 +626,7 @@ HTTP/<span class="number">1.1</span> <span class="number">101</span> Switching P
 
 <div class="duoshuo">
 	<!-- 多说评论框 start -->
-	<div class="ds-thread" data-thread-key="基于WebSocket，Spring开发消息系统后台" data-title="基于WebSocket，Spring开发消息系统后台" data-url="http://blog.ssearch.cn/2015/12/02/基于WebSocket，Spring开发消息系统后台/"></div>
+	<div class="ds-thread" data-thread-key="基于WebSocket，Spring开发消息系统后台" data-title="基于WebSocket，Spring开发消息系统后台" data-url="http://blog.zerohuan.com/2015/12/02/基于WebSocket，Spring开发消息系统后台/"></div>
 	<!-- 多说评论框 end -->
 	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
 	<script type="text/javascript">
@@ -651,7 +651,7 @@ HTTP/<span class="number">1.1</span> <span class="number">101</span> Switching P
   <div class="outer">
     <div id="footer-info">
     	<div class="footer-left">
-    		&copy; 2015 Zerohuan
+    		&copy; 2016 Zerohuan
     	</div>
       	<div class="footer-right">
       		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten

@@ -8,7 +8,7 @@
   <meta name="description" content="从CSDN迁徙而来">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Zerohuan的博客">
-<meta property="og:url" content="http://blog.ssearch.cn/index.html">
+<meta property="og:url" content="http://blog.zerohuan.com/index.html">
 <meta property="og:site_name" content="Zerohuan的博客">
 <meta property="og:description" content="从CSDN迁徙而来">
 <meta name="twitter:card" content="summary">
@@ -39,7 +39,7 @@
 		</hgroup>
 
 		
-		<p class="header-subtitle">我在路上</p>
+		<p class="header-subtitle">Talk is cheap, show me the code!</p>
 		
 
 		
@@ -114,7 +114,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/JVM/" style="font-size: 12.5px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12.5px;">TCP/IP</a> <a href="/tags/思考和求解/" style="font-size: 17.5px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
+						<a href="/tags/JVM/" style="font-size: 12.5px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 15px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java并发/" style="font-size: 15px;">Java并发</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12.5px;">TCP/IP</a> <a href="/tags/思考和求解/" style="font-size: 17.5px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
 					</div>
 				</section>
 				
@@ -166,7 +166,7 @@
 			  <h1 class="header-author">Zerohuan</h1>
 			</hgroup>
 			
-			<p class="header-subtitle">我在路上</p>
+			<p class="header-subtitle">Talk is cheap, show me the code!</p>
 			
 			<nav class="header-menu">
 				<ul>
@@ -678,6 +678,410 @@ boolean <span class="keyword">red</span>;
       
 	<div class="article-tag tagcloud">
 		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/TCP-IP/">TCP/IP</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-Java并发（三）——并发容器" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/11/Java并发（三）——并发容器/" class="article-date">
+  	<time datetime="2015-12-11T06:48:41.000Z" itemprop="datePublished">2015-12-11</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/11/Java并发（三）——并发容器/">Java并发（三）——并发容器</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Queue BlocingQueue</p>
+<p>ConcurrentMap</p>
+<p>ConcurrentSkipListMap——&gt;SortedMap（TreeMap）<br>ConcurrentSkipListSet——&gt;SortedSet（TreeSet）</p>
+<p>CopyOnWriteArrayList/Set</p>
+<p>Java 5之后提供了很多并发容器类。<br>相对与同步容器：<br>（1）同步容器是锁整个容器的，因此竞争的概率更大，随着容器包含的元素越多，竞争的概率，阻塞的时间可能越长，可伸缩性差，并且对容器状态访问都是串行化；<br>（2）并发容器利用分段锁，事实不可变对象，volatile可见性，克隆副本等方式提供并发访问设计，比如ConcurrentHashMap的读完全支持任意线程数量的并发，支持一定数量线程并发写；可伸缩性强；</p>
+<h1 id="1-_ConcurrentHashMap">1. ConcurrentHashMap</h1><h2 id="1-1_要点">1.1 要点</h2><p>分段锁，弱一致性迭代器（支持并发修改）；size/isEmpty也具有非实时性<br>不支持独占加锁访问；<br>红黑树；</p>
+<h2 id="1-2_结构和操作">1.2 结构和操作</h2><p>ConcurrentHashMap的一些基本功能和HashMap实现基本相同，HashMap也已经总结过了，这里重点分析并发相关的控制；<br><a href="http://blog.zerohuan.com/2015/12/12/Java%208%E9%9B%86%E5%90%88%E6%A1%86%E6%9E%B6%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94HashMap/">Java 8集合框架源码学习——HashMap </a></p>
+<h3 id="重要的常量值">重要的常量值</h3>
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java并发/">Java并发</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-Java并发（一）——线程安全基础" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/11/Java并发（一）——线程安全基础/" class="article-date">
+  	<time datetime="2015-12-11T06:48:41.000Z" itemprop="datePublished">2015-12-11</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/11/Java并发（一）——线程安全基础/">Java并发（一）——线程安全基础</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>心得：线程安全最关键是保持正确性，先验条件、状态间的约束条件，后验条件，是我们写一个程序正确性的基础，我们保持不变性（final），可见性（volatile，锁），以及原子性（Synchronized，显示锁）和其他的同步工具就是为了让程序中那些存在竞争条件的部分始终保持正确的顺序执行；</p>
+<p>学习参考资料：<br>（1）Java并发编程实战；<br>（2）<a href="http://www.ruanyifeng.com/blog/2013/04/processes_and_threads.html" target="_blank" rel="external">进程与线程的一个简单解释</a>；<br>（3）《操作系统精髓与设计原理》；<br>（4）<a href="http://www.infoq.com/cn/news/2007/10/whatisscalability/" target="_blank" rel="external">你真的明白什么是可伸缩性吗？</a>；<br>（5）jls8（Java语言规范8）；<br>（6）JVM规范8；</p>
+<h1 id="一、总览和原理">一、总览和原理</h1><h2 id="1-_Java线程模型和操作系统">1. Java线程模型和操作系统</h2><p>基于JVM对OS底层的兼容，在使用Java时可以依赖Java的线程库来创建单进程多线程的Java应用。但Java线程很多重要的特性是和操作系统的表现相关，Thread中很多方法都是native方法也有这个因素。优先级，Sleep，Yield等语义包括线程的调度也都依赖于操作系统的实现。<br>当然，这些细节并不会影响具体的业务功能开发，但是明白它们对一些问题的理解显然很有帮助。比如allocateDirect在进行分配时的开销为什么会比allocate要大（系统调用，执行模式的切换）；不同类型应用在不同硬件环境下表现有怎样的差异等等。</p>
+<p>进程作为<strong>分配资源</strong>的基本单位，而把线程作为<strong>独立运行和独立调度</strong>的基本单位。</p>
+<h4 id="进程，线程与Java：">进程，线程与Java：</h4><p>在1.2之前是基于用户线程（绿色线程）实现的，这样做有什么问题：<br>（1）虽然用户线程的管理对内核不可见，不需要切换到内核态，但是一个线程调用系统调用比如I/O会导致整个进程阻塞；<br>（2）用户线程对内核不可见的另一个问题是，只能利用一个CPU（因为对内核来说只看见一个进程/线程）；<br>（3）如果使用纯粹的用户线程必然增加JVM的实现难度和额外负担；</p>
+<p>Java的线程模型是基于操作系统原生线程模型实现的，Windows，Solaris，Linux都支持单进程多线程的实现，Linux的线程是通过轻量级子进程实现的（和Solaris类似）；</p>
+<blockquote>
+<p>以Linux为例，线程模型是，一个进程拥有多个用户线程，每个用户线程基于一个轻量级进程（LWP），每个LWP基于一个内核线程（KLT），由Thread Scheduler调度，分配CPU资源；</p>
+</blockquote>
+<p>基于这个模型特点和对Java线程模型的影响：<br>（1）依赖于操作的底层实现，线程的创建/销毁，优先级，yield/Sleep等等都基于操作系统实现；<br>（2）LWP对一个KLT，系统调用需要在用户态和内核态中切换，LWP需要占用一定内核资源（比如一个LWP要保存ID，优先级，信号掩码，寄存器，内核栈，地址空间，文件系统，处理器上下文等）；<br>（3）Linux中一个进程创建“线程”（实际上是子进程）可以通过<code>clone()</code>调用：<br>子线程<strong>复制</strong>那些可以写的部分（堆栈，数据段，文件，共享库，ipc），对Java应用来说，由于基于JVM，就是JVM运行时数据区域等，这是一个逻辑副本，共享地址空间，因此堆、方法区中的数据对线程是可见，虚拟栈（以及栈的PC寄存器等）基于JVM，Java线程之间互相独立，这时Java程序的用户线程部分；<br>子线程<strong>共享</strong>那些只读的部分，正文（程序）和数据，这和我们平时所见的Java程序没有直接关系，jar包的内容对于Java进程（JVM实例）来说是磁盘（或者网络）上的二进制字节码流；<br>子线程<strong>不会继承</strong>，进程ID，各种锁，定时锁，未决信号；</p>
+<blockquote>
+<p>当然JVM的存在对Java应用程序来说屏蔽了底层很多细节，这些说这些只是为了说明Java线程和轻量级进程之间的对应关系；</p>
+</blockquote>
+<h2 id="2-_Java中线程和锁定">2. Java中线程和锁定</h2><h3 id="Thread及其状态">Thread及其状态</h3><p>基于之前的表述，在一个支持多线程操作系统中，Java线程模型到操作系统（比如Linux）应该存在这样一条对应关系：<br>一个Java的<strong>Thread</strong>对象——（对应）——一个JVM中一个<strong>VMThread</strong>对象（HotSpot VM，C++）——（对应）——一个<strong>LWP</strong>（轻量级线程）——（对应）——一个<strong>KLT</strong>（内核级线程）；</p>
+<p>正像操作系统中线程需要状态来描述一样，Java中Thread也有自己的状态（6种状态）：<br>（1）<strong>New</strong>：新创建，start之前；<br>（2）<strong>Runnable</strong>：可运行，包括正在运行；<br>（3）<strong>Blocked</strong>：被阻塞，等待<strong>内置锁</strong>时会进入Blocked；<br>（4）<strong>Waiting</strong>：等待，wait，join，等待Lock，Condition.await会导致进入等待状态；<br>（5）<strong>Timed Waiting</strong>：计时等待，sleep，带计时参数的wait，join，Condition.await，Lock.tryLock；<br>（6）<strong>Terminated</strong>：被终止，有两种情况，一是正常退出自然死亡，二是因为<strong>没有捕获的异常</strong>终止了run方法而意外退出；</p>
+<p><strong>问题一：Blocked和Waiting有什么区别</strong><br>最直接的区别上面已经说过，Thread的Blocked状态只是在等待内置锁时才能产生，而等待状态则是在等待一段时间或者唤醒动作，但是很多教材在讨论Java中阻塞和等待时并不是对应于Thread的状态的，因此可能会有一些混淆，一般意义上阻塞和等待的意思相近都表示等待某个事件的发生或条件的满足，这和这里讨论的Thread的阻塞状态是由区别的。具体来说，一般意义上，我们可以将下列事件成为”阻塞“：<br>（1）等待<strong>内置锁</strong>，Thread为Blocked状态，不可中断；<br>（2）java.io中InputStream的read方法，Thread的状态为Runnable，同样是不可中断的，read方法一般会导致切换到内核状态，进行系统调用，等待IO事件，线程在OS中的状态会变成阻塞，但这对于Java的Thread并不需要知道；<br>（3）Object的wait方法，Thread为WAITING状态，等待通知，可以响应中断；<br>（4）J.U.C中的Lock的lock方法不会响应中断，但是lockinterruptible可以响应中断，Thread为WAITING状态；<br>等等；<br>可见，Thread的状态，能否响应中断，是否阻塞并不能一概而论，它们各自有自己的语义。</p>
+<h3 id="Synchronized关键字">Synchronized关键字</h3><p>正如JLS中所说的，Synchroinzation语义是Java线程间同步的最简单的方式，当然”简单“是对使用者来说的。</p>
+<p><strong>要点</strong>：<br>（1）Synchronized是互斥的，monitor监视器，又称为内置锁；<br>（2）等待内置锁的线程处于<strong>BLOCKED</strong>状态；<br>（3）static的Synchronized方法（类方法）基于该类的Class对象的内置锁；<br>（4）加锁和解锁动作有原子性保证；</p>
+<h3 id="wait，notification，interrupt">wait，notification，interrupt</h3><h4 id="Wait">Wait</h4><p>wait语义很重要，像join等方法都是依赖wait来实现的；<br>前面我们已经知道wait有无限等待和计时等待两个版本；<br>JLS中用Wait Set表示等待一个锁对象的所有等待状态的线程的集合；<br><strong>wait要点</strong>：<br>（1）调用wait方法的条件时，当前线程必须拥有对应的锁，否则抛出IllegalMonitorStateException；<br>（2）wait可以响应中断，如果当前线程处于被中断，将会抛出InterruptedException，不仅是调用wait方法时，wait之后重新获得锁后，依然可以抛出InterruptedException；<br>（3）wait会释放锁，相对的sleep不会释放锁；</p>
+<p><strong>wait的执行流程（Thread t中执行wait）</strong>（by JLS）：<br>（1）将Thread t加入wait set，释放锁；<br>（2）Thread t将不再执行任何指令，直到notify/notifyAll，或者Thread t被请求中断，等待超时；<br>（3）Thread t重新获得锁；<br>（4）如果第2步中是因为中断请求，抛出InterruptedException，<strong>并清除中断状态</strong>；</p>
+<h4 id="Notification：">Notification：</h4><p>notify和notifyAll，notify选择一个等待线程通知唤醒，但是当存在对多个不同条件等待的线程时，由于不能保证哪一个线程被唤醒；因此notifyAll要安全一些；<br><strong>要点</strong>：<br>（1）必先获得锁；<br>（2）notify和interrupt，如果等待线程中一个线程被中断了，那么除非所有的线程都被中断了，不然notify必然会保证至少有一个线程可以被唤醒，正常执行；<br>（3）JLS中定义了当一个线程同时被中断和notify时，JVM实现有两种可能，一是正常被唤醒，但是保留中断状态；二是抛出InterruptedException，清除中断状态；<br>我实验了一下（Hotspot VM，还没看这块的源码），总是抛出异常，清除状态；</p>
+<p><strong>问题：什么时候可以使用notify()？</strong><br>必须同时满足两个条件：<br>（1）所有等待线程的类型相同；<br>（2）单进单出，每次通知最多只能唤醒一个线程；</p>
+<p><strong>notifyAll的效率问题：</strong><br>notifyAll由于会唤醒所有等待线程，当存在多个线程等待（不同的条件）时，可能大部分线程发现条件不满足又重新回到等待状态，这导致<strong>大量的上下文切换和竞争的锁获取操作</strong>，虽然比较“低效”，但是存在多个等待条件时，这是必须的；也就是说条件没有细化，而Lock+Condition可以细化不同的条件，这也是显式锁的一个优势；</p>
+<p><strong>条件通知</strong>：<br>如果发生条件状态转换时再进行通知，而不是每次操作都通知可以优化减少“误唤醒”：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">put</span><span class="params">(V v)</span> throw InterruptedException </span>&#123;</span><br><span class="line">	<span class="keyword">while</span> (isFull())</span><br><span class="line">		wait();</span><br><span class="line">	<span class="keyword">boolean</span> wasEmpty = isEmpty();</span><br><span class="line">	doPut(v);</span><br><span class="line">	<span class="keyword">if</span> (wasEmpty) &#123;</span><br><span class="line">		notifyAll();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="Interrupt：">Interrupt：</h4><p>首先得明白，这是一种协作机制，通过设置一个中断状态，wait等库函数会检查这个状态，或通过异常来协助处理；<br>（1）Thread.interrupted，返回当前中断状态，并清除，不用抛出异常了；<br>（2）t.isInterrupted()不清除状态，所以对于任务类来说通过Thread.currentThread().isInterrupted()一般要优于Thread.interruted()；<br>（3）一个好的做法是检查到中断状态时，要么抛出异常，要么捕获到异常后进行一次interrupt恢复中断状态，具体原因后面会说；</p>
+<p><strong>问题：wait法和sleep方法的区别和联系</strong>：<br>（1）wait是Object的实例方法，sleep是Thread类方法；<br>（2）wait和sleep都会使Thread状态变为等待状态（WAITING/TIMED_WAITING），对应的都不再使用CPU执行时间，OS可以将执行时间分配给其他线程，区别在于wait需要notify/notifyAll之后才可以重新获得CPU执行时间，sleep计时完成后将可以重新获得CPU时间，sleep语义和底层操作系统有关（比如Solaris用poll调用实现，产生一个带timeout的io阻塞，线程进入阻塞队列）；<br>（3）sleep不会改变锁状态，wait必须先拥有锁并且释放锁，因此在同步控制块中使用sleep是一个糟糕的做法，在多线程争用一个锁的情况下，会极大的降低吞吐量；</p>
+<h3 id="Sleep和Yield">Sleep和Yield</h3><p>sleep和yield语义依赖于操作系统的实现，它们没有同步语义，同时sleep的线程的恢复执行也要依赖调度和能否获得CPU时间。</p>
+<h2 id="3-_显式锁">3. 显式锁</h2><blockquote>
+<p>Lock提供了一种<strong>无条件的</strong>，<strong>可轮询的</strong>，<strong>定时的</strong>，<strong>可中断的</strong>锁获取操作，所有加锁和解锁方法都是显式的；<br>Lock的实现中必须提供与内置锁相同的内存可见性语义，但在<strong>加锁语义</strong>，<strong>调度算法</strong>，<strong>顺序保证</strong>，<strong>性能特性</strong>可以不同；</p>
+</blockquote>
+<h3 id="ReentrantLock">ReentrantLock</h3><p>提供了和synchronized相同的互斥性，内存可见性，可重入的加锁语义；</p>
+<p><strong>显式锁和内置锁的不同</strong>：<br>（1）可中断，而内置锁不可中断正在等待锁的线程；<br>（2）显式锁可以实现非阻塞结构的加锁规则，JDK 1.6后synchronized虽然引入了偏向锁，轻量级锁和自适应自旋，但是这不是用户代码可控的；<br>（3）显式锁可以通过轮询锁和定时锁避免死锁等活跃性问题，内置锁一旦发生死锁就只能重启应用了；<br>（4）synchroinzed必须在获取锁的代码块中释放，结构简单易于使用，但是不如显式锁灵活，比如分段锁，链式加锁（比如链表遍历操作，直到获得了下个节点的锁，才释放前一个节点的锁），锁耦合；</p>
+<blockquote>
+<p>除了上述说的可中断，定时，可轮询这些明显的区别之外，还有一个重要的区别就是Lock+Condition有条件语义，而内置锁synchronized没有条件这一语义，很多时候一个条件满足了，我们调用<code>notifyAll()</code>，可能让多个等待条件上等待的线程被唤醒去竞争锁，想要细化就必须引入更多的锁，但即使引入再多的对象作为锁，对象本身可能是共享的，也没有办法百分百保证和条件绑定，所以我们说<code>notifyAll()</code>要比<code>notify()</code>更安全。<br>但如果看看ArrayBlockingQueue之类的阻塞队列的源码你可以发现，它们用的Lock和Condition，并且在唤醒时用的是<code>Condition.signal()</code>而不是<code>Condition.signalAll()</code>，因为通过Condition已经将等待某个条件的线程归于同一队列了，因此使用<code>singal()</code>是安全的，这也防止了唤醒所有线程同时竞争时的开销（每个线程都被唤醒，去竞争锁，检查，不满足再释放）。当然前面也说了，通过多个对象的内置锁也可实现，但是Java语言规范并没有给内置锁以条件语义，你能保证对象不被其他地方当作另外的锁用吗？显然很难，<strong>因此这就是Lock为什么要引入Condition的愿意和优势</strong>。</p>
+</blockquote>
+<p><strong>公平性（ReentrantLock和Samphore可以选择公平性）</strong>：<br>公平的锁：线程将按照它们发出请求的顺序来获得锁，即使是公平锁，tryLock轮询仍然可以插入；<br>非公平的锁：允许“插队”，如果在发出请求同时该锁的状态变为可用，那该线程可以跳过队列中所有等待线程；</p>
+<p><strong>公平性和性能</strong>：<br>大多数情况，非公平性锁的性能要高于公平锁，如果算法需要保证公平性那另说；<br>公平性锁挂起线程和恢复线程存在的开销极大降低了性能；</p>
+<blockquote>
+<p>如果等待时间较长或者请求锁的平均时间较长，那么应该使用公平锁，因为这时，“插队”带来的吞吐量可能不会出现；</p>
+</blockquote>
+<p>synchronized和默认的ReentrantLock都是非公平的（当然在统计上是公平的）；</p>
+<p><strong>读-写锁（避免读-写，写-写冲突）</strong>：<br>在多处理器系统上频繁读取，而写入较少，读-写锁可以提高性能，读写互斥，读读不互斥；其他情况，要比独占锁性能要略差一些，因为复杂性更高；</p>
+<p>ReadWriteLock的特点：<br>（1）提高了可重入的语义；<br>（2）支持降级，写锁可以降级为读锁，但读锁不能审升级为写锁（防止死锁）；<br>（3）默认非公平可插队；<br>（4）写锁只能有唯一的所有者，读锁在JDK1.6后记录哪些线程已经获得了读锁；</p>
+<h3 id="原子变量">原子变量</h3><p>互斥锁虽然简单，但是有如下问题：<br>（1）活跃性问题：死锁，饥饿，活锁等；<br>（2）优先级反转：低优先级的线程持有锁，高优先级的被阻塞；<br>（3）在协调不当的情况下，短时间持有锁，会由于线程上下文切换频繁，调度开销过大而降低性能；</p>
+<p><strong>原子操作的硬件支持</strong>：<br>对于JVM来说，lock，unlock，read，write，load，store，use，assign这些操作是原子性的不可再分的，并且有硬件的支持（double和long另说）；除了这些基本的保证，处理对乐观，并发也有支持：<br>Test-And-Set；<br>Compare-And-Swap；<br>Fetch-And-Increment；<br>Swap；<br>Load-Linked/Store-Conditional；<br>这些指令都是处理器提供的原子性操作，Java中Unsafe类提供了这些功能（只能JDK框架内部使用，外部需要通过反射）；<br>J.U.C中的原子类也是基于这些机制实现的；</p>
+<h3 id="封闭_VS_乐观_VS_悲观">封闭 VS 乐观 VS 悲观</h3><p>除了不可变对象之外，这三种可以说是实现线程安全的并发编程的主要手段。</p>
+<p><strong>封闭</strong>：可重入，ThreadLocal；<br>如果能够做到每个线程各自封闭，就可以实现消除竞争和串行，根据Amadhl定律这是最理想的状态。</p>
+<p><strong>乐观</strong>：原子类，自旋；<br>CAS，自旋等是乐观的同步方式：<br>（1）CAS自旋中应用代码要比锁要复杂，但是由调用者处理竞争问题；<br>（2）非阻塞，避免了阻塞带来的调度和上下文切换开销；<br>（3）在无竞争和竞争较少的情况下，效率要高于互斥锁，实际情况大多数情况是CAS更优；竞争较多的情况下，可能导致自旋次数过多浪费CPU，性能下降；<br>（4）不存在死锁，优先级反转等问题；但是也存在饥饿，活锁的风险；<br>（5）在单CPU环境下，CAS自旋也要由于锁，因为这样CAS失败的可能性很小；</p>
+<p><strong>悲观</strong>：Lock，synchronized中的互斥锁；<br>Java中悲观锁的实现就是重量级的互斥锁了。<br>（1）应用代码简单，但JVM中执行的路径和开销较大；<br>（2）阻塞，需要处理调度和上下文切换开销；<br>（3）在高度竞争的情况下，效率要由于CAS自旋高；无竞争环境下，开销一般是CAS的两倍；竞争较少的情况下，CAS要优于互斥锁；<br>（4）存在死锁，优先级反转，饥饿，活锁等问题；</p>
+<p>总的来看，Java中乐观和悲观之间的选择，在于CAS自旋的开销和阻塞调度/上下文切换之间的比较和权衡。这也是为什么JDK1.6引入自适应自旋的原因，即使从轻量级锁升级成了重量级锁，在真正阻塞之前也会进行一定次数的自旋（基于之前的统计）。</p>
+<p><strong>其他领域的乐观和悲观：</strong><br>乐观和悲观的选择在很多领域都存在：比如<strong>大转盘（乐观）</strong>与<strong>红绿灯（悲观）</strong>，<strong>以太网（争用，乐观）</strong>与<strong>令牌环网（令牌互斥，悲观）</strong>。</p>
+<h3 id="非阻塞算法">非阻塞算法</h3><p>一个线程的失败或挂起不会导致其他线程也失败或挂起。</p>
+<blockquote>
+<p>我觉得这是因为CAS自旋失败的原因就在于同样的操作，另一个线程成功了。因此总能保证有一个线程成功。</p>
+</blockquote>
+<p><strong>实例一：并发栈</strong><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConcurrentStack</span>&lt;<span class="title">E</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> AtomicReference&lt;Node&lt;E&gt;&gt; top = <span class="keyword">new</span> AtomicReference&lt;&gt;(); <span class="comment">//栈顶</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Node&lt;E&gt; <span class="title">pop</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Node&lt;E&gt; oldHead;</span><br><span class="line">        Node&lt;E&gt; newHead;</span><br><span class="line">        do &#123;</span><br><span class="line">            oldHead = top.get();</span><br><span class="line">            <span class="keyword">if</span> (oldHead == <span class="keyword">null</span>)</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">            newHead = oldHead.next;</span><br><span class="line">        &#125; <span class="keyword">while</span>(!top.compareAndSet(oldHead, newHead)); <span class="comment">//自旋</span></span><br><span class="line">        <span class="keyword">return</span> oldHead;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">push</span><span class="params">(E e)</span> </span>&#123;</span><br><span class="line">        Node&lt;E&gt; oldHead;</span><br><span class="line">        Node&lt;E&gt; newHead = <span class="keyword">new</span> Node&lt;&gt;(e);</span><br><span class="line">        do &#123;</span><br><span class="line">            oldHead = top.get();</span><br><span class="line">            newHead.next = oldHead;</span><br><span class="line">        &#125; <span class="keyword">while</span> (!top.compareAndSet(oldHead, newHead)); <span class="comment">//自旋</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Node</span>&lt;<span class="title">E</span>&gt; </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> E item;</span><br><span class="line">        <span class="keyword">private</span> Node&lt;E&gt; next;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">Node</span><span class="params">(E item)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.item = item;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><strong>实例二：并发队列</strong><br>我用反射使用Unsafe实现一个demo，实际上JDK源码中也是通过<code>Unsafe.objectFieldOffset</code>获取反射获取指定volatile域的偏移量结合<code>Unsafe.compareAndSwapObject</code>实现的，而不是直接使用原子类，这样做效率更高。（还有一个类似作用的东西叫原子域更新器，实际上是封装了上面的做法，不过不是用反射因为人家是JDK提供的）<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MConcurrentLinkedQueue</span>&lt;<span class="title">E</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Node</span>&lt;<span class="title">E</span>&gt; </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> nextOffset;</span><br><span class="line">        <span class="keyword">static</span> &#123;</span><br><span class="line">            Class&lt;?&gt; N = Node.class;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                nextOffset = UNSAFE.objectFieldOffset(N.getDeclaredField(<span class="string">"next"</span>));</span><br><span class="line">            &#125; <span class="keyword">catch</span> (NoSuchFieldException e) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> E item;</span><br><span class="line">        <span class="comment">/*</span><br><span class="line">        不在节点类中直接使用原子类性能更好</span><br><span class="line">        实际上J.U.C中也是采用Unsafe的cas更新+volatile；</span><br><span class="line">         */</span></span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">volatile</span> Node&lt;E&gt; next;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">Node</span><span class="params">(E item)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.item = item;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Node&lt;E&gt; dummy = <span class="keyword">new</span> Node&lt;&gt;(<span class="keyword">null</span>);</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> Node&lt;E&gt; head = dummy;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> Node&lt;E&gt; tail = dummy;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> sun.misc.Unsafe UNSAFE;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> headOffset;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> tailOffset;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        Class&lt;?&gt; claz = sun.misc.Unsafe.class;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Field theUnsafe = claz.getDeclaredField(<span class="string">"theUnsafe"</span>);</span><br><span class="line">            theUnsafe.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">            UNSAFE = (sun.misc.Unsafe)theUnsafe.get(<span class="keyword">null</span>);</span><br><span class="line">            Class&lt;?&gt; k = MConcurrentLinkedQueue.class;</span><br><span class="line">            headOffset = UNSAFE.objectFieldOffset(k.getDeclaredField(<span class="string">"head"</span>));</span><br><span class="line">            tailOffset = UNSAFE.objectFieldOffset(k.getDeclaredField(<span class="string">"tail"</span>));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IllegalAccessException | NoSuchFieldException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span><br><span class="line">    对于保证两个变量同时更新的原子性必须进行更复杂的判断和考虑（可见非阻塞算法比阻塞算法要复杂）</span><br><span class="line">    保证同时更新tail引用和oldTail.next引用，分为稳定状态和中间状态来考虑</span><br><span class="line">    一个关键的地方需要注意的是：设置保证tail在CAS设置时不用考虑成败，因为我们知道至少有一个线程可以修改成功，这经常被非阻塞算法所利用；</span><br><span class="line">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">put</span><span class="params">(E item)</span> </span>&#123;</span><br><span class="line">        Node&lt;E&gt; newNode = <span class="keyword">new</span> Node&lt;&gt;(item);</span><br><span class="line">        <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">            Node&lt;E&gt; curTail = tail;</span><br><span class="line">            Node&lt;E&gt; tailNext = tail.next;</span><br><span class="line">            <span class="keyword">if</span> (curTail == tail) &#123;</span><br><span class="line">                <span class="keyword">if</span> (tailNext != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    <span class="comment">/*</span><br><span class="line">                    队列处于中间状态，说明有线程在进行插入操作</span><br><span class="line">                    注意这里不用成功与否，因此不成功说明其他线程成功设置了</span><br><span class="line">                     */</span></span><br><span class="line">                    UNSAFE.compareAndSwapObject(<span class="keyword">this</span>, tailOffset, curTail, tailNext);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    <span class="comment">//链表处于稳定状态</span></span><br><span class="line">                    <span class="keyword">if</span> (UNSAFE.compareAndSwapObject(curTail, Node.nextOffset, <span class="keyword">null</span>, newNode))  &#123;</span><br><span class="line">                        <span class="comment">//成功插入新节点，CAS设置tail，这里也一样不用考虑成败</span></span><br><span class="line">                        UNSAFE.compareAndSwapObject(<span class="keyword">this</span>, tailOffset, curTail, newNode);</span><br><span class="line">                        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Node&lt;E&gt; h = head;</span><br><span class="line">        StringBuilder sb = <span class="keyword">new</span> StringBuilder(<span class="string">"MConcurrentLinkedQueue["</span>);</span><br><span class="line">        <span class="keyword">while</span> (h.next != <span class="keyword">null</span>) &#123;</span><br><span class="line">            Node&lt;E&gt; n = h.next;</span><br><span class="line">            sb.append(n.item).append(<span class="string">','</span>);</span><br><span class="line">            h = n;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">int</span> len;</span><br><span class="line">        <span class="keyword">if</span> ((len = sb.length()) &gt; <span class="string">"MConcurrentLinkedQueue["</span>.length())</span><br><span class="line">            sb.deleteCharAt(len - <span class="number">1</span>);</span><br><span class="line">        sb.append(<span class="string">']'</span>);</span><br><span class="line">        <span class="keyword">return</span> sb.toString();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//用一个Barrier同步打印</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> THREAD_COUNT = <span class="number">10</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> CountDownLatch LATCH = <span class="keyword">new</span> CountDownLatch(THREAD_COUNT);</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">InsertQueueTask</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> MConcurrentLinkedQueue&lt;Integer&gt; queue;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">InsertQueueTask</span><span class="params">(MConcurrentLinkedQueue&lt;Integer&gt; queue)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.queue = queue;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="annotation">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            queue.put(<span class="number">1</span>);</span><br><span class="line">            queue.put(<span class="number">2</span>);</span><br><span class="line">            queue.put(<span class="number">3</span>);</span><br><span class="line">            LATCH.countDown();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        MConcurrentLinkedQueue&lt;Integer&gt; queue = <span class="keyword">new</span> MConcurrentLinkedQueue&lt;&gt;();</span><br><span class="line">        ExecutorService executorService = Executors.newCachedThreadPool();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span>; ++i) &#123;</span><br><span class="line">            executorService.execute(<span class="keyword">new</span> InsertQueueTask(queue));</span><br><span class="line">        &#125;</span><br><span class="line">        executorService.shutdown();</span><br><span class="line">        LATCH.await();</span><br><span class="line">        System.out.println(queue);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><strong>ABA问题：</strong><br>如果只需基于一个正确old值就可以操作，那么ABA问题其实也不用考虑。如果A-&gt;B-&gt;A也认为发生了变化，那才需要考虑，使用<code>AtomicStampedReference</code>（提供一个额外的时间戳/version）来解决ABA问题。</p>
+<h1 id="二、基础知识">二、基础知识</h1><h2 id="1-_线程安全是什么">1. 线程安全是什么</h2><p>线程安全代码的核心在于对状态访问操作进行管理，特别是对共享的（Shared）和可变的（Mutable）状态的访问。</p>
+<p><strong>保证线程安全的3种方式</strong>：<br>（1）不在线程之间共享该状态变量（共享性）；<br>（2）将状态变量修改为不可变的变量（可变性）；<br>（3）在访问状态变量时使用同步；</p>
+<p><strong>怎么样设计以便于实现线程安全的关系</strong>：<br>封装性越好，越容易实现线程安全；<br>良好的面向对象技术，不可修改性，以及明确的不变性规范有利于实现线程安全；</p>
+<p>总结：<br>（1）一方面从面向对象的角度，对外设计合理的接口，可以减少实现线程安全的难度，比如public成员变量这样的做法就很难维护；<br>（2）一方面从线程安全正确性的角度，向public成员变量，可能与其他状态之间存在一些约束条件，public相当于对外的一种承诺，那这种约束条件如果也让调用者承担显然是一种很可怕的事情。</p>
+<p><strong>“线程安全”，“线程安全类”和“线程安全程序”</strong>：<br>使用线程安全类也不一定保证程序的就是线程安全的，线程安全类也可以包含非线程安全类，所谓的线程安全关于特定的状态并且是由特定的范围的；</p>
+<p><strong>线程安全是什么</strong>：<br>线程安全最核心的是<strong>正确性</strong>，当多个线程访问某个类时，这个类始终表现出正确的行为，这个类就是线程安全（正确性包含<strong>不变性约束</strong>和<strong>后验条件</strong>组成）。</p>
+<p><strong>无状态对象一定是线程安全的；</strong></p>
+<h2 id="2-_原子性">2. 原子性</h2><h3 id="竞态条件：">竞态条件：</h3><p>当某个计算的正确性取决于多个线程的<strong>交替执行时序</strong>，就会发生竞态条件；<br><strong>常见的竞态条件</strong>：Check-Then-Act操作；</p>
+<h3 id="复合操作的原子性：">复合操作的原子性：</h3><p>如果一组复合操作具有原子性也就不存在竞态条件；<br>使复合操作具有原子性本质上都需要加锁，Java中的原子类本质上是CAS自旋乐观锁；</p>
+<h3 id="加锁：">加锁：</h3><p>当状态为多个时，仅仅各自保证对单个状态的原子性操作是远远不够的，<strong>状态之间的不变性约束条件</strong>也必须满足。</p>
+<p><strong>（1）内置锁</strong>：每个Java对象都可以用做锁，对象头中Mark Word可以保存锁状态和锁记录，这是一种<strong>互斥锁</strong>，并且是<strong>可重入的锁</strong>；<br><strong>（2）重入</strong>：一个<strong>线程</strong>可以重复获取已经持有的锁，每个锁关联一个获取计数值和所有者线程，计数器为0表示为任何线程获取，一个线程每获取一次锁，计数器加1；</p>
+<h4 id="重入和死锁">重入和死锁</h4><p>Java的锁<strong>粒度是线程</strong>，可重入最大的好处是防止死锁，一个同步控制块中可以调用基于同一个锁的，如果是不可重入的那么将会造成死锁。</p>
+<h4 id="是否应该使用内置锁">是否应该使用内置锁</h4><p>使用内置锁可以省去创建显示的锁对象，但是很多时候直接使用内置锁同步控制状态的访问并不是好的做法：<br>（1）Synchronized同步阻塞是不可中断的，而显示锁可以中断，可以设置超时时间，可立即返回；<br>（2）使用内置锁迫使JVM需要在对象大小与加锁性能之间进行权衡；</p>
+<h4 id="活跃与性能">活跃与性能</h4><p>（1）同步控制块尽可能<strong>小和少</strong>；<br>（2）耗时操作（比如网络，控制台I/O）一定不要持有锁；</p>
+<h2 id="2-_对象的共享">2. 对象的共享</h2><h3 id="2-1_可见性">2.1 可见性</h3><p>一个线程对可变共享状态的修改能否被其他线程及时读取即对其他线程是否是可见的。</p>
+<p>CPU的指令重排序，线程自身的缓存，非原子性的操作等会对可见性造成影响。</p>
+<p>可见性仍然需要同步来保证，即使是volitable也是轻量级锁，它是通过锁缓存/总线（现代计算机应当是锁缓存）的方式来使得其他线程的缓存失效来保证可见性。</p>
+<h4 id="失效数据">失效数据</h4><p>缺乏同步可能导致失效数据，即其他线程获取的是已经过期的数据。<br><strong>失效数据的栗子</strong>：<br>HashMap在并发环境下因为导致无限循环（resize过程中形成有环的链表）；</p>
+<h4 id="最低安全性（out-of-thin-air-safety）">最低安全性（out-of-thin-air-safety）</h4><p>变量的读写操作都必须是原子操作，这保证即使我们可能读取是一个失效值，但至少这个值是由之前某个线程设置的。</p>
+<p>Java中局部变量表和操作数栈的slot是32位的，因此long和double这样的64位需要分解为两个32位的操作。这long和double导致读取和写入不是原子操作，volatile或者锁可以保证long和double的原子性操作。</p>
+<h4 id="保证可见性的手段">保证可见性的手段</h4><p>（1）加锁：Synchronized和ReentraLock，记住它们不仅仅是互斥，同样可以保证内存可见性；<br>（2）volatile变量：轻量级的同步机制，开销和它的语义相比可以忽略不计，保证不同线程对volatile变量的可见性，理解了<strong>锁缓存</strong>实现方式也就基本明白volatile能干什么，不能干什么；</p>
+<p><strong>volatile的应用</strong>：<br>（1）对于“Check-Then-Act”，volatile是一种典型的应用，保证volatile变量自身状态的可见性，比如状态标志（是否已初始化/关闭），双检锁等都可以用volatile的布尔变量控制；<br>（2）volatile显然不能保证复合操作的原子性，对于状态的复杂判断（比如状态之间有约束等）就不要用volatitle了，它只能保证可见性；<br>（3）server模式和client模式：server模式下JVM会进行更多优化，比如将循环中为被修改的变量提升到循环外部，使用volatitle声明，防止这一点；</p>
+<p><strong>使用volatile的条件</strong>：<br>（1）对变量的写入操作不依赖变量的当前值或者确保只有一个单个线程更新值；<br>（2）该变量不会与其他状态变量一起纳入不变性条件中；<br>（3）访问变量时不需要加锁，已经加锁了volatile也是多此一举；</p>
+<h2 id="2-2_发布与逸出（帮助我们判断线程安全的界限）">2.2 发布与逸出（帮助我们判断线程安全的界限）</h2><p><strong>发布（Public）</strong>：对象能够在当前作用域之外的代码中使用；<br><strong>逸出（escapse）</strong>：某个不应该发布或者不应该在某个时刻发布的对象被发布就是“逸出”；对于后者，我觉得还是在于保持正确的时序，比如某个对象应该在构造器调用完成前才能进行使用，就不应该因为某些不当的操作造成逸出导致不正确的调用时序；</p>
+<p>对象逸出的情况：<br>（1）在构造器中启动线程；<br>（2）在构造器中调用可被覆盖的方法，这还会因为多态导致不安全的问题；<br>（3）在构造器中将<code>this</code>注入到其他已经发布的对象中，因为你不能保证外部方法到底干了什么，比如：</p>
+<pre><code><span class="keyword">static</span> <span class="keyword">class</span> <span class="title">ThisEscape</span> {
+    <span class="function"><span class="keyword">public</span> <span class="title">ThisEscape</span>(<span class="params">EventSource source</span>) </span>{
+        source.registerListener(
+            <span class="keyword">new</span> EventListener() {
+                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onEvent</span>(<span class="params">Event e</span>) </span>{
+                    doSomething(e)
+                } 
+            });
+    }
+}
+</code></pre><p>通过定义<code>init()</code>方法，<code>dispose()</code>方法将初始化/释放的过程分离出来，保证时序的正确性；因此这不仅仅在抽象出回调接口，它的存在是必要的；</p>
+<h2 id="2-3_线程封闭">2.3 线程封闭</h2><p>封闭是相对于逸出的，可共享的，将变量限制在线程中使用从而保证线程安全。</p>
+<p><strong>Java中的线程封闭手段：</strong><br><strong>（1）Ad-hoc线程封闭</strong>：维护线程封闭性的职责完全由程序实现来承担，十分脆弱；它本身基于单线程子系统，自己保证只有单个线程对它进行使用。<br><strong>（2）栈封闭</strong>：使用局部变量，局部变量保存在栈的局部变量表中。需要保证的就是防止对象不会逸出，比如创建一个对象局部变量引用使用这问题，但是将它传入已经发布的方法，数组，集合等等这都存在破坏封闭的风险；<br><strong>（3）ThreadLocal类</strong>：我觉得在使用上<code>ThreadLocal&lt;T&gt;</code>相当于<code>Map&lt;ThreadId,T&gt;</code>，每个变量一个独立的副本，通常用于防止对可变的单实例变量或全局变量进行共享。ThreadLocal避免了使用共享静态缓冲区带来同步和频繁反配问题，线程终止后，这些值可以作为垃圾回收；</p>
+<h2 id="2-4_不变性">2.4 不变性</h2><p>不可变对象一定是线程安全的；</p>
+<p><strong>不可变对象的条件</strong>：<br>（1）状态一旦被创建就不再改变；<br>（2）所有的域都是final的（并不是绝对的，比如不可变类一个常用的优化是缓存hashCode，但它是计算一次并且基于不可变状态的）；<br>（3）对象被正确的构造；</p>
+<p>final成员变量+构造器控制，这里涉及到一个final是否会被CPU重排导致逸出的问题。基于Java内存模型的定义，通过内存屏障可以保证：<br>（1）在构造函数中对一个final写入和将这个被构造对象的引用赋值给一个引用变量，这两个操作之间不能被重排序；<br>（2）初次读一个包含final域的对象引用，与随后读取这个final域，这两个操作之间不能被重排序；</p>
+<p><strong>保护性拷贝</strong>：<br>不可变对象中可变域或者不可变域中也可能进一步引用可变对象，同样要注意防止逸出，通过保护性拷贝是一种常用的手段。</p>
+<h2 id="2-5_安全发布和共享">2.5 安全发布和共享</h2><p><strong>常用的安全发布模式</strong>（基于正确构造的对象）：<br>（1）在静态初始化函数中初始化一个对象引用，static块只执行一次并且是加锁阻塞的，这是有JVM来保证的（锁保护）；<br>（2）将对象的引用保存到volatile类型的域或者AtomicReferance对象中（可见性）；<br>（3）将对象的引用保存到某个正确构造对象的final类型域中（不可变）；<br>（4）将对象的引用保存到一个由锁保护的域中（锁保护）；</p>
+<p><strong>对象的可变性和发布需求：</strong><br>（1）不可变对象可以任意的发布；<br>（2）事实不可变对象必须通过安全方式发布（对象实际上不会改变，那么读写对象引用本身的安全就要靠安全的发布方式来保证）；<br>（3）可变对象必须通过安全方式来发布，并且必须是线程安全的或者某个锁保护起来；</p>
+<p><strong>安全的使用和共享对象的常用策略</strong>：<br>大部分线程安全问题在于共享性，可变性问题，首先要明确对象需要进行哪些操作，在此基础上，选择合适的线程安全策略：<br>（1）线程封闭：Ad-hod，栈封闭，ThreadLocal；<br>（2）只读共享（不可变对象和事实不可变对象）；<br>（3）线程安全共享：对象内部实现同步；<br>（4）保护对象：加锁；</p>
+<h1 id="栗子：">栗子：</h1><p>（1）自增操作：由三个指令构成的：读取-修改-写入（load，const，store），如果对一个状态进行并发修改就会存在竞态条件；<br>（2）延迟初始化：典型的Check-Then-Act操作；<br>（3）NoVisibility；<br>（4）Integer.toString()使用ThreadLocal保存线程独立的缓冲区；<br>（5）多个存在约束条件的变量可以放在一个不可变对象之中，使用volatile变量引用该类型不可变对象，这样可以同时保证约束不变和可见性；</p>
+<h1 id="3-_对象的组合（封装+组合模式——线程安全的设计）">3. 对象的组合（封装+组合模式——线程安全的设计）</h1><h2 id="3-1_设计线程安全的类（对象的状态的“安全”划分，哪些是封装自己控制，哪些是和别人共享的）">3.1 设计线程安全的类（对象的状态的“安全”划分，哪些是封装自己控制，哪些是和别人共享的）</h2><h3 id="基本原则：">基本原则：</h3><p><strong>设计线程安全类的3个基本要素</strong>：<br>（1）找出构成对象状态的所有变量；<br>（2）找出约束状态变量的不变性条件；<br>（3）建立对象状态的并发访问管理策略；</p>
+<p><strong>同步策略</strong>：基于所有状态和状态以及之间的<strong>先验，不变，后验条件</strong>，选择<strong>不可变性（对应可变性），线程封闭（对应共享性），加锁保护</strong>等结合起来维护线程安全性。</p>
+<p><strong>那些条件会影响线程安全</strong>：<br>（1）约束条件（不变性/后验条件）——&gt;存在无效状态——&gt;进行封装+原子性操作；<br>（2）不变性条件包含多个变量：<br>锁保护；<br>不可变对象包含所有的状态+volatile或者原子类引用这个对象；<br>（3）依赖状态：<br>先验条件（队列不为空），Check-then-Act；</p>
+<h3 id="状态的所有权：进行封装的基础">状态的所有权：进行封装的基础</h3><p>（1）独占控制权：自身内部状态可以封装在对象内部，而不逸出的部分（可以通过保护性拷贝传递给外界副本）；<br>（2）共享控制权：从外部传入或者需要发布的状态，那么这些对象可以是线程安全的对象，事实不可变对象，锁保护；</p>
+<p>栗子：容器类——“所有权分离”，ServletContext，Map；</p>
+<h2 id="3-2_实例封闭（独占控制权）">3.2 实例封闭（独占控制权）</h2><p>封装：实例封闭+加锁保护——&gt;线程安全方式使用非线程安全的对象，并且这个对象必须不能逸出；</p>
+<p>比如，SynchronizedMap与HashMap，封装了HashMap这个非线程安全的类，装饰器模式；</p>
+<p>通过实例封闭分析类的线程安全无须检查整个程序；</p>
+<h3 id="Java监视器模式">Java监视器模式</h3><p>监视器模式在于使用自己的内置锁来保护，简单明确。</p>
+<p><strong>私有锁，内置锁还是公有锁</strong>：<br>如果使用<code>synchronized(&quot;SOME_STR&quot;)</code>设置<code>synchronized(Integer.valueOf(1)</code>这样的公有锁的风险在于你不能保证其他地方是否会使用这样的锁，即使不是这样的全局单例的锁，而是一个成员变量形式的锁，如果存在逸出同样具有这样的风险。在这样情形下产生活跃性问题就是一个全局的问题。</p>
+<p><strong>使用私有锁</strong>的一个好处在于封闭性，这样我们就只需检查类本身，而不是整个程序，将耦合局限在局部。</p>
+<p><strong>实例封闭的优缺点</strong>：<br>优点：可以很好的保证内部的一致性需求；<br>缺点：可能需要结合保护性拷贝开销较大，不能支持实时的最新信息；</p>
+<h2 id="3-3_线程安全性的委托（共享控制权）">3.3 线程安全性的委托（共享控制权）</h2><p>PS：委托是创建线程安全类最有效的策略；</p>
+<p>注意虽然委托给线程安全的类，但如果多个变量存在约束条件，仍然需要考虑增加一个线程安全层；</p>
+<p>当一个类的多个可变状态时，一个做法是将它们统一的输入/输出，比如SafePoint，用一个数组输入和返回坐标(x,y)，<strong>我觉得这只是保证了最低安全性，但是x和y如果存在约束条件仍然是不安全的</strong>；</p>
+<p><strong>使用线程安全性委托的优缺点</strong>：<br>优点：可以反映最新的信息；<br>缺点：当内部的状态之间存在约束时，可能导致内部状态不一致；</p>
+<h2 id="3-4_现有的线程安全类添加功能">3.4 现有的线程安全类添加功能</h2><p>使用<strong>组合</strong>，装饰器模式；</p>
+<h2 id="线程安全类设计小结">线程安全类设计小结</h2><p>和进行复杂的系统的设计一样，在设计线程安全的程序时没有绝对好模式可以套，需要分析复杂的实际情况，依据一些原则，模式，经验来设计。<br>我深深的感到线程安全问题和设计类体系结构息息相关，比如考虑封装还是委托，委托中是否又可以抽象出线程安全层，具体使用那一种手段来设计。能够面对复杂情况设计合适策略，真的需要大量的实践经验和分析复杂问题的能力。</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java并发/">Java并发</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-Java并发（二）——同步容器" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/11/Java并发（二）——同步容器/" class="article-date">
+  	<time datetime="2015-12-11T06:48:41.000Z" itemprop="datePublished">2015-12-11</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/11/Java并发（二）——同步容器/">Java并发（二）——同步容器</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>这些同步容器通常被称为“遗留集合”，和J.U.C中并发容器相比确实没有必要特地使用它们，但是我觉得了解它们是怎样工作的，并且理解它们为什么过时了，有什么缺点对理解并发容器的优点以及自己实际开发也是十分有用的。</p>
+<p>同步容器与并发容器相比：<br>同步容器锁整个容器，多个线程存在竞争，可能会导致吞吐量降低；<br>因此同步容器并发支持度不高；</p>
+<h1 id="1-_体系结构">1. 体系结构</h1><p>（1）Vector，Stack（派生自Vector），和ArrayList的结构很相似，也采用动态增长的数组+复制机制。实现了List接口，同时派生自AbstractList。Stack只是对Vector简单扩展，提供了一些栈的API而已。<br>（2）HashTable，之后也实现Map，和HashMap的内部表示比较相近，但是一些细节比如容量控制等没有HashMap那样的优化；<br>（3）Collections中基于各种synchronized～工厂方法的容器内部类实现，是基本容器类的装饰器同步包装类；</p>
+<h1 id="2-_Vector">2. Vector</h1><h2 id="2-1_Vector要点">2.1 Vector要点</h2><p>（1）基于动态增长数组实现，支持<code>RandomAccess</code>，但是结构性修改需要复制数组；<br>（2）支持克隆和序列化，但是基于同步，如果包含的元素很多，可能导致其他操作的长时间阻塞；<br>（3）与并发容器相比，Vector这样的同步容器是锁整个容器，而且读写都需要同步，包含的元素越多，阻塞的时间越长，伸缩性较差；<br>（4）线程安全，在使用Vector进行组合操作时（迭代，跳转，条件运算）需要额外的基于Vector内置锁（Vector对象）进行加锁保护；</p>
+<h2 id="2-2_结构和操作">2.2 结构和操作</h2><h3 id="核心属性">核心属性</h3><p>（1）数组缓存区：</p>
+<pre><code><span class="keyword">protected</span> <span class="keyword">Object</span>[] elementData;
+<span class="keyword">protected</span> <span class="built_in">int</span> elementCount;
+</code></pre><p>（2）容量控制：<br>如果没有通过构造器指定这个值，默认每次容量扩展为原数组的2倍，如果指定了就增加指定的增量；</p>
+<pre><code><span class="keyword">protected</span> <span class="keyword">int</span> capacityIncrement;
+</code></pre><h3 id="操作">操作</h3><p>由于总结过ArrayList的源码，细节就不再赘述了：<br><a href="http://blog.zerohuan.com/2015/12/11/Java%208%E9%9B%86%E5%90%88%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94ArrayList/">Java 8集合源码学习——ArrayList </a>;</p>
+<p>大致重复一下几个部分：<br>（1）容量控制：grow，ensureCapacity～系列，trimeToSize（压缩）等；<br>（2）List实现方法；<br>（3）迭代器：iterator和listIterator实现；</p>
+<h2 id="2-3_Vector的线程安全">2.3 Vector的线程安全</h2><p>Vector的主要操作方法都是使用内置锁的同步方法，但是是否线程安全还要看是否正确的使用了它，一些需要同时使用Vector几个方法组合时，就需要在客户端进行加锁保护，操作涉及：<strong>迭代</strong>，<strong>跳转</strong>，<strong>条件运算</strong>；</p>
+<h3 id="Vector的迭代器：">Vector的迭代器：</h3><p>同步容器，虽然本身是线程安全的，但是它的迭代器仍然实现了<strong>fail-fast</strong>机制。因为<code>Itr</code>迭代器的hashNext，next和remove等方法虽然本身是同步的，但是它们组合使用时需要在客户端进行加锁，fail-fast机制的意义在于快速发现bug，说明使用者误用了容器类，而不是一种恢复机制（RuntimeException一般都表示程序员自己的误用）；</p>
+<p><strong>隐藏迭代器</strong>：<br><code>toString</code>，<code>equals</code>，<code>hashCode</code>，<code>containsAll</code>等方法，实际是基于迭代器的，因此在封装基本容器类（ArrayList等），加锁保护同时要注意这些情况。<br>Vector的这些方法基于内置锁进行同步；</p>
+<h1 id="3-_HashTable">3. HashTable</h1><p>总的来说，排除同步的需求，HashTable效率也是远不如Java 8的HashMap的；</p>
+<h2 id="3-1_HashTable要点">3.1 HashTable要点</h2><p>（1）HashTable同样是基于“数组+链表”实现的，但显然它没有Java 8中HashMap那样的红黑树的实现；<br>（2）视图基于Collections.synchronizedSet实现同步，注意其迭代器需要在客户端实现同步控制；<br>（3）锁定整个表，并发支持度低；</p>
+<h3 id="与HashMap的不同点：">与HashMap的不同点：</h3><p>（1）key和value不能为null，HashMap中null对应的hash值为0；<br>（2）容量并不是2的幂次方，因此计算index时需要使用mod运算，效率不如HashMap；<br>（3）创建时的策略：并没有采用HashMap的延迟分配桶数组内存而是在构造器中创建数组，默认容量大小为11，并且没有最小容量的限制；</p>
+<pre><code><span class="keyword">if</span> (initialCapacity==<span class="number">0</span>)
+        initialCapacity = <span class="number">1</span>;
+    <span class="keyword">this</span>.loadFactor = loadFactor;
+    table = <span class="keyword">new</span> Entry&lt;?,?&gt;[initialCapacity];
+    threshold = (<span class="keyword">int</span>)Math.min(initialCapacity * loadFactor, MAX_ARRAY_SIZE + <span class="number">1</span>);     
+</code></pre><p>（4）视图不是用Set而是Enumeration实现的；</p>
+<h2 id="3-2_结构和操作">3.2 结构和操作</h2><p>属性不用多说核心的包括：table，count，threshold，loadFactor，modCount；</p>
+<h3 id="操作-1">操作</h3><p><strong>get：计算索引+链表查找</strong></p>
+<pre><code><span class="keyword">public</span> <span class="keyword">synchronized</span> V <span class="built_in">get</span>(<span class="keyword">Object</span> <span class="variable">key</span>) {
+    Entry&lt;?,?&gt; tab[] = table;
+    <span class="built_in">int</span> hash = <span class="variable">key</span>.hashCode();
+    <span class="comment">//计算是哪个桶</span>
+    <span class="built_in">int</span> index = (hash &amp; <span class="number">0x7FFFFFFF</span>) % tab.length;
+    <span class="keyword">for</span> (Entry&lt;?,?&gt; e = tab[index]; e != <span class="keyword">null</span>; e = e.next) {
+        <span class="comment">//不允许null的key</span>
+        <span class="keyword">if</span> ((e.hash == hash) &amp;&amp; e.<span class="variable">key</span>.equals(<span class="variable">key</span>)) {
+            <span class="keyword">return</span> (V)e.value;
+        }
+    }
+    <span class="keyword">return</span> <span class="keyword">null</span>;
+}
+</code></pre><p><strong>put：</strong><br>保证value不为null：</p>
+<pre><code><span class="keyword">if</span> (<span class="keyword">value</span> == <span class="keyword">null</span>) {
+    <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();
+}
+</code></pre><p>计算桶位置：</p>
+<pre><code>Entry&lt;?,?&gt; <span class="keyword">tab</span>[] = table;
+<span class="keyword">int</span> hash = key.hashCode();
+<span class="keyword">int</span> <span class="built_in">index</span> = (hash &amp; <span class="number">0</span>x7FFFFFFF) % <span class="keyword">tab</span>.length;
+</code></pre><p>查看表中是否已经存在：</p>
+<pre><code>for(; <span class="built_in">entry</span> <span class="comment">!= null ; entry = entry.next) {</span>
+        <span class="keyword">if</span> ((<span class="built_in">entry</span>.hash == hash) &amp;&amp; <span class="built_in">entry</span>.key.equals(key)) {
+            V old = <span class="built_in">entry</span>.<span class="keyword">value</span>;
+            <span class="built_in">entry</span>.<span class="keyword">value</span> = <span class="keyword">value</span>;
+            <span class="keyword">return</span> old;
+        }
+    }
+</code></pre><p>添加新键值对：</p>
+<pre><code>Entry&lt;?,?&gt; <span class="keyword">tab</span>[] = <span class="keyword">table</span>;
+    <span class="keyword">if</span> (<span class="keyword">count</span> &gt;= threshold) {
+        <span class="comment">// Rehash the table if the threshold is exceeded</span>
+        rehash();
+
+        <span class="keyword">tab</span> = <span class="keyword">table</span>;
+        hash = key.hashCode();
+        index = (hash &amp; 0x7FFFFFFF) % <span class="keyword">tab</span>.length;
+    }
+
+    <span class="comment">// Creates the new entry.</span>
+    @SuppressWarnings(<span class="string">"unchecked"</span>)
+    Entry&lt;K,V&gt; <span class="keyword">e</span> = (Entry&lt;K,V&gt;) <span class="keyword">tab</span>[index];
+    <span class="keyword">tab</span>[index] = new Entry&lt;&gt;(hash, key, value, <span class="keyword">e</span>);
+    <span class="keyword">count</span>++;
+</code></pre><p><strong>rehash：再散列（扩容+迁移）：</strong><br>扩容：</p>
+<pre><code><span class="keyword">int</span> newCapacity = (oldCapacity &lt;&lt; <span class="number">1</span>) + <span class="number">1</span>;
+<span class="keyword">if</span> (newCapacity - MAX_ARRAY_SIZE &gt; <span class="number">0</span>) {
+    <span class="keyword">if</span> (oldCapacity == MAX_ARRAY_SIZE)
+        <span class="comment">// Keep running with MAX_ARRAY_SIZE buckets</span>
+        <span class="keyword">return</span>;
+    newCapacity = MAX_ARRAY_SIZE;
+}
+Entry&lt;?,?&gt;[] newMap = <span class="keyword">new</span> Entry&lt;?,?&gt;[newCapacity];
+</code></pre><p>每个桶迁移，在链表头部插入：</p>
+<pre><code>for (<span class="built_in">int</span> i = oldCapacity ; i-- &gt; <span class="number">0</span> ;) {
+        for (<span class="built_in">Entry</span>&lt;K,V&gt; old = (<span class="built_in">Entry</span>&lt;K,V&gt;)oldMap[i] ; old <span class="comment">!= null ; ) {</span>
+            <span class="built_in">Entry</span>&lt;K,V&gt; e = old;
+            old = old.next;
+
+            <span class="built_in">int</span> <span class="built_in">index</span> = (e.hash &amp; x7FFFFFFF) % newCapacity;
+            e.next = (<span class="built_in">Entry</span>&lt;K,V&gt;)newMap[<span class="built_in">index</span>];
+            newMap[<span class="built_in">index</span>] = e;
+        }
+    }
+</code></pre><h1 id="4-_Collections同步容器">4. Collections同步容器</h1><p>结合Java容器类的体系结构，Collections中同步装饰器同样包含：<br><code>SynchronizedCollection</code>;<br><code>SynchronizedList</code>；<br><code>SynchronizedSet</code>；<br><code>SynchronizedMap</code>；<br>等等；</p>
+<h2 id="要点">要点</h2><p>（1）基于装饰器模式，大多操作方法都是对基本容器类的委托；<br>（2）基于额外的<code>final Object mutex;</code>互斥锁，但是在客户端同步仍然可以基于容器对象同步复合操作；<br>（3）迭代器需要额外的同步：</p>
+<pre><code><span class="keyword">public</span> ListIterator&lt;E&gt; listIterator() {
+        <span class="function"><span class="keyword">return</span> list.<span class="title">listIterator</span><span class="params">()</span></span>; <span class="comment">// Must be manually synched by user</span>
+    }
+    <span class="keyword">public</span> ListIterator&lt;E&gt; listIterator(<span class="keyword">int</span> index) {
+        <span class="function"><span class="keyword">return</span> list.<span class="title">listIterator</span><span class="params">(index)</span></span>; <span class="comment">// Must be manually synched by user</span>
+    }
+</code></pre><p>（4）子列表，Map的Set视图等提供的并不是实时的最新信息，因此可以根据需求基于这个事实指定同步策略，比如利用不可变对象，加强锁保护等等；</p>
+<h2 id="具体类实现要点">具体类实现要点</h2><p><strong>SynchronizedList：</strong><br>（1）List一般可以基于数组和链表两种实现，可以通过是否实现<code>RandomAccess</code>接口进行判断，这里区分的目的在与保持RandomAccess接口实现：</p>
+<pre><code><span class="function"><span class="keyword">public</span> List&lt;E&gt; <span class="title">subList</span><span class="params">(<span class="keyword">int</span> fromIndex, <span class="keyword">int</span> toIndex)</span> </span>{
+        <span class="keyword">synchronized</span> (mutex) {
+            <span class="keyword">return</span> <span class="keyword">new</span> SynchronizedRandomAccessList&lt;&gt;(
+                list.subList(fromIndex, toIndex), mutex);
+        }
+    }
+</code></pre><p>（2）subList提供另外副本（弱一致性）：</p>
+<pre><code><span class="function"><span class="keyword">public</span> List&lt;E&gt; <span class="title">subList</span><span class="params">(<span class="keyword">int</span> fromIndex, <span class="keyword">int</span> toIndex)</span> </span>{
+        <span class="keyword">synchronized</span> (mutex) {
+            <span class="keyword">return</span> <span class="keyword">new</span> SynchronizedList&lt;&gt;(list.subList(fromIndex, toIndex),
+                                        mutex);
+        }
+    }
+</code></pre>
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java并发/">Java并发</a></li></ul>
 	</div>
 
       
@@ -1219,119 +1623,6 @@ E elementData(<span class="keyword">int</span> <span class="keyword">index</span
 
 
   
-    <article id="post-反射工具——运行时打印对象状态（包括数组域）" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/12/09/反射工具——运行时打印对象状态（包括数组域）/" class="article-date">
-  	<time datetime="2015-12-09T08:38:24.000Z" itemprop="datePublished">2015-12-09</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/09/反射工具——运行时打印对象状态（包括数组域）/">反射工具——运行时打印对象状态（包括数组域）</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>这两天遇到一个需求像打印出一个对象的状态，包括private域和多维数组域，因此写了个小工具类，打印数组的函数用递归实现处理多维数组（使用java.lang.reflect.Array打印数组值）：</p>
-<pre><code><span class="comment">/**
- * 打印一个对象的实例数据状态
- * @param obj
- * @param out
- */</span>
-<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">printStatus</span>(<span class="params">Object obj, PrintStream <span class="keyword">out</span></span>)</span>{
-    Class&lt;?&gt; claz = obj.getClass();
-    Field[] fields = claz.getDeclaredFields();
-    <span class="keyword">try</span> {
-        <span class="keyword">for</span>(Field field : fields) {
-            field.setAccessible(<span class="keyword">true</span>);
-            <span class="keyword">out</span>.print(field);
-            <span class="keyword">out</span>.print(<span class="string">"\t"</span>);
-            Object fieldObj = field.<span class="keyword">get</span>(obj);
-
-            <span class="comment">//判断是否为空</span>
-            <span class="keyword">if</span>(fieldObj == <span class="keyword">null</span>)
-                <span class="keyword">out</span>.println(<span class="string">"null"</span>);
-            <span class="keyword">else</span> {
-                Class&lt;?&gt; fieldClass = fieldObj.getClass();
-                <span class="comment">//判断是否为数组</span>
-                <span class="keyword">if</span>(fieldClass.isArray()) {
-                    printArray(fieldObj, <span class="keyword">out</span>);
-                    <span class="keyword">out</span>.println();
-                } <span class="keyword">else</span> {
-                    <span class="keyword">out</span>.println(fieldObj);
-                }
-            }
-        }
-    } <span class="keyword">catch</span> (IllegalAccessException e) {
-        e.printStackTrace();
-    }
-}
-
-<span class="comment">/**
- * 反射打印数组，如果是多维数组递归打印
- * @param arr
- * @param out
- */</span>
-<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">printArray</span>(<span class="params">Object arr, PrintStream <span class="keyword">out</span></span>) </span>{
-    Class&lt;?&gt; arrClass = arr.getClass();
-    <span class="keyword">if</span>(arrClass.isArray()) {
-        <span class="keyword">int</span> length = Array.getLength(arr);
-        <span class="keyword">out</span>.print(<span class="string">'['</span>);
-        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; length; ++i) {
-            Object o = Array.<span class="keyword">get</span>(arr, i);
-            <span class="comment">//如果元素仍然是数组类型，递归打印</span>
-            <span class="keyword">if</span>(o.getClass().isArray()) {
-                printArray(o, <span class="keyword">out</span>);
-            } <span class="keyword">else</span> {
-                <span class="keyword">out</span>.print(o);
-                <span class="keyword">if</span>(i &lt; length - <span class="number">1</span>)
-                    <span class="keyword">out</span>.print(<span class="string">","</span>);
-            }
-        }
-        <span class="keyword">out</span>.print(<span class="string">']'</span>);
-    }
-}
-</code></pre>
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/思考和求解/">思考和求解</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
     <article id="post-final变量+匿名内部类的字节码分析，以及Java 8中的使用" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
@@ -1450,11 +1741,11 @@ final com.jvm.showByteCode.FinalParameter this<span class="variable">$0</span>;
 
 
   
-    <article id="post-NIO与select和enpoll" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-反射工具——运行时打印对象状态（包括数组域）" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2015/12/09/NIO与select和enpoll/" class="article-date">
-  	<time datetime="2015-12-08T17:25:18.000Z" itemprop="datePublished">2015-12-09</time>
+      <a href="/2015/12/09/反射工具——运行时打印对象状态（包括数组域）/" class="article-date">
+  	<time datetime="2015-12-09T08:38:24.000Z" itemprop="datePublished">2015-12-09</time>
 </a>
     </div>
   
@@ -1467,7 +1758,7 @@ final com.jvm.showByteCode.FinalParameter this<span class="variable">$0</span>;
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/09/NIO与select和enpoll/">NIO与select和enpoll</a>
+      <a class="article-title" href="/2015/12/09/反射工具——运行时打印对象状态（包括数组域）/">反射工具——运行时打印对象状态（包括数组域）</a>
     </h1>
   
 
@@ -1476,778 +1767,66 @@ final com.jvm.showByteCode.FinalParameter this<span class="variable">$0</span>;
     
     <div class="article-entry" itemprop="articleBody">
       
-        
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
-    <article id="post-Java 8集合源码学习——LinkedList" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/12/07/Java 8集合源码学习——LinkedList/" class="article-date">
-  	<time datetime="2015-12-07T14:28:49.000Z" itemprop="datePublished">2015-12-07</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/07/Java 8集合源码学习——LinkedList/">Java 8集合源码学习——LinkedList</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>参考学习资料：<br>（1）<a href="http://blog.csdn.net/ns_code/article/details/35787253" target="_blank" rel="external">JDK1.7之前的【Java集合源码剖析】LinkedList源码剖析</a></p>
-<h2 id="1-_LinkedList的要点">1. LinkedList的要点</h2><p><strong>（1）双向链表</strong>：LinkedList基于双向链表实现的（Entry有next，previous指针），因此可以把它当栈，队列和双端队列使用；<br>在JDK1.7之前LinkedList之前是循环链表的方式实现两端插入的，包含一个无值的头结点，JDK1.7及以上是包含两个指针分别指向头结点和尾结点；<br><strong>（3）线程不安全</strong>：LinkedList通过维护modCount修改计数，每个迭代器保存各自的修改计数与modCount对比检验的方式防止并发修改；<br><strong>（4）性能特点</strong>：由于是链表实现，<strong>不支持快速随机存取</strong>，因此get(index)效率不高，在循环时一定注意不能误用；支持<strong>高效的结构性修改</strong>（只需要移动指针指向）；因此LinkedList定义了内部类实现ListIterator，避免使用效率低下的<code>get()</code>（AbstractList的迭代器是基于<code>get()</code>的），<code>iterator()</code>返回也是这个内部类实例；<br><strong>（5）克隆和序列化</strong>：实现了Serializable和Cloneable接口，支持序列化和克隆，其中序列化使用writeObject和readObject不采用默认的序列化机制，只保存size和元素对象，一方面是隐藏内部表示信息，一方面节省了开销；<br><strong>（6）置空操作</strong>：强调一点，对应容器，删除结点时<code>x = null;</code>是很有必要的，让容器，容器中的结点在清除后不要互相引用的保存在堆中，影响垃圾回收，因为JVM一般是进行可达性分析的；</p>
-<h2 id="2-_基本结构">2. 基本结构</h2><h3 id="2-1_结点类">2.1 结点类</h3><p>双向链表，链表包含2个指针：头结点指针，尾结点指针；<br>结点（Node），包含2个指针，指向前驱结点和后序结点；</p>
-<pre><code>transient int size = <span class="number">0</span>;    
-//不变式：(first == null &amp;&amp; last == null) || (first.prev == null &amp;&amp; first.item != null)
-transient <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; first;
-//不变式：(first == null &amp;&amp; last == null) || (last.next == null &amp;&amp; last.item != null)
-transient <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; last;
-//结点
-private static class <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; {
-    E item;
-    <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; next;
-    <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; prev;
-
-    <span class="keyword">Node</span><span class="identifier"></span><span class="title">(Node</span><span class="tag">&lt;E&gt;</span> prev, E element, <span class="keyword">Node</span><span class="identifier"></span><span class="title">&lt;E</span>&gt; next) {
-        this.item = element;
-        this.next = next;
-        this.prev = prev;
-    }
-}
-</code></pre><h3 id="2-2_列表迭代器ListIterator非静态内部类实现">2.2 列表迭代器ListIterator非静态内部类实现</h3><p>（1）每个迭代器对象独立维护一个expectedModCount进行修改计数检查，每次进行修改操作之前（包括set方法）检查计数，防止并发修改（抛出ConcurrentModificationException异常）；<br>（2）lastReturned这个变量很关键，结构性修改一次之后（add和remove）这个变量被置空，因此对于迭代器调用一次add或remove之后调用next才可以在此remove和set；<br>（3）ListIterator支持两个方向的迭代遍历；</p>
-<pre><code><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">ListItr</span> <span class="keyword">implements</span> <span class="title">ListIterator</span>&lt;<span class="title">E</span>&gt; </span>{
-    <span class="comment">//lastReturned保存最后返回的结点引用，当add，remove结构性修改后将这个值置空用于标识结构结构已修改</span>
-    <span class="keyword">private</span> Node&lt;E&gt; lastReturned;
-    <span class="keyword">private</span> Node&lt;E&gt; next;
-    <span class="keyword">private</span> <span class="keyword">int</span> nextIndex;
-    <span class="comment">//每个迭代器保存创建时modCount，维护自己的modCount防止因为并发修改造成的不一致</span>
-    <span class="keyword">private</span> <span class="keyword">int</span> expectedModCount = modCount;
-
-    ListItr(<span class="keyword">int</span> index) {
-        next = (index == size) ? <span class="keyword">null</span> : node(index);
-        nextIndex = index;
-    }
-
-    <span class="annotation">@Override</span>
-    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">add</span><span class="params">(E e)</span> </span>{
-        <span class="comment">//每次结构性修改之前必须先检查modCount是否同步，保证同时只有一个ListIterator可以修改链表</span>
-        checkForComodification();
-        <span class="comment">//lastReturned置空，防止删除之前的结点</span>
-        lastReturned = <span class="keyword">null</span>;
-        <span class="keyword">if</span>(next == <span class="keyword">null</span>)
-            linkLast(e);
-        <span class="keyword">else</span>
-            linkBefore(e, next);
-        nextIndex++;
-        expectedModCount++;
-    }
-
-    <span class="annotation">@Override</span>
-    <span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">hasNext</span><span class="params">()</span> </span>{
-        <span class="keyword">return</span> nextIndex &lt; size;
-    }
-
-    <span class="annotation">@Override</span>
-    <span class="keyword">public</span> <span class="function">E <span class="title">next</span><span class="params">()</span> </span>{
-        <span class="comment">//检查修改计数</span>
-        checkForComodification();
-        <span class="keyword">if</span>(!hasNext())
-            <span class="keyword">throw</span> <span class="keyword">new</span> NoSuchElementException();
-        lastReturned = next;
-        next = next.next;
-        nextIndex++;
-        <span class="keyword">return</span> lastReturned.item;
-    }
-
-    <span class="annotation">@Override</span>
-    <span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">hasPrevious</span><span class="params">()</span> </span>{
-        <span class="comment">//nextIndex时显然不能有prev</span>
-        <span class="keyword">return</span> nextIndex &gt; <span class="number">0</span>;
-    }
-
-    <span class="comment">//前一个结点，此时next和lastReturned值一致</span>
-    <span class="annotation">@Override</span>
-    <span class="keyword">public</span> <span class="function">E <span class="title">previous</span><span class="params">()</span> </span>{
-        checkForComodification();
-        <span class="keyword">if</span>(!hasPrevious())
-            <span class="keyword">throw</span> <span class="keyword">new</span> NoSuchElementException();
-        nextIndex--;
-        lastReturned = next = (next == <span class="keyword">null</span>) ? last : next.prev;
-        <span class="keyword">return</span> lastReturned.item;
-    }
-
-    <span class="annotation">@Override</span>
-    <span class="keyword">public</span> <span class="function"><span class="keyword">int</span> <span class="title">nextIndex</span><span class="params">()</span> </span>{
-        <span class="keyword">return</span> nextIndex;
-    }
-
-    <span class="annotation">@Override</span>
-    <span class="keyword">public</span> <span class="function"><span class="keyword">int</span> <span class="title">previousIndex</span><span class="params">()</span> </span>{
-        <span class="keyword">return</span> nextIndex - <span class="number">1</span>;
-    }
-
-    <span class="comment">//删除最后返回的结点</span>
-    <span class="annotation">@Override</span>
-    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">remove</span><span class="params">()</span> </span>{
-        <span class="comment">//检查修改计数</span>
-        checkForComodification();
-        <span class="keyword">if</span>(lastReturned == <span class="keyword">null</span>)
-            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException();
-
-        Node&lt;E&gt; lastNext = lastReturned.next;
-        unlink(lastReturned);
-        <span class="comment">//如果next和lastReturned（这种情况在previous执行后出现），要修改next值</span>
-        <span class="keyword">if</span>(next == lastReturned)
-            next = lastNext; <span class="comment">//虽然删除了一个结点，但是next向后移动了一位，因此nextIndex值不需要修改</span>
-        <span class="keyword">else</span>
-            nextIndex--;
-        lastReturned = <span class="keyword">null</span>;
-        expectedModCount++;
-    }
-
-    <span class="comment">//修改最后返回结点的值</span>
-    <span class="annotation">@Override</span>
-    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">set</span><span class="params">(E e)</span> </span>{
-        <span class="keyword">if</span>(lastReturned == <span class="keyword">null</span>)
-            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException();
-        checkForComodification();
-        lastReturned.item = e;
-    }
-
-    <span class="comment">//检查是否并发修改</span>
-    <span class="keyword">final</span> <span class="function"><span class="keyword">void</span> <span class="title">checkForComodification</span><span class="params">()</span> </span>{
-        <span class="keyword">if</span> (modCount != expectedModCount)
-            <span class="keyword">throw</span> <span class="keyword">new</span> ConcurrentModificationException();
-    }
-}
-</code></pre><h2 id="3-_操作">3. 操作</h2><p>LinkedList继承自AbstractSequentialList，实现了List，Deque，Serializable和Cloneable；因此可以按此顺序进行解释，首先分析LinkedList自身最很核心的方法。</p>
-<h3 id="3-1_核心操作">3.1 核心操作</h3><p>包括linkFirst，linkLast，linkBefore，unlink，unlinkFirst，unlinkLast，node；这7个方法实现了双向链表最核心的功能，其他接口实现大部分是基于这7个方法的。</p>
-<p>这些方法有几个重要的细节：<br>（1）删除结点的时候置空操作；<br>（2）modCount的修改；<br>（3）node方法查找某个位置的结点根据index和size/2的关系进行优化处理；</p>
-<pre><code><span class="comment">//在头端插入</span>
-<span class="keyword">private</span> <span class="keyword">void</span> linkFirst(E e) {
-    <span class="keyword">final</span> Node&lt;E&gt; f = first;
-    <span class="keyword">final</span> Node&lt;E&gt; newNode = <span class="keyword">new</span> Node&lt;&gt;(e, <span class="keyword">null</span>, f);
-    first = newNode;
-    <span class="keyword">if</span>(f == <span class="keyword">null</span>) {
-        <span class="comment">//原链表为空时last指针也要指向新结点</span>
-        last = newNode;
-    } <span class="keyword">else</span> {
-        f.prev = newNode;
-    }
-    ++<span class="keyword">size</span>;
-    <span class="comment">//增加修改次数</span>
-    ++modCount;
-}
-<span class="comment">//在尾端插入</span>
-<span class="keyword">void</span> linkLast(E e) {
-    <span class="keyword">final</span> Node&lt;E&gt; l = last;
-    <span class="keyword">final</span> Node&lt;E&gt; newNode = <span class="keyword">new</span> Node&lt;&gt;(e, l, <span class="keyword">null</span>);
-    last = newNode;
-    <span class="keyword">if</span>(l == <span class="keyword">null</span>) {
-        <span class="comment">//原链表为空时first指针也要执行新结点</span>
-        first = newNode;
-    } <span class="keyword">else</span> {
-        l.<span class="keyword">next</span> = newNode;
-    }
-    ++<span class="keyword">size</span>;
-    ++modCount;
-}
-<span class="comment">//在指定结点前插入</span>
-<span class="keyword">void</span> linkBefore(E e, Node&lt;E&gt; succ) {
-    <span class="keyword">final</span> Node&lt;E&gt; pred = succ.prev;
-    <span class="keyword">final</span> Node&lt;E&gt; newNode = <span class="keyword">new</span> Node&lt;&gt;(e, succ.prev, succ);
-    succ.prev = newNode;
-    <span class="keyword">if</span>(pred == <span class="keyword">null</span>) {
-        first = newNode;
-    } <span class="keyword">else</span> {
-        pred.<span class="keyword">next</span> = newNode;
-    }
-    ++<span class="keyword">size</span>;
-    ++modCount;
-}
-<span class="comment">//删除第一个结点，由调用者判断是否有头结点</span>
-<span class="keyword">private</span> E unlinkFirst(Node&lt;E&gt; f) {
-    <span class="keyword">final</span> E element = f.item;
-    <span class="keyword">final</span> Node&lt;E&gt; <span class="keyword">next</span> = f.<span class="keyword">next</span>;
-    f.<span class="keyword">next</span> = <span class="keyword">null</span>; <span class="comment">//删除之后置为null，不影响被引用对象的垃圾回收</span>
-    f.item = <span class="keyword">null</span>;
-    first = <span class="keyword">next</span>; <span class="comment">//first指针指向next</span>
-    <span class="keyword">if</span>(<span class="keyword">next</span> == <span class="keyword">null</span>)
-        last = <span class="keyword">null</span>;
-    <span class="keyword">else</span>
-        <span class="keyword">next</span>.prev = <span class="keyword">null</span>;
-    --<span class="keyword">size</span>; <span class="comment">//数量减少</span>
-    ++modCount; <span class="comment">//修改计数增加</span>
-    <span class="keyword">return</span> element;
-}
-<span class="comment">//删除最后一个结点</span>
-<span class="keyword">private</span> E unlinkLast(Node&lt;E&gt; l) {
-    <span class="keyword">final</span> E element = l.item;
-    <span class="keyword">final</span> Node&lt;E&gt; prev = l.prev;
-    l.item = <span class="keyword">null</span>; <span class="comment">//置空不影响原被引用对象的垃圾回收</span>
-    l.prev = <span class="keyword">null</span>;
-    last = prev;
-    <span class="keyword">if</span>(prev == <span class="keyword">null</span>)
-        first = <span class="keyword">null</span>;
-    <span class="keyword">else</span>
-        prev.<span class="keyword">next</span> = <span class="keyword">null</span>;
-    --<span class="keyword">size</span>;
-    ++modCount;
-    <span class="keyword">return</span> element;
-}
-<span class="comment">//删除链表中某个结点</span>
-E unlink(Node&lt;E&gt; x) {
-    <span class="keyword">final</span> E element = x.item;
-    <span class="keyword">final</span> Node&lt;E&gt; prev = x.prev;
-    <span class="keyword">final</span> Node&lt;E&gt; <span class="keyword">next</span> = x.<span class="keyword">next</span>;
-    x.item = <span class="keyword">null</span>; <span class="comment">//置空，不影响垃圾回收</span>
-    <span class="keyword">if</span>(prev == <span class="keyword">null</span>)
-        first = <span class="keyword">next</span>;
-    <span class="keyword">else</span> {
-        prev.<span class="keyword">next</span> = <span class="keyword">next</span>;
-        x.prev = <span class="keyword">null</span>;
-    }
-    <span class="keyword">if</span>(<span class="keyword">next</span> == <span class="keyword">null</span>)
-        last = prev;
-    <span class="keyword">else</span> {
-        <span class="keyword">next</span>.prev = prev;
-        x.<span class="keyword">next</span> = <span class="keyword">null</span>;
-    }
-    --<span class="keyword">size</span>;
-    ++modCount;
-    <span class="keyword">return</span> element;
-}
-
-<span class="comment">//获取指定位置的结点，通过index是否小于size/2进行优化</span>
-Node&lt;E&gt; node(<span class="keyword">int</span> index) {
-    <span class="comment">//如果小于size / 2从头开始搜索，否则从尾开始搜索</span>
-    <span class="keyword">if</span>(index &lt; (<span class="keyword">size</span> &gt;&gt; <span class="number">1</span>)) {
-        Node&lt;E&gt; x = first;
-        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; index; ++i)
-            x = x.<span class="keyword">next</span>;
-        <span class="keyword">return</span> x;
-    } <span class="keyword">else</span> {
-        Node&lt;E&gt; x = last;
-        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="keyword">size</span> - <span class="number">1</span>; i &gt;= <span class="number">0</span>; --i)
-            x = x.prev;
-        <span class="keyword">return</span> x;
-    }
-}
-</code></pre><h3 id="3-2_私有辅助方法">3.2 私有辅助方法</h3><p>包括检查<strong>查找索引</strong>，<strong>插入位置</strong>是否合法；</p>
-<pre><code><span class="comment">//检查索引是否合法</span>
-<span class="keyword">private</span> <span class="keyword">boolean</span> isElementIndex(<span class="keyword">int</span> <span class="keyword">index</span>) {
-    <span class="keyword">return</span> <span class="keyword">index</span> &gt;= <span class="number">0</span> &amp;&amp; <span class="keyword">index</span> &lt; size;
-}
-<span class="comment">//检查索引是否合法，不合法抛出异常</span>
-<span class="keyword">private</span> <span class="keyword">void</span> checkElementIndex(<span class="keyword">int</span> <span class="keyword">index</span>) {
-    <span class="keyword">if</span>(isElementIndex(<span class="keyword">index</span>))
-        <span class="keyword">throw</span> <span class="keyword">new</span> IndexOutOfBoundsException(outOfBoundsMsg(<span class="keyword">index</span>));
-}
-<span class="keyword">private</span> String outOfBoundsMsg(<span class="keyword">int</span> <span class="keyword">index</span>) {
-    <span class="keyword">return</span> <span class="string">"Index: "</span>+<span class="keyword">index</span>+<span class="string">", Size: "</span>+size;
-}
-<span class="comment">//检查待插入位置的索引值是否合法</span>
-<span class="keyword">private</span> <span class="keyword">boolean</span> isPositionIndex(<span class="keyword">int</span> <span class="keyword">index</span>) {
-    <span class="keyword">return</span> <span class="keyword">index</span> &gt;= <span class="number">0</span> &amp;&amp; <span class="keyword">index</span> &lt;= size;
-}
-<span class="comment">//检查待插入位置的索引值是否合法，不合法抛出异常</span>
-<span class="keyword">private</span> <span class="keyword">void</span> checkPositionIndex(<span class="keyword">int</span> <span class="keyword">index</span>) {
-    <span class="keyword">if</span>(isPositionIndex(<span class="keyword">index</span>))
-        <span class="keyword">throw</span> <span class="keyword">new</span> IndexOutOfBoundsException(outOfBoundsMsg(<span class="keyword">index</span>));
-} 
-</code></pre><h3 id="3-3_List接口实现">3.3 List接口实现</h3><p>（1）基于Node内部表示，因此List的关键方法也要依赖与内部表示；<br>（2）注意，LinkedList的subList实现没有覆盖AbstractList的实现；</p>
-<pre><code><span class="comment">//添加结点，在表尾</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">add</span><span class="params">(E e)</span> </span>{
-    linkLast(e);
-    <span class="keyword">return</span> <span class="keyword">true</span>;
-}
-
-<span class="comment">//在指定位置添加结点</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> index, E element)</span> </span>{
-    <span class="comment">//检查插入位置是否合法</span>
-    checkPositionIndex(index);
-
-    <span class="keyword">if</span>(index == size) <span class="comment">//排除为空的可能</span>
-        linkLast(element);
-    <span class="keyword">else</span> { <span class="comment">//index &lt; size时</span>
-        linkBefore(element, node(index));
-    }
-}
-
-<span class="comment">//将一个集合中元素添加在指定位置之后，注意双向链表中指针值的设置</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">addAll</span><span class="params">(<span class="keyword">int</span> index, Collection&lt;? <span class="keyword">extends</span> E&gt; c)</span> </span>{
-    <span class="comment">//检验插入位置是否合法</span>
-    checkPositionIndex(index);
-
-    <span class="comment">//将这个集合中的保存到新数组中，再进行操作，这是一种“安全”的做法</span>
-    <span class="comment">//使用toArray的目的是为了调用者可以自由的操作这个数组，而不会影响原来的集合</span>
-    <span class="comment">//返回的是对象数组，因为将集合类本身并不知道具体是什么类型，因此无法以最具体的类型声明数组</span>
-    <span class="comment">//调用此方法也意味着我们要进行强制类型转换，不过可以像addAll这样通过参数的类型参数来限制保证正确的类型</span>
-    Object[] a = c.toArray();
-    <span class="keyword">int</span> numNew = a.length; <span class="comment">//arraylength指令（乱入一记字节码指令）</span>
-    <span class="keyword">if</span>(numNew == <span class="number">0</span>)
-        <span class="keyword">return</span> <span class="keyword">false</span>;
-
-    <span class="comment">//声明两个变量（指针）用来辅助设置插入过程中前后结点的指针值</span>
-    <span class="comment">//保存succ最后修改这个结点的prev指针（如果不为空的话）</span>
-    Node&lt;E&gt; pred, succ;
-    <span class="comment">//插入位置正好是末尾，无法通过node()查找定位到</span>
-    <span class="comment">//否则找到index位置的结点，并确定pred的值</span>
-    <span class="keyword">if</span>(index == size) {
-        pred = last;
-        succ = <span class="keyword">null</span>;
-    } <span class="keyword">else</span> {
-        succ = node(index);
-        pred = succ.prev;
-    }
-
-    <span class="keyword">for</span>(Object o : a) {
-        <span class="annotation">@SuppressWarnings</span>(<span class="string">"unchecked"</span>) E element = (E)o;
-        Node&lt;E&gt; newNode = <span class="keyword">new</span> Node&lt;&gt;(element, pred, succ);
-        <span class="keyword">if</span>(pred == <span class="keyword">null</span>) <span class="comment">//在表头插入，设置frist值</span>
-            first = newNode;
-        <span class="keyword">else</span>
-            pred.next = newNode;
-        pred = newNode;
-    }
-
-    <span class="comment">//设置后续结点的prev</span>
-    <span class="keyword">if</span>(succ == <span class="keyword">null</span>) <span class="comment">//在末尾插入修改last的指向</span>
-        last = pred;
-    <span class="keyword">else</span> {
-        pred.next = succ;
-        succ.prev = pred;
-    }
-
-    size += numNew;
-    ++modCount;
-
-    <span class="keyword">return</span> <span class="keyword">true</span>;
-}
-
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">addAll</span><span class="params">(Collection&lt;? <span class="keyword">extends</span> E&gt; c)</span> </span>{
-    addAll(size, c);
-    <span class="keyword">return</span> <span class="keyword">true</span>;
-}
-
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function">E <span class="title">get</span><span class="params">(<span class="keyword">int</span> index)</span> </span>{
-    <span class="comment">//检验索引值是否合法，不合法抛出异常</span>
-    checkElementIndex(index);
-    <span class="keyword">return</span> node(index).item;
-}
-
-<span class="comment">//设置并返回旧值</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function">E <span class="title">set</span><span class="params">(<span class="keyword">int</span> index, E element)</span> </span>{
-    <span class="comment">//检验索引值是否合法，不合法抛出异常</span>
-    checkElementIndex(index);
-    Node&lt;E&gt; x = node(index);
-    E oldVal = x.item;
-    x.item = element;
-    <span class="keyword">return</span> oldVal;
-}
-
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function">E <span class="title">remove</span><span class="params">(<span class="keyword">int</span> index)</span> </span>{
-    checkElementIndex(index);
-    <span class="keyword">return</span> unlink(node(index));
-}
-
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">remove</span><span class="params">(Object o)</span> </span>{
-    <span class="keyword">if</span>(o == <span class="keyword">null</span>) {
-        <span class="keyword">for</span>(Node&lt;E&gt; x = first; x != <span class="keyword">null</span>; x = x.next) {
-            <span class="keyword">if</span>(x.item == <span class="keyword">null</span>) {
-                unlink(x);
-                <span class="keyword">return</span> <span class="keyword">true</span>;
-            }
-        }
-    } <span class="keyword">else</span> {
-        <span class="keyword">for</span>(Node&lt;E&gt; x = first; x != <span class="keyword">null</span>; x = x.next) {
-            <span class="keyword">if</span>(o.equals(x.item)) {
-                unlink(x);
-                <span class="keyword">return</span> <span class="keyword">true</span>;
-            }
-        }
-    }
-    <span class="keyword">return</span> <span class="keyword">false</span>;
-}
-
-<span class="comment">//清空链表，尤其注意置空，让结点之间，结点和元素之间不在互相引用的存在堆中，让它们“独立”的接受垃圾回收</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">clear</span><span class="params">()</span> </span>{
-    <span class="keyword">for</span>(Node&lt;E&gt; x = first; x != <span class="keyword">null</span>;) {
-        Node&lt;E&gt; next = x.next;
-        <span class="comment">//置空，不要影响原来被引用对象的垃圾回收</span>
-        x.item = <span class="keyword">null</span>;
-        x.next = <span class="keyword">null</span>;
-        x.prev = <span class="keyword">null</span>;
-        x = next;
-    }
-    first = last = <span class="keyword">null</span>;
-    size = <span class="number">0</span>;
-    ++modCount;
-}
-
-<span class="comment">//查找指定对象第一次出现的位置</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">int</span> <span class="title">indexOf</span><span class="params">(Object o)</span> </span>{
-    <span class="keyword">int</span> index = <span class="number">0</span>;
-    <span class="keyword">if</span>(o == <span class="keyword">null</span>) {
-        <span class="keyword">for</span>(Node&lt;E&gt; x = first; x != <span class="keyword">null</span>; x = x.next) {
-            <span class="keyword">if</span>(x.item == <span class="keyword">null</span>)
-                <span class="keyword">return</span> index;
-            index++;
-        }
-    } <span class="keyword">else</span> {
-        <span class="keyword">for</span>(Node&lt;E&gt; x = first; x != <span class="keyword">null</span>; x = x.next) {
-            <span class="keyword">if</span>(o.equals(x.item))
-                <span class="keyword">return</span> index;
-            index++;
-        }
-    }
-    <span class="keyword">return</span> -<span class="number">1</span>;
-}
-
-<span class="comment">//查找指定对象最后一次出现的位置</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">int</span> <span class="title">lastIndexOf</span><span class="params">(Object o)</span> </span>{
-    <span class="keyword">int</span> index = <span class="number">0</span>;
-
-    <span class="keyword">if</span>(o == <span class="keyword">null</span>) {
-        <span class="keyword">for</span>(Node&lt;E&gt; x = last; x != <span class="keyword">null</span>; x = x.prev) {
-            <span class="keyword">if</span>(x.item == <span class="keyword">null</span>)
-                <span class="keyword">return</span> index;
-            index++;
-        }
-    } <span class="keyword">else</span> {
-        <span class="keyword">for</span>(Node&lt;E&gt; x = last; x != <span class="keyword">null</span>; x = x.prev) {
-            <span class="keyword">if</span>(o.equals(x.item))
-                <span class="keyword">return</span> index;
-            index++;
-        }
-    }
-
-    <span class="keyword">return</span> -<span class="number">1</span>;
-}
-
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">int</span> <span class="title">size</span><span class="params">()</span> </span>{
-    <span class="keyword">return</span> size;
-}
-
-<span class="comment">//注意contains，indexOf，lastIndexOf方法接受的都是Object</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">contains</span><span class="params">(Object o)</span> </span>{
-    <span class="keyword">return</span> indexOf(o) != -<span class="number">1</span>;
-}
-
-<span class="comment">//列表迭代器</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> ListIterator&lt;E&gt; listIterator(<span class="keyword">int</span> index) {
-    checkPositionIndex(index);
-    <span class="keyword">return</span> <span class="keyword">new</span> ListItr(index);
-}
-
-<span class="comment">//保存为数组，这里只能返回Object，因为不能通过泛型参数创建对象/数组对象</span>
-<span class="comment">//通过toArray方法可以自由操作该集合内元素而不影响该集合</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> Object[] toArray() {
-    Object[] result = <span class="keyword">new</span> Object[size];
-    <span class="keyword">int</span> i = <span class="number">0</span>;
-    <span class="keyword">for</span>(Node&lt;E&gt; x = first; x != <span class="keyword">null</span>; x = x.next) {
-        result[i++] = x.item;
-    }
-    <span class="keyword">return</span> result;
-}
-
-<span class="comment">//toArray的泛型方法版本，相对于toArray()来说可以进行必要的类型检查，但是创建数组的责任交给了调用者</span>
-<span class="annotation">@SuppressWarnings</span>(<span class="string">"unchecked"</span>)
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> &lt;T&gt; T[] toArray(T[] a) {
-    <span class="comment">//检查长度是否能够存放所有元素</span>
-    <span class="keyword">if</span>(a.length &lt; size) <span class="comment">//小于size重新通过反射创建</span>
-        a = (T[])java.lang.reflect.Array.newInstance(
-                a.getClass().getComponentType(), size);
-
-    <span class="keyword">int</span> i = <span class="number">0</span>;
-    <span class="comment">//通过Object数组引用，可以避开泛型参数的限制，数组对象本身可以检查存入的类型是否正确，不正确保存ArrayStoreException</span>
-    Object[] result = a;
-    <span class="keyword">for</span>(Node&lt;E&gt; x = first; x != <span class="keyword">null</span>; x = x.next) {
-        result[i++] = x.item;
-    }
-
-    <span class="comment">//如果数组长度大于集合长度，size位置置空</span>
-    <span class="keyword">if</span>(a.length &gt; size) {
-        a[size] = <span class="keyword">null</span>;
-    }
-
-    <span class="keyword">return</span> a;
-}
-</code></pre><h3 id="3-4_Deque双端队列的实现">3.4 Deque双端队列的实现</h3><p>（1）与其他队列实现一样：offer（入队），poll（出队），peek（队首元素）不抛出异常，remove～（不同位置的删除方法），element（队首元素）为空是抛出异常；<br>（2）实现pop和push，栈操作，以链表头作为栈顶；</p>
-<pre><code><span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">addFirst</span><span class="params">(E e)</span> </span>{
-    linkFirst(e);
-}
-
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">addLast</span><span class="params">(E e)</span> </span>{
-    linkLast(e);
-}
-
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">offerFirst</span><span class="params">(E e)</span> </span>{
-    addFirst(e);
-    <span class="keyword">return</span> <span class="keyword">true</span>;
-}
-
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">offerLast</span><span class="params">(E e)</span> </span>{
-    addLast(e);
-    <span class="keyword">return</span> <span class="keyword">true</span>;
-}
-
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function">E <span class="title">removeFirst</span><span class="params">()</span> </span>{
-    <span class="keyword">final</span> Node&lt;E&gt; f = first;
-    <span class="keyword">if</span>(f == <span class="keyword">null</span>)
-        <span class="keyword">throw</span> <span class="keyword">new</span> NoSuchElementException(<span class="string">"first is not exist."</span>);
-    <span class="function"><span class="keyword">return</span> <span class="title">unlinkFirst</span><span class="params">(f)</span></span>;
-}
-
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function">E <span class="title">removeLast</span><span class="params">()</span> </span>{
-    <span class="keyword">final</span> Node&lt;E&gt; l = last;
-    <span class="keyword">if</span>(l == <span class="keyword">null</span>)
-        <span class="keyword">throw</span> <span class="keyword">new</span> NoSuchElementException(<span class="string">"last is not exist."</span>);
-    <span class="function"><span class="keyword">return</span> <span class="title">unlinkLast</span><span class="params">(l)</span></span>;
-}
-
-<span class="comment">//poll~方法不抛出异常，为空时返回null</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function">E <span class="title">pollFirst</span><span class="params">()</span> </span>{
-    <span class="keyword">final</span> Node&lt;E&gt; f = first;
-    <span class="keyword">return</span> f == <span class="keyword">null</span> ? <span class="keyword">null</span> : unlinkFirst(f);
-}
-
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function">E <span class="title">pollLast</span><span class="params">()</span> </span>{
-    <span class="keyword">final</span> Node&lt;E&gt; l = last;
-    <span class="keyword">return</span> l == <span class="keyword">null</span> ? <span class="keyword">null</span> : unlinkLast(l);
-}
-
-<span class="comment">//get~方法抛出异常</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function">E <span class="title">getFirst</span><span class="params">()</span> </span>{
-    <span class="keyword">final</span> Node&lt;E&gt; f = first;
-    <span class="keyword">if</span>(f == <span class="keyword">null</span>)
-        <span class="keyword">throw</span> <span class="keyword">new</span> NoSuchElementException();
-    <span class="keyword">return</span> f.item;
-}
-
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function">E <span class="title">getLast</span><span class="params">()</span> </span>{
-    <span class="keyword">final</span> Node&lt;E&gt; l = last;
-    <span class="keyword">if</span>(l == <span class="keyword">null</span>)
-        <span class="keyword">throw</span> <span class="keyword">new</span> NoSuchElementException();
-    <span class="keyword">return</span> l.item;
-}
-
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function">E <span class="title">peekFirst</span><span class="params">()</span> </span>{
-    <span class="keyword">final</span> Node&lt;E&gt; f = first;
-    <span class="keyword">return</span> f == <span class="keyword">null</span> ? <span class="keyword">null</span> : f.item;
-}
-
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function">E <span class="title">peekLast</span><span class="params">()</span> </span>{
-    <span class="keyword">final</span> Node&lt;E&gt; l = last;
-    <span class="keyword">return</span> l == <span class="keyword">null</span> ? <span class="keyword">null</span> : l.item;
-}
-
-<span class="comment">//删除队列中第一个该对象的引用</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">removeFirstOccurrence</span><span class="params">(Object o)</span> </span>{
-    <span class="function"><span class="keyword">return</span> <span class="title">remove</span><span class="params">(o)</span></span>;
-}
-
-<span class="comment">//删除队列中最后一个该对象的引用</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">removeLastOccurrence</span><span class="params">(Object o)</span> </span>{
-    <span class="keyword">if</span>(o == <span class="keyword">null</span>) {
-        <span class="keyword">for</span>(Node&lt;E&gt; x = last; x != <span class="keyword">null</span>; x = x.prev) {
-            <span class="keyword">if</span>(x.item == <span class="keyword">null</span>) {
-                unlink(x);
-                <span class="keyword">return</span> <span class="keyword">true</span>;
-            }
-        }
-    } <span class="keyword">else</span> {
-        <span class="keyword">for</span>(Node&lt;E&gt; x = last; x != <span class="keyword">null</span>; x = x.prev) {
-            <span class="keyword">if</span>(o.equals(x.item)) {
-                unlink(x);
-                <span class="keyword">return</span> <span class="keyword">true</span>;
-            }
-        }
-    }
-    <span class="keyword">return</span> <span class="keyword">false</span>;
-}
-
-<span class="comment">//入队操作，链表尾部插入，不抛出异常</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">offer</span><span class="params">(E e)</span> </span>{
-    <span class="function"><span class="keyword">return</span> <span class="title">add</span><span class="params">(e)</span></span>;
-}
-
-<span class="comment">//出队操作，不抛出异常</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function">E <span class="title">poll</span><span class="params">()</span> </span>{
-    <span class="keyword">final</span> Node&lt;E&gt; f = first;
-    <span class="keyword">return</span> f == <span class="keyword">null</span> ? <span class="keyword">null</span> : unlinkFirst(f);
-}
-
-<span class="comment">//获取表头元素，栈的操作，不抛出异常</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function">E <span class="title">peek</span><span class="params">()</span> </span>{
-    <span class="keyword">final</span> Node&lt;E&gt; f = first;
-    <span class="keyword">return</span> (f == <span class="keyword">null</span>) ? <span class="keyword">null</span> : f.item;
-}
-
-<span class="comment">//出队删除，检查抛出异常</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function">E <span class="title">remove</span><span class="params">()</span> </span>{
-    <span class="function"><span class="keyword">return</span> <span class="title">removeFirst</span><span class="params">()</span></span>;
-}
-
-<span class="comment">//获取表头元素，抛出异常</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function">E <span class="title">element</span><span class="params">()</span> </span>{
-    <span class="function"><span class="keyword">return</span> <span class="title">getFirst</span><span class="params">()</span></span>;
-}
-
-<span class="comment">//入栈，表头添加，栈的操作</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">push</span><span class="params">(E e)</span> </span>{
-    addFirst(e);
-}
-
-<span class="comment">//出栈，表头删除，栈的操作</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="function">E <span class="title">pop</span><span class="params">()</span> </span>{
-    <span class="function"><span class="keyword">return</span> <span class="title">removeFirst</span><span class="params">()</span></span>;
-}
-</code></pre><h3 id="3-5_AbstractSequentialList的实现">3.5 AbstractSequentialList的实现</h3><p>实现逆序迭代器。</p>
-<pre><code><span class="comment">//逆序迭代器</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> Iterator&lt;E&gt; descendingIterator() {
-    <span class="keyword">return</span> <span class="keyword">new</span> DescendingIterator();
-}
-
-<span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">DescendingIterator</span> <span class="keyword">implements</span> <span class="title">Iterator</span>&lt;<span class="title">E</span>&gt; </span>{
-    <span class="keyword">private</span> <span class="keyword">final</span> ListItr itr = <span class="keyword">new</span> ListItr(size());
-    <span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">hasNext</span><span class="params">()</span> </span>{
-        <span class="function"><span class="keyword">return</span> itr.<span class="title">hasPrevious</span><span class="params">()</span></span>;
-    }
-    <span class="keyword">public</span> <span class="function">E <span class="title">next</span><span class="params">()</span> </span>{
-        <span class="function"><span class="keyword">return</span> itr.<span class="title">previous</span><span class="params">()</span></span>;
-    }
-    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">remove</span><span class="params">()</span> </span>{
-        itr.remove();
-    }
-}
-</code></pre><h3 id="3-6_Cloneable的实现">3.6 Cloneable的实现</h3><pre><code>@Override
-<span class="keyword">public</span> Object <span class="keyword">clone</span>() {
-    MLinkedList&lt;E&gt; <span class="keyword">clone</span> = superClone();
-    <span class="keyword">clone</span>.first = <span class="keyword">clone</span>.last = <span class="keyword">null</span>;
-    <span class="keyword">clone</span>.size = <span class="number">0</span>;
-    <span class="keyword">clone</span>.modCount = <span class="number">0</span>;
-
-    <span class="keyword">for</span>(Node&lt;E&gt; x = first; x != <span class="keyword">null</span>; x = x.next) {
-        <span class="keyword">clone</span>.add(x.item);
-    }
-
-    <span class="keyword">return</span> <span class="keyword">clone</span>;
-}
-
-@SuppressWarnings(<span class="string">"unchecked"</span>)
-<span class="keyword">private</span> MLinkedList&lt;E&gt; superClone() {
+        <p>这两天遇到一个需求像打印出一个对象的状态，包括private域和多维数组域，因此写了个小工具类，打印数组的函数用递归实现处理多维数组（使用java.lang.reflect.Array打印数组值）：</p>
+<pre><code><span class="comment">/**
+ * 打印一个对象的实例数据状态
+ * @param obj
+ * @param out
+ */</span>
+<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">printStatus</span>(<span class="params">Object obj, PrintStream <span class="keyword">out</span></span>)</span>{
+    Class&lt;?&gt; claz = obj.getClass();
+    Field[] fields = claz.getDeclaredFields();
     <span class="keyword">try</span> {
-        <span class="keyword">return</span> (MLinkedList&lt;E&gt;) super.<span class="keyword">clone</span>();
-    } <span class="keyword">catch</span> (CloneNotSupportedException e) {
-        <span class="keyword">throw</span> <span class="keyword">new</span> InternalError(e);
+        <span class="keyword">for</span>(Field field : fields) {
+            field.setAccessible(<span class="keyword">true</span>);
+            <span class="keyword">out</span>.print(field);
+            <span class="keyword">out</span>.print(<span class="string">"\t"</span>);
+            Object fieldObj = field.<span class="keyword">get</span>(obj);
+
+            <span class="comment">//判断是否为空</span>
+            <span class="keyword">if</span>(fieldObj == <span class="keyword">null</span>)
+                <span class="keyword">out</span>.println(<span class="string">"null"</span>);
+            <span class="keyword">else</span> {
+                Class&lt;?&gt; fieldClass = fieldObj.getClass();
+                <span class="comment">//判断是否为数组</span>
+                <span class="keyword">if</span>(fieldClass.isArray()) {
+                    printArray(fieldObj, <span class="keyword">out</span>);
+                    <span class="keyword">out</span>.println();
+                } <span class="keyword">else</span> {
+                    <span class="keyword">out</span>.println(fieldObj);
+                }
+            }
+        }
+    } <span class="keyword">catch</span> (IllegalAccessException e) {
+        e.printStackTrace();
     }
 }
-</code></pre><h3 id="3-7_序列化支持">3.7 序列化支持</h3><p>（1）LinkedList的size，first，last使用transient关键字，使用自定义的序列化机制，只写入size和元素对象，一方面是隐藏内部表示信息，一方面节省了开销；<br>（2）在JDK1.7之前使用的并不是Node而是Entry，也是保存了元素对象而不是Entry，这样的考虑解决了LinkedList的兼容问题；</p>
-<pre><code><span class="comment">//序列化版本号，是数据域和方法签名的数字指纹（SHA）</span>
-<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">876323262645176354</span>L;
 
-<span class="comment">//代替默认的序列化过程，这里值写入了元素对象和元素集合大小</span>
-<span class="comment">//在JDK1.7之前使用的并不是Node而是Entry，也是保存了元素对象而不是Entry，这样的考虑解决了LinkedList的兼容问题</span>
-<span class="comment">//这也是为什么用transient修饰size，first，last域的原因</span>
-<span class="comment">//一方面是隐藏内部表示信息，一方面节省了开销</span>
-<span class="keyword">private</span> <span class="keyword">void</span> writeObject(java.io.ObjectOutputStream s)
-        <span class="keyword">throws</span> IOException {
-    <span class="comment">//写入包括魔数，序列化格式版本号，包括所有对象的类型和（非静态和非transient）数据域</span>
-    <span class="comment">//每个对象包括一个序列号</span>
-    <span class="comment">//相同对象重复出现将被视为对这个对象序列号的引用</span>
-    s.defaultWriteObject();
-
-    s.writeInt(<span class="keyword">size</span>);
-
-    <span class="keyword">for</span>(Node&lt;E&gt; x = first; x != <span class="keyword">null</span>; x = x.<span class="keyword">next</span>) {
-        s.writeObject(x.item);
+<span class="comment">/**
+ * 反射打印数组，如果是多维数组递归打印
+ * @param arr
+ * @param out
+ */</span>
+<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">printArray</span>(<span class="params">Object arr, PrintStream <span class="keyword">out</span></span>) </span>{
+    Class&lt;?&gt; arrClass = arr.getClass();
+    <span class="keyword">if</span>(arrClass.isArray()) {
+        <span class="keyword">int</span> length = Array.getLength(arr);
+        <span class="keyword">out</span>.print(<span class="string">'['</span>);
+        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; length; ++i) {
+            Object o = Array.<span class="keyword">get</span>(arr, i);
+            <span class="comment">//如果元素仍然是数组类型，递归打印</span>
+            <span class="keyword">if</span>(o.getClass().isArray()) {
+                printArray(o, <span class="keyword">out</span>);
+            } <span class="keyword">else</span> {
+                <span class="keyword">out</span>.print(o);
+                <span class="keyword">if</span>(i &lt; length - <span class="number">1</span>)
+                    <span class="keyword">out</span>.print(<span class="string">","</span>);
+            }
+        }
+        <span class="keyword">out</span>.print(<span class="string">']'</span>);
     }
 }
-
-<span class="comment">//反序列化过程，同样读取size和元素对象，重新“构建”链表</span>
-@SuppressWarnings(<span class="string">"unchecked"</span>)
-<span class="keyword">private</span> <span class="keyword">void</span> readObject(java.io.ObjectInputStream s)
-        <span class="keyword">throws</span> IOException, ClassNotFoundException {
-    s.defaultReadObject();
-
-    <span class="keyword">int</span> <span class="keyword">size</span> = s.readInt();
-
-    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="keyword">size</span>; i++) {
-        linkLast((E)s.readObject());
-    }
-}
-</code></pre><h2 id="4-_LinkedList对Java_8新特性的支持">4. LinkedList对Java 8新特性的支持</h2><h3 id="4-1_对Lambda表达式的支持">4.1 对Lambda表达式的支持</h3>
+</code></pre>
       
     </div>
     
@@ -2255,7 +1834,7 @@ Node&lt;E&gt; node(<span class="keyword">int</span> index) {
       
       
 	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java-8集合框架源码/">Java 8集合框架源码</a></li></ul>
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/思考和求解/">思考和求解</a></li></ul>
 	</div>
 
       
@@ -2275,59 +1854,9 @@ Node&lt;E&gt; node(<span class="keyword">int</span> index) {
 
 
   
-    <article id="post-Java基础知识总结（十）——并发" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/12/07/Java基础知识总结（十）——并发/" class="article-date">
-  	<time datetime="2015-12-07T03:49:06.000Z" itemprop="datePublished">2015-12-07</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/07/Java基础知识总结（十）——并发/">Java基础知识总结（十）——并发</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
   
     <nav id="page-nav">
-      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
     </nav>
   
 </div>
@@ -2335,7 +1864,7 @@ Node&lt;E&gt; node(<span class="keyword">int</span> index) {
   <div class="outer">
     <div id="footer-info">
     	<div class="footer-left">
-    		&copy; 2015 Zerohuan
+    		&copy; 2016 Zerohuan
     	</div>
       	<div class="footer-right">
       		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
