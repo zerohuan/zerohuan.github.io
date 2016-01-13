@@ -114,7 +114,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/JVM/" style="font-size: 12px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 14px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java并发/" style="font-size: 16px;">Java并发</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12px;">TCP/IP</a> <a href="/tags/思考和求解/" style="font-size: 18px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
+						<a href="/tags/JVM/" style="font-size: 12px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 14px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java并发/" style="font-size: 16px;">Java并发</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12px;">TCP/IP</a> <a href="/tags/java-web/" style="font-size: 10px;">java web</a> <a href="/tags/思考和求解/" style="font-size: 18px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
 					</div>
 				</section>
 				
@@ -195,6 +195,137 @@
 	</div>
 </nav>
       <div class="body-wrap">
+  
+    <article id="post- Servlet &amp; Spring对Multipart数据请求的支持" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2016/01/13/ Servlet & Spring对Multipart数据请求的支持/" class="article-date">
+  	<time datetime="2016-01-13T06:19:44.000Z" itemprop="datePublished">2016-01-13</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/01/13/ Servlet & Spring对Multipart数据请求的支持/">Servlet &amp; Spring对Multipart数据请求的支持</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>参考资料：<br>（1）<a href="http://www.ietf.org/rfc/rfc1867" target="_blank" rel="external">RFC 1867</a><br>（2）Java Servlet Specification 3.1；<br>（3）《Java Web高级编程》；</p>
+<h1 id="1-_Multipart_FormData">1. Multipart FormData</h1><p>Multipart是HTML中表单文件上传的基本格式，一般通过如下方法可以通过HTTP上传文件：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">form</span> <span class="attribute">action</span>=<span class="value">"_URL_"</span> <span class="attribute">method</span>=<span class="value">"POST"</span> <span class="attribute">enctype</span>=<span class="value">"multipart/form-data"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"text"</span> <span class="attribute">name</span>=<span class="value">"username"</span> /&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"file"</span> <span class="attribute">name</span>=<span class="value">"userfile1"</span> /&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"submit"</span> <span class="attribute">value</span>=<span class="value">"submit"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">form</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>有两个地方是使用Multipart的关键：<br>（1）对于POST请求来说，enctype的默认值是application/x-www-form-urlencoded，而这里要是用<code>multipart/form-data</code>；<br>（2）<code>&lt;input /&gt;</code>的type设置为<code>file</code>；</p>
+<h2 id="1-1_Multipart的数据格式">1.1 Multipart的数据格式</h2><p>基于Multipart，请求的每个部分都有指定的边界分隔开，都有一个值为form-data的<strong>Content-Disposition</strong>和匹配表单输入名称的<strong>name</strong>。<br>如果是文件类型字段，还将有<strong>filename</strong>，匹配MIME类型的<strong>Content-Type</strong>；<br>使用下面的表单提交单个文件和其他文本域：</p>
+<h4 id="测试1：单文件上传">测试1：单文件上传</h4><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">form</span> <span class="attribute">action</span>=<span class="value">"/s/upload/1"</span> <span class="attribute">method</span>=<span class="value">"post"</span> <span class="attribute">enctype</span>=<span class="value">"multipart/form-data"</span>&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="title">fieldset</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">legend</span>&gt;</span>测试1：单文件上传<span class="tag">&lt;/<span class="title">legend</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">p</span>&gt;</span><span class="tag">&lt;<span class="title">label</span> <span class="attribute">for</span>=<span class="value">"name"</span>&gt;</span>名称 <span class="tag">&lt;/<span class="title">label</span>&gt;</span><span class="tag">&lt;<span class="title">input</span> <span class="attribute">id</span>=<span class="value">"name"</span> <span class="attribute">type</span>=<span class="value">"text"</span> <span class="attribute">name</span>=<span class="value">"name"</span> /&gt;</span><span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">p</span>&gt;</span><span class="tag">&lt;<span class="title">label</span> <span class="attribute">for</span>=<span class="value">"files"</span>&gt;</span>文件 <span class="tag">&lt;/<span class="title">label</span>&gt;</span><span class="tag">&lt;<span class="title">input</span> <span class="attribute">id</span>=<span class="value">"files"</span> <span class="attribute">type</span>=<span class="value">"file"</span> <span class="attribute">name</span>=<span class="value">"files"</span> /&gt;</span><span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">p</span>&gt;</span><span class="tag">&lt;<span class="title">label</span> <span class="attribute">for</span>=<span class="value">"location"</span>&gt;</span>地区 <span class="tag">&lt;/<span class="title">label</span>&gt;</span><span class="tag">&lt;<span class="title">input</span> <span class="attribute">id</span>=<span class="value">"location"</span> <span class="attribute">type</span>=<span class="value">"text"</span> <span class="attribute">name</span>=<span class="value">"location"</span> /&gt;</span><span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"submit"</span> /&gt;</span></span><br><span class="line">       <span class="tag">&lt;/<span class="title">fieldset</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="title">form</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>请求数据内容：<br><figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">------WebKitFormBoundaryBDujyAl87MaTQd9J</span></span><br><span class="line">Content-Disposition: form-data; <span class="property">name</span>=<span class="string">"name"</span></span><br><span class="line"></span><br><span class="line">串个沙</span><br><span class="line"><span class="comment">------WebKitFormBoundaryBDujyAl87MaTQd9J</span></span><br><span class="line">Content-Disposition: form-data; <span class="property">name</span>=<span class="string">"files"</span>; filename=<span class="string">"说明.txt"</span></span><br><span class="line">Content-Type: <span class="type">text</span>/plain</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">------WebKitFormBoundaryBDujyAl87MaTQd9J</span></span><br><span class="line">Content-Disposition: form-data; <span class="property">name</span>=<span class="string">"location"</span></span><br><span class="line"></span><br><span class="line">地球</span><br><span class="line"><span class="comment">------WebKitFormBoundaryBDujyAl87MaTQd9J--</span></span><br></pre></td></tr></table></figure></p>
+<p>可以看到每个部分有边界像分隔，这个边界值由客户端决定，是随机生成的（这里我使用chrome做的实验，因此可以看到“WebKit”）。</p>
+<h4 id="测试2：多文件上传">测试2：多文件上传</h4><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">form</span> <span class="attribute">action</span>=<span class="value">"/s/upload/1"</span> <span class="attribute">method</span>=<span class="value">"post"</span> <span class="attribute">enctype</span>=<span class="value">"multipart/form-data"</span>&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="title">fieldset</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">legend</span>&gt;</span>测试2：多文件上传<span class="tag">&lt;/<span class="title">legend</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">p</span>&gt;</span><span class="tag">&lt;<span class="title">label</span> <span class="attribute">for</span>=<span class="value">"name"</span>&gt;</span>名称 <span class="tag">&lt;/<span class="title">label</span>&gt;</span><span class="tag">&lt;<span class="title">input</span> <span class="attribute">id</span>=<span class="value">"name1"</span> <span class="attribute">type</span>=<span class="value">"text"</span> <span class="attribute">name</span>=<span class="value">"name"</span> /&gt;</span><span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">p</span>&gt;</span><span class="tag">&lt;<span class="title">label</span> <span class="attribute">for</span>=<span class="value">"files"</span>&gt;</span>文件 <span class="tag">&lt;/<span class="title">label</span>&gt;</span><span class="tag">&lt;<span class="title">input</span> <span class="attribute">id</span>=<span class="value">"files1"</span> <span class="attribute">type</span>=<span class="value">"file"</span> <span class="attribute">name</span>=<span class="value">"files1"</span> <span class="attribute">multiple</span>=<span class="value">"multiple"</span> /&gt;</span><span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">p</span>&gt;</span><span class="tag">&lt;<span class="title">label</span> <span class="attribute">for</span>=<span class="value">"location"</span>&gt;</span>地区 <span class="tag">&lt;/<span class="title">label</span>&gt;</span><span class="tag">&lt;<span class="title">input</span> <span class="attribute">id</span>=<span class="value">"location1"</span> <span class="attribute">type</span>=<span class="value">"text"</span> <span class="attribute">name</span>=<span class="value">"location"</span> /&gt;</span><span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"submit"</span> /&gt;</span></span><br><span class="line">       <span class="tag">&lt;/<span class="title">fieldset</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="title">form</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>请求头Content-Type：<br><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="constant">Content</span>-<span class="constant">Type</span><span class="symbol">:multipart/form-data</span>; boundary=----<span class="constant">WebKitFormBoundaryZGDkB6nM3LvHX0KI</span></span><br></pre></td></tr></table></figure></p>
+<p>请求数据内容：<br><figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">------WebKitFormBoundaryLnO8YOO2DPoP3M6y</span></span><br><span class="line">Content-Disposition: form-data; <span class="property">name</span>=<span class="string">"name"</span></span><br><span class="line"></span><br><span class="line"><span class="number">2</span>个文件</span><br><span class="line"><span class="comment">------WebKitFormBoundaryLnO8YOO2DPoP3M6y</span></span><br><span class="line">Content-Disposition: form-data; <span class="property">name</span>=<span class="string">"files1"</span>; filename=<span class="string">"说明.txt"</span></span><br><span class="line">Content-Type: <span class="type">text</span>/plain</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">------WebKitFormBoundaryLnO8YOO2DPoP3M6y</span></span><br><span class="line">Content-Disposition: form-data; <span class="property">name</span>=<span class="string">"files1"</span>; filename=<span class="string">"说明 (copy).txt"</span></span><br><span class="line">Content-Type: <span class="type">text</span>/plain</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">------WebKitFormBoundaryLnO8YOO2DPoP3M6y</span></span><br><span class="line">Content-Disposition: form-data; <span class="property">name</span>=<span class="string">"location"</span></span><br><span class="line"></span><br><span class="line">中国</span><br><span class="line"><span class="comment">------WebKitFormBoundaryLnO8YOO2DPoP3M6y--</span></span><br></pre></td></tr></table></figure></p>
+<p>基于chrome得到的结果，没有出现一个Content-type为<code>multipart/mixed</code>的嵌套部分，而是用多个文件字段部分表示。</p>
+<h1 id="2-_Servlet_3-0对Multipart的支持">2. Servlet 3.0对Multipart的支持</h1><p>在Servlet3.0之前对于文件上传的支持，可以通过Commons FileUpload等第三方工具来实现。Java EE 6中Servlet 3.0新增了对它的支持，这样可以不再依赖第三方库。主要通过HttpServletRequest的<code>getParts()</code>和<code>getPart()</code>方法。<br>结合前面的测试表单，我用一个Servlet和Jsp来演示处理的具体方法：<br>UploadServlet2：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@WebServlet</span> (</span><br><span class="line">        name = <span class="string">"uploadServlet2"</span>,</span><br><span class="line">        urlPatterns = <span class="string">"/upload2"</span>,</span><br><span class="line">        loadOnStartup = <span class="number">1</span></span><br><span class="line">)</span><br><span class="line"><span class="annotation">@MultipartConfig</span> (</span><br><span class="line">        fileSizeThreshold = <span class="number">5_242_880</span>,</span><br><span class="line">        maxFileSize = <span class="number">20_971_520L</span>,</span><br><span class="line">        maxRequestSize = <span class="number">41_943_040L</span></span><br><span class="line">)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UploadServlet2</span> <span class="keyword">extends</span> <span class="title">HttpServlet</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger logger = LogManager.getLogger();</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line">        req.getRequestDispatcher(<span class="string">"/p/upload/upload.jsp"</span>).forward(req, resp);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doPost</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line">        Collection&lt;Part&gt; parts = req.getParts();</span><br><span class="line">        logger.debug(<span class="string">"uploading..."</span>);</span><br><span class="line">        req.setAttribute(<span class="string">"parts"</span>, parts);</span><br><span class="line">        req.getRequestDispatcher(<span class="string">"/p/upload/resolvePart.jsp"</span>).forward(req, resp);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>通过ServletContainerInitializer配置：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@Override</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">contextInitialized</span><span class="params">(ServletContextEvent sce)</span> </span>&#123;</span><br><span class="line">       logger.info(<span class="string">"ServletContextListener invoked"</span>);</span><br><span class="line">       <span class="comment">//获取ServletContext对象</span></span><br><span class="line">       ServletContext servletContext = sce.getServletContext();</span><br><span class="line">       <span class="comment">//添加Servlet</span></span><br><span class="line">       ServletRegistration.Dynamic uploadRegistration = servletContext.addServlet(<span class="string">"uploadServlet"</span>, UploadServlet.class);</span><br><span class="line">       uploadRegistration.addMapping(<span class="string">"/upload/*"</span>);</span><br><span class="line">       uploadRegistration.setLoadOnStartup(<span class="number">1</span>);</span><br><span class="line">       MultipartConfigElement configElement = <span class="keyword">new</span> MultipartConfigElement(<span class="string">"."</span>, <span class="number">52428800</span>,</span><br><span class="line">               <span class="number">52428800</span>, <span class="number">0</span>);</span><br><span class="line">       uploadRegistration.setMultipartConfig(configElement);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></p>
+<p>必须启用multipart支持，配置一样有三种方法：注解，编程（ServletContextListener/ServletContainerInitializer），XML，但是基本的配置项是一样的：<br><code>location</code>：临时文件目录，一般可以使用默认的由服务器软件决定；<br><code>fileSizehreshold</code>：超过这个阈值放入临时文件目录，否则在内存中有垃圾回收处理；<br><code>maxFileSize</code>和<code>maxRequestSize</code>；</p>
+<p>location的配置需要注意，Servlet规范中的说明：</p>
+<blockquote>
+<p>location元被解析为一个绝对路径且默认为 javax.servlet.context.tempdir。如果指定了相对地址，它将是相对于 tempdir 位置。绝对路径与相对地址的测试必须使用 java.io.File.isAbsolute。</p>
+</blockquote>
+<h1 id="3-_Spring对Multipart的支持">3. Spring对Multipart的支持</h1><p>服务端主要就是解析Multipart数据。</p>
+<p>启用Multipart，这里通过Spring的WebApplicationInitializer初始化器进行配置，本质是通过ServletContainerInitializer。启用指定DispatcherServlet的Multipart支持。还是通过<code>Registration</code>配置的和上面的ServletContextListener一样。这里配置了自定义的临时目录，如果指定的目录不存在或是无法访问，通过”.”配置，因为前面引用的Serlvet规范已经说明了，相对目录是基于容器的临时目录的。</p>
+<p>Spring同时兼容了基于Commons FileUpload和Servlet 3.0标准API两种方式的解析。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@Order</span>(<span class="number">1</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BootStrap</span> <span class="keyword">implements</span> <span class="title">WebApplicationInitializer</span> </span>&#123;</span><br><span class="line">    <span class="comment">/* 略 */</span></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onStartup</span><span class="params">(ServletContext container)</span> <span class="keyword">throws</span> ServletException </span>&#123;</span><br><span class="line">        <span class="comment">/* 略 */</span></span><br><span class="line">        DispatcherServlet dispatcherServlet = <span class="keyword">new</span> DispatcherServlet(cgContext);</span><br><span class="line">        dispatcherServlet.setThrowExceptionIfNoHandlerFound(<span class="keyword">true</span>);</span><br><span class="line">        ServletRegistration.Dynamic dispatcherCG = container.addServlet(<span class="string">"cgServlet"</span>,</span><br><span class="line">                dispatcherServlet);</span><br><span class="line">        dispatcherCG.setLoadOnStartup(<span class="number">1</span>);</span><br><span class="line">        <span class="comment">//文件上传支持</span></span><br><span class="line">        <span class="comment">//设置临时文件目录</span></span><br><span class="line">        File path = <span class="keyword">new</span> File(container.getRealPath(<span class="string">"/tmp/web_yjh_files/"</span>));</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span>(path.exists() || path.mkdirs()) &#123;</span><br><span class="line">            dispatcherCG.setMultipartConfig(<span class="keyword">new</span> MultipartConfigElement(</span><br><span class="line">                    path.getAbsolutePath(), <span class="number">200_971_520L</span>, <span class="number">401_943_040L</span>, <span class="number">0</span></span><br><span class="line">            ));</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            dispatcherCG.setMultipartConfig(<span class="keyword">new</span> MultipartConfigElement(</span><br><span class="line">                    <span class="string">"."</span>, <span class="number">200_971_520L</span>, <span class="number">401_943_040L</span>, <span class="number">0</span></span><br><span class="line">            ));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">/* 略 */</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>Spring提供了一个Multipart的解析器：MultipartResolver，因此在<code>@Configuration</code>类中添加一个Bean，有两种选择<strong>CommonsMultipartResolver</strong>和<strong>StandardServletMultipartResolver</strong>，分别基于Commons File Upload和Servlet 3.0标准API；<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@Bean</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> MultipartResolver <span class="title">multipartResolver</span><span class="params">()</span> </span>&#123;</span><br><span class="line">       <span class="keyword">return</span> <span class="keyword">new</span> CommonsMultipartResolver();</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></p>
+<p>编写Controller method，使用Spring的<code>MultipartFile</code>：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@RequestMapping</span>(value = <span class="string">"upload"</span>, method = RequestMethod.POST, produces = <span class="string">"text/html"</span>)</span><br><span class="line">   <span class="annotation">@ResponseBody</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> String <span class="title">upload</span><span class="params">(String username,</span><br><span class="line">                        @RequestParam(value = <span class="string">"attachment"</span>)</span> MultipartFile parts) <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">       <span class="keyword">return</span> <span class="string">"success "</span> +</span><br><span class="line">               <span class="string">"name:"</span> + parts.getName() +</span><br><span class="line">               <span class="string">"size:"</span> + parts.getSize() +</span><br><span class="line">               <span class="string">"contentType:"</span> + parts.getContentType() +</span><br><span class="line">               (parts.getContentType() == <span class="keyword">null</span> ? <span class="string">""</span> : (<span class="string">"filename"</span> + parts.getOriginalFilename())) +</span><br><span class="line">               <span class="string">""</span> + IOUtils.toString(parts.getInputStream()) +</span><br><span class="line">               <span class="string">"size:"</span> + parts.getSize();</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="使用Part_API：">使用Part API：</h2><p>Serlvet Part的标准API包括：<br>（1）<strong>name</strong>：表单字段名；<br>（2）<strong>size</strong>：Part数据内容的大小；<br>（3）<strong>submittedFileName</strong>：Servlet 3.1新增方法，获取文件名，之前必须通过<code>getHeader(&quot;content-disposition&quot;)</code>解析；<br>（4）<strong>contentType</strong>：如果<code>&lt;input&gt;</code>类型是type这个值是<code>null</code>，如果是文件，可以获得它的MIME类型；<br>（5）<strong>getHeader</strong>：获取指定头；<br>（6）<strong>getInputStream</strong>：获取输入流；</p>
+<blockquote>
+<p>对于表单数据的 Content-Disposition,即使没有文件名,也可使用 part 的名称通过 HttpServletRequest 的<br>getParameter 和 getParameterValues 方法得到 part 的字符串值。</p>
+</blockquote>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">h1</span>&gt;</span>Multipart解析<span class="tag">&lt;/<span class="title">h1</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="title">c:forEach</span> <span class="attribute">items</span>=<span class="value">"$&#123;parts&#125;"</span> <span class="attribute">var</span>=<span class="value">"part"</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="title">p</span>&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="title">h3</span>&gt;</span>Part: $&#123;part.name&#125;<span class="tag">&lt;/<span class="title">h3</span>&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="title">span</span>&gt;</span>Size: $&#123;part.size&#125;<span class="tag">&lt;/<span class="title">span</span>&gt;</span><span class="tag">&lt;<span class="title">br</span> /&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="title">span</span>&gt;</span>SubmittedFileName: $&#123;part.submittedFileName&#125;，Servlet 3.1新增方法<span class="tag">&lt;/<span class="title">span</span>&gt;</span><span class="tag">&lt;<span class="title">br</span> /&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="title">span</span>&gt;</span>ContentType: $&#123;part.contentType&#125;<span class="tag">&lt;/<span class="title">span</span>&gt;</span><span class="tag">&lt;<span class="title">br</span> /&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="title">c:choose</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="title">c:when</span> <span class="attribute">test</span>=<span class="value">"$&#123;part.contentType == null || part.contentType eq 'text/plain'&#125;"</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">p</span>&gt;</span></span><br><span class="line">               $&#123;IOUtils.toString(part.inputStream)&#125;</span><br><span class="line">           <span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;/<span class="title">c:when</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="title">c:when</span> <span class="attribute">test</span>=<span class="value">"$&#123;part.contentType eq 'application/octet-stream'&#125;"</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">p</span>&gt;</span></span><br><span class="line">               $&#123;part.getHeader("content-disposition")&#125;</span><br><span class="line">           <span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;/<span class="title">c:when</span>&gt;</span></span><br><span class="line">       <span class="tag">&lt;/<span class="title">c:choose</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="title">c:forEach</span>&gt;</span></span><br><span class="line"> <span class="tag">&lt;<span class="title">c:import</span> <span class="attribute">url</span>=<span class="value">"upload.jsp"</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/java-web/">java web</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
+    <article id="post-Servlet-Spring对Multipart数据请求的支持" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2016/01/13/Servlet-Spring对Multipart数据请求的支持/" class="article-date">
+  	<time datetime="2016-01-13T06:19:44.000Z" itemprop="datePublished">2016-01-13</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/01/13/Servlet-Spring对Multipart数据请求的支持/">Servlet &amp; Spring对Multipart数据请求的支持</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
   
     <article id="post-数据结构的理解和应用——红黑树" class="article article-type-post" itemscope itemprop="blogPost">
   
@@ -758,113 +889,6 @@ boolean <span class="keyword">red</span>;
 
 
   
-    <article id="post-Java并发（七）——内存模型" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/12/11/Java并发（七）——内存模型/" class="article-date">
-  	<time datetime="2015-12-11T06:48:41.000Z" itemprop="datePublished">2015-12-11</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/11/Java并发（七）——内存模型/">Java并发（七）——内存模型</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>心得：<br>内存模型的就是为了在现代计算机平台中保证程序可以正确性的执行，但是不同的平台实现是不同的，比如重排序，x86中只会对Store-Load可能重排序，ia64可以在不存在数据依赖性的操作之间重排序。JMM就是为了屏蔽底层的细节，在不同平台JVM采用不同的实现，保证正确性的基础上，追求效率。<br>在理解了锁语义，volatile语义，final语义在内存模型中的定义后，对DCL的发展和演进有了更清晰的认识。</p>
-<p>学习参考资料：<br>（1）《Java并发编程实战》；<br>（2）《深入理解Java虚拟机》；<br>（3）jls8；<br>（4）jvms8；<br>（5）<a href="http://www.infoq.com/cn/minibooks/java_memory_model" target="_blank" rel="external">深入理解Java内存模型</a></p>
-<h1 id="1-_为什么需要Java内存模型">1. 为什么需要Java内存模型</h1><h2 id="编译/运行环境对可见性/原子性的影响：">编译/运行环境对可见性/原子性的影响：</h2><p>（1）编译器中生成的指令顺序，可以与源代码中的顺序不同；<br>（2）编译器可能把变量保存在寄存器而不是内存中；<br>（3）处理器可以采用乱序或并行等方式来执行指令；<br>（4）缓存可能会改变将写入变量提交到主内存的次序；<br>（5）保存在处理器本地缓存中的值，对其他处理器是不可见的；</p>
-<blockquote>
-<p>缓存的存在就是为了减少CPU的停顿，减少IO的次数，减少CPU等待I/O的时间。通过批处理的方式刷新写缓冲区，以及合并写缓冲区对同一内存地址的多次写。</p>
-<p>重排序，多核（并行性提升），CPU时钟频率的提升，多级缓存等等，编译器也进行指令重排，全局寄存器分配算法等可以大大提升计算性能；但这些可能会影响程序的正确性，那么必须要要保证的正确性的执行次序，JMM正是规定了JVM必须遵循的一组最小保证。</p>
-<p><strong>“次序”</strong>的正确是一个关键问题；</p>
-<p>并发编程需要处理两个关键问题是：线程之间如何<strong>通信</strong>及线程之间如何<strong>同步</strong>；命令式编程中，线程之间的通信机制有两种：<strong>共享内存</strong>和<strong>消息传递</strong>；</p>
-</blockquote>
-<h3 id="平台的内存模型">平台的内存模型</h3><p>提高CPU主频来提升计算性能出现了瓶颈，多核处理器是一个新的主要方向（也是是Amadhl定律为什么很重要的原因）；</p>
-<p>在多核处理器环境下，每个处理器有自己的缓存，定期与主内存进行协调。<strong>高速缓存</strong>的使用为了解决处理器速度和内存读取速度的矛盾（存储器越小，速度越快，价格越高。高速缓存的一个核心原理就是<strong>局部性原理</strong>，这也是为什么这种小块缓存方案可行的原因）。<br>当然也就需要解决<strong>缓存一致性</strong>的问题，比如在<strong>操作系统层面</strong>，有MESI，MSI等等协议，来保证程序执行在多核处理器环境下的正确性。<br>但Java是一款“一次编译到处运行”的语言，那JMM（Java内存模型）就是JVM需要保证的模型，屏蔽底层OS的差异（JVM规范对JMM的定义委托给了Java语言规范）。</p>
-<h3 id="重排序">重排序</h3><p>这里可以将：<br>（1）处理器的乱序执行，CPU将不存在数据依赖性的指令重叠执行（到流水线）；<br>（2）处理器并行执行，由于缓存和读/写缓冲区导致的行为上乱序；<br>（3）编译器的指令重排序；<br>使得为同步的程序的执行顺序的推断变“乱”的这些原因，统称为重排序；</p>
-<p>不同处理器平台上允许的重排序类型列表：<br>|    平台      | load-load|load-store|store-store|store-load |数据依赖  |<br>|:——-:|:——–:|:——–:|:———:|:———:|:——-:|<br>|sparc-TSO| N        |N            |N            |Y            |N          |<br>|x86      | N        |N            |N            |Y            |N          |<br>|ia64      | Y        |Y            |Y            |Y            |N          |<br>|PowerPC  | Y        |Y            |Y            |Y            |N          |<br>注：x86包括x64和AMD64；</p>
-<p><strong>内存屏障的类型</strong>：<br>（1）<strong>LoadLoad</strong>：load1; LoadLoad; load2;<br>（2）<strong>StoreStore</strong> ；<br>（3）<strong>LoadStore</strong>；<br>（4）<strong>StoreLoad</strong>：使得该屏障之前的所有内存访问指令（装载和存储）完成后，才执行屏障之后的内存访问指令；<br>StoreLoad，写读屏障是“全能屏障”，大多数处理器平台都支持这一屏障。该屏障的开销较大，因为要将缓存全部刷新到主存（LoadLoad和LoadStore只要保证顺序就好了）；</p>
-<h4 id="数据依赖性和as-if-serial语义（单线程内的正确性）">数据依赖性和as-if-serial语义（单线程内的正确性）</h4><p><strong>单个处理器</strong>指令执行序列中，如果两个操作访问同一个变量，并且有一个操作是写操作，那就存在数据依赖性，具有编译器和处理器不会改变存在数据依赖关系的两个操作的执行顺序。<br>注意是单个处理器，不同处理器并行就需要另外的保证了。</p>
-<p><strong>as-if-serial语义</strong>：<br>不管怎么重排序，（单线程）程序的执行结果不能被改变。as-if-serial语义可以保证单线程程序执行的正确性，但是并行情形下，这个是不够的。</p>
-<h4 id="内存屏障（内存可见性的“底层”实现手段）">内存屏障（内存可见性的“底层”实现手段）</h4><p>内存屏障</p>
-<h1 id="2-_Java内存模型的内容">2. Java内存模型的内容</h1><p>JMM决定一个线程对共享变量的写入何时对另一个线程可见。定义了线程（工作内存或本地内存）和主内存之间的抽象关系（当然这只是一种<strong>抽象</strong>的定义）。</p>
-<p>每个线程有自己的私有本地内存，存储主内存中共享变量的副本；这里的变量包括实例域，静态域，数组元素。<br>线程之间的内存互相不可见，只能通过主内存来传递。JMM通过定义<strong>缓存一致性协议</strong>来保证必要的<strong>可见性</strong>和<strong>原子性</strong>。</p>
-<h4 id="重排序和程序顺序规则（Happens-Before）">重排序和程序顺序规则（Happens-Before）</h4><p>上面说了as-if-serial可以保证在单线程环境下的正确性，但对于java程序来说这是远远不够的。</p>
-<p>JMM规定了一种偏序关系，也就是Happens-Before（具有反对称，自反，传递属性）；两个操作之间不存在Happends-Before关系，JVM可以进行任意地重排序。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a = <span class="number">1</span>; <span class="comment">//操作A</span></span><br><span class="line"><span class="keyword">int</span> b = <span class="number">2</span>; <span class="comment">//操作B</span></span><br><span class="line"><span class="keyword">int</span> c = a + b; <span class="comment">//操作C</span></span><br></pre></td></tr></table></figure></p>
-<p>操作A，C之间，B，C之间存在Happens-Before关系，不能进行重排序（无论是否在同一个线程）；<br>操作A，B之间不存在Happens-Before关系，因此可以重排序，并行等；</p>
-<p><strong>Happens-Before的规则有（8个）：</strong><br>（1）<strong>程序顺序规则</strong>：在一个线程内，书写在前面的操作先行发生于书写在后面的操作（主要考虑控制流顺序）；<br>（2）<strong>监视器锁规则</strong>：内置锁上的解锁操作必须先于发生于后面在同一个锁上的加锁操作；（之前我们总结过显式锁和内置锁具有相同的内存语义，后面是指绝对<strong>时间上</strong>先后）<br>（3）<strong>volatile变量规则</strong>：对volatile变量的写入操作必须先行发生于后面对该变量的读入操作（原子变量和volatile变量在读写操作上有相同的语义，后面同样是指时间上先后）；也就是说，如果在时间上，写操作发生在先面，那它的结果一定要被后面发生的读操作看到，无论是否在同一线程内，这就是可见性保证。<br>（4）<strong>线程启动规则</strong>：线程上对Thread.start()必须先行发生于对该线程中任务操作之前；<br>（5）<strong>线程终止规则</strong>：线程中所有操作必须先行发生于对此线程的终止检测；也就是说Thread.join()和Thread.alive()不可能在线程操作结束之前分别返回和返回true；<br>（6）<strong>线程中断规则</strong>：线程interrupt()方法的调用先行发生于被中断线程代码检测到中断事件的发生，保证Thread.interrupted()和Thread.currentThread().isInterruted()方法的正确性；<br>（7）<strong>终结器规则</strong>：对象的构造函数必须在启动它的终结器（finalize()方法）之前执行完成；<br>（8）<strong>传递性</strong>；</p>
-<blockquote>
-<p>as-if-serial语义保证了单线程内的正确性，Happens-Before更包含了并行环境下的正确性。</p>
-</blockquote>
-<h3 id="JMM和顺序一致性内存模型">JMM和顺序一致性内存模型</h3><p>首先说明JMM并不保证顺序一致性，所谓的顺序一致性内存模型保证一个线程的所有操作必须按照程序的顺序来执行；所有线程都只能看到一个单一的操作执行顺序，每个操作都必须原子执行且立刻对所有线程可见。</p>
-<p>所以顺序一致性内存模型是一个很严格的规定，在每个线程存在缓存的情况下保证每个操作对所有线程立即可见需要很大的代价。</p>
-<p>而JMM并不像这样严格，根据上面的8个Happens-Before，我们可以知道，在保证正确同步时，临界区是可以重排序的（当然要保证as-if-serial语义）：<br><img src="http://cdn2.infoqstatic.com/statics_s2_20160105-0313u5/resource/articles/java-memory-model-3/zh/resources/4.png" alt=""><br>（图片来源于info）</p>
-<blockquote>
-<p>所以JMM的目的在于保证程序执行正确性下，可以尽可能的利用并行，重排序等优化手段。</p>
-</blockquote>
-<p>对于未同步程序的执行特性，JMM只提供最小安全性：线程执行时读取到的值，要么是之前某个线程写入的值，要么是默认值（这也是为啥分配对象内存要清零初始化了）。</p>
-<p>虽然JMM不支持顺序一致性模型，但通过对比也可以更好的理解JMM。</p>
-<h3 id="long和double操作规则">long和double操作规则</h3><p>JMM要求<strong>lock</strong>，<strong>unlock</strong>，<strong>read</strong>，<strong>write</strong>，<strong>assign</strong>，<strong>use</strong>，<strong>load</strong>，<strong>store</strong>这8个操作具有原子性，对于64位的long和double来说，如果没有被volatile修饰，那可以鼓励但不保证原子性（可以划分为两个32位操作）。</p>
-<p>这样规定是处于对不同OS实现考虑的，对于32位处理器，总线宽度是32位，64位数据的原子性读写开销较大。因此如果分成2个32位分配到不同的总线事务（单个总线事务中内存读写具有原子性），那就不再具有原子性。<br><img src="http://cdn2.infoqstatic.com/statics_s2_20160105-0313u5/resource/articles/java-memory-model-3/zh/resources/6.png" alt=""></p>
-<blockquote>
-<p>但是大部分商业JVM实现都保证了long和double的原子性。</p>
-</blockquote>
-<h3 id="volatile语义">volatile语义</h3><p><strong>写-读内存语义</strong>：<br><strong>写语义：</strong><br>当写一个volatile变量时，JMM会把该线程对应的本地内存中的共享变量刷新到主内存。</p>
-<p><strong>读语义：</strong><br>主存更新后，当读一个volatile变量时，JMM会把该线程对应的本地内存置为无效，线程接下来将从主内存中读取共享变量。</p>
-<p><strong>JMM volatile语义实现和作用</strong>：<br>（1）<strong>保证可见性</strong>（之前的总结系列中也说过依赖当前值或者和其他变量组成不变性条件需要同步控制保证原子性）；<br>（2）<strong>禁止部分重排序</strong><br>|    是否能重排序    |    第二个操作    |            |            |<br>| :———— | :————:| :——–:|:———:|<br>|    第一个操作    |    普通读/写        |volatile读    | volatile写    |<br>|    普通读/写         |                |            |    NO        |<br>|    volatile读    |    NO            |    NO        |    NO        |<br>|    volatile写    |                 |    NO        |    NO        |</p>
-<p><strong>volatile和内存屏障：</strong><br>编译器在生成字节码时，JMM在指令序列中插入内存屏障来禁止特定类型的处理器重排序：<br>（1）在volatile变量写之前，插入一个StoreStore，之后插入一个StoreLoad；<br>（2）在volatile变量读之前，插入一个LoadLoad和LoadStore；<br>这是一种严格的保守规定，不同的处理器平台可以根据自己的特点进行设计，只要保证语义正确性就可以：<br>比如x86只规定在写操作之后插入一个StoreLoad就可以了，因为x86中只有Store-Load前后指令才可以重排序，所以其他3个Barrier实际没有必要。</p>
-<p>还有一个需要注意地方：如果写操作之后直接是return指令，也要保证插入一个StoreLoad，因为并不能确定之后的语句是什么；</p>
-<p>PS：<br>（1）JSR-133之前的内存模型并不禁止普通变量的读写和volatile变量之间的重排序，因此JDK1.5之前的双检锁是有问题的。JSR-133将volatile的内存可见性语义“升级”的和监视器锁一样，解决这个问题，但是volatile是保证单个变量，而后者是整个临界区。<br>（2）不同的处理器平台实现volatile语义的具体方式不一样，比如IA-32处理器和Intel 64处理器通过MESI（修改，独占，共享，失效）保证对volatile的写入刷新到主内存，其他处理器通过嗅探到更新使得自己的对应缓存行失效，这样保证下一次读取的时候从主存中读取新的值。</p>
-<p><strong>volatile语义和双检锁：</strong><br>之所以要使用双检锁就是为了减少同步的开销，提高效率，但是这要求检测到<code>helper != null</code> 时对象处于一致的状态。</p>
-<p>PS：当前比较好的做法是使用枚举或者静态内部类的方式实现，随着JDK1.6以来对synchronized的优化，这种简单判断语句同步与否没有那么耸人听闻，不过追求“最优”总是一件有意义的事。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Foo</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> Helper helper;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> Helper <span class="title">getHelper</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Helper result = helper;</span><br><span class="line">        <span class="keyword">if</span> (result == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">synchronized</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">                result = helper;</span><br><span class="line">                <span class="keyword">if</span> (result == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    helper = result = <span class="keyword">new</span> Helper();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// other functions and members...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>在JDK 1.5之前会有问题，前面说过JDK1.5之前volatile语义和普通变量读写之间可以被重排序，因此<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">helper = result = <span class="keyword">new</span> Helper();</span><br></pre></td></tr></table></figure></p>
-<p>这里构造器中的读写操作可能逸出到构造函数返回对象引用之后的，这样另一个线程判断到<code>helper != null</code>时，对象可能存在不一致的状态中，而JSR-133增强了volatile的语义，解决这个问题。</p>
-<p>PS：这里使用一个本地变量result是为了减少volatile的访问，根据《Effective Java》（第2版）的说法，这样可以提高25%的效率。</p>
-<h3 id="final语义">final语义</h3><p><strong>final域与重排序规则</strong>：<br>（1）构造函数内对一个final域的写入，与随后把个被构造的引用赋给一个引用变量之间不能重排序；<br>在<strong>写入final指令</strong>和<strong>构造函数结束</strong>之间插入一个<strong>StoreStore</strong>屏障，防止写入final域逸出到构造函数之外，保证其他线程得到对象引用的时候，final域一定写入过了；<br>（2）初次读入一个包含final域的的对象引用和初次读入这个被包含的final域之间，不能重排序；<br>在<strong>读取final域之前</strong>插入一个<strong>LoadLoad</strong>屏障，这样可以保证获得一个非null的对象引用时，结合规则（1）已经初始化完成，在读取final域一定是正确的；<br>（3）如果final域是引用类型，构造函数内对final引用对象的成员域的写入和被构造对象的引用赋值给一个变量的，这两个操作之间不能重排序；</p>
-<p><strong>final语义与双检锁：</strong><br>基于JSR-133对final语义的加强，可以通过下面的方式实现安全的双检锁：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FinalWrapper</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> T value;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">FinalWrapper</span><span class="params">(T value)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.value = value;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Foo</span> </span>&#123;</span><br><span class="line">   <span class="keyword">private</span> FinalWrapper&lt;Helper&gt; helperWrapper;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">public</span> Helper <span class="title">getHelper</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      FinalWrapper&lt;Helper&gt; wrapper = helperWrapper;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span> (wrapper == <span class="keyword">null</span>) &#123;</span><br><span class="line">          <span class="keyword">synchronized</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">              <span class="keyword">if</span> (helperWrapper == <span class="keyword">null</span>) &#123;</span><br><span class="line">                  helperWrapper = <span class="keyword">new</span> FinalWrapper&lt;Helper&gt;(<span class="keyword">new</span> Helper());</span><br><span class="line">              &#125;</span><br><span class="line">              wrapper = helperWrapper;</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">return</span> wrapper.value;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>因为对构造器中对final域写不能“逸出”构造器，所以当<code>wrapper</code>不为null时，helperWrapper引用的对象已经被完成了正确的初始化了，所以不会在判断<code>wapper != null</code>时对象处于不一致的状态；</p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java并发/">Java并发</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
     <article id="post-Java并发（一）——线程安全基础" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
@@ -1041,10 +1065,10 @@ boolean <span class="keyword">red</span>;
 
 
   
-    <article id="post-Java并发（二）——同步容器" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-Java并发（七）——内存模型" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2015/12/11/Java并发（二）——同步容器/" class="article-date">
+      <a href="/2015/12/11/Java并发（七）——内存模型/" class="article-date">
   	<time datetime="2015-12-11T06:48:41.000Z" itemprop="datePublished">2015-12-11</time>
 </a>
     </div>
@@ -1058,7 +1082,7 @@ boolean <span class="keyword">red</span>;
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/11/Java并发（二）——同步容器/">Java并发（二）——同步容器</a>
+      <a class="article-title" href="/2015/12/11/Java并发（七）——内存模型/">Java并发（七）——内存模型</a>
     </h1>
   
 
@@ -1067,120 +1091,60 @@ boolean <span class="keyword">red</span>;
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>这些同步容器通常被称为“遗留集合”，和J.U.C中并发容器相比确实没有必要特地使用它们，但是我觉得了解它们是怎样工作的，并且理解它们为什么过时了，有什么缺点对理解并发容器的优点以及自己实际开发也是十分有用的。</p>
-<p>同步容器与并发容器相比：<br>同步容器锁整个容器，多个线程存在竞争，可能会导致吞吐量降低；<br>因此同步容器并发支持度不高；</p>
-<h1 id="1-_体系结构">1. 体系结构</h1><p>（1）Vector，Stack（派生自Vector），和ArrayList的结构很相似，也采用动态增长的数组+复制机制。实现了List接口，同时派生自AbstractList。Stack只是对Vector简单扩展，提供了一些栈的API而已。<br>（2）HashTable，之后也实现Map，和HashMap的内部表示比较相近，但是一些细节比如容量控制等没有HashMap那样的优化；<br>（3）Collections中基于各种synchronized～工厂方法的容器内部类实现，是基本容器类的装饰器同步包装类；</p>
-<h1 id="2-_Vector">2. Vector</h1><h2 id="2-1_Vector要点">2.1 Vector要点</h2><p>（1）基于动态增长数组实现，支持<code>RandomAccess</code>，但是结构性修改需要复制数组；<br>（2）支持克隆和序列化，但是基于同步，如果包含的元素很多，可能导致其他操作的长时间阻塞；<br>（3）与并发容器相比，Vector这样的同步容器是锁整个容器，而且读写都需要同步，包含的元素越多，阻塞的时间越长，伸缩性较差；<br>（4）线程安全，在使用Vector进行组合操作时（迭代，跳转，条件运算）需要额外的基于Vector内置锁（Vector对象）进行加锁保护；</p>
-<h2 id="2-2_结构和操作">2.2 结构和操作</h2><h3 id="核心属性">核心属性</h3><p>（1）数组缓存区：</p>
-<pre><code><span class="keyword">protected</span> <span class="keyword">Object</span>[] elementData;
-<span class="keyword">protected</span> <span class="built_in">int</span> elementCount;
-</code></pre><p>（2）容量控制：<br>如果没有通过构造器指定这个值，默认每次容量扩展为原数组的2倍，如果指定了就增加指定的增量；</p>
-<pre><code><span class="keyword">protected</span> <span class="keyword">int</span> capacityIncrement;
-</code></pre><h3 id="操作">操作</h3><p>由于总结过ArrayList的源码，细节就不再赘述了：<br><a href="http://blog.zerohuan.com/2015/12/11/Java%208%E9%9B%86%E5%90%88%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94ArrayList/">Java 8集合源码学习——ArrayList </a>;</p>
-<p>大致重复一下几个部分：<br>（1）容量控制：grow，ensureCapacity～系列，trimeToSize（压缩）等；<br>（2）List实现方法；<br>（3）迭代器：iterator和listIterator实现；</p>
-<h2 id="2-3_Vector的线程安全">2.3 Vector的线程安全</h2><p>Vector的主要操作方法都是使用内置锁的同步方法，但是是否线程安全还要看是否正确的使用了它，一些需要同时使用Vector几个方法组合时，就需要在客户端进行加锁保护，操作涉及：<strong>迭代</strong>，<strong>跳转</strong>，<strong>条件运算</strong>；</p>
-<h3 id="Vector的迭代器：">Vector的迭代器：</h3><p>同步容器，虽然本身是线程安全的，但是它的迭代器仍然实现了<strong>fail-fast</strong>机制。因为<code>Itr</code>迭代器的hashNext，next和remove等方法虽然本身是同步的，但是它们组合使用时需要在客户端进行加锁，fail-fast机制的意义在于快速发现bug，说明使用者误用了容器类，而不是一种恢复机制（RuntimeException一般都表示程序员自己的误用）；</p>
-<p><strong>隐藏迭代器</strong>：<br><code>toString</code>，<code>equals</code>，<code>hashCode</code>，<code>containsAll</code>等方法，实际是基于迭代器的，因此在封装基本容器类（ArrayList等），加锁保护同时要注意这些情况。<br>Vector的这些方法基于内置锁进行同步；</p>
-<h1 id="3-_HashTable">3. HashTable</h1><p>总的来说，排除同步的需求，HashTable效率也是远不如Java 8的HashMap的；</p>
-<h2 id="3-1_HashTable要点">3.1 HashTable要点</h2><p>（1）HashTable同样是基于“数组+链表”实现的，但显然它没有Java 8中HashMap那样的红黑树的实现；<br>（2）视图基于Collections.synchronizedSet实现同步，注意其迭代器需要在客户端实现同步控制；<br>（3）锁定整个表，并发支持度低；</p>
-<h3 id="与HashMap的不同点：">与HashMap的不同点：</h3><p>（1）key和value不能为null，HashMap中null对应的hash值为0；<br>（2）容量并不是2的幂次方，因此计算index时需要使用mod运算，效率不如HashMap；<br>（3）创建时的策略：并没有采用HashMap的延迟分配桶数组内存而是在构造器中创建数组，默认容量大小为11，并且没有最小容量的限制；</p>
-<pre><code><span class="keyword">if</span> (initialCapacity==<span class="number">0</span>)
-        initialCapacity = <span class="number">1</span>;
-    <span class="keyword">this</span>.loadFactor = loadFactor;
-    table = <span class="keyword">new</span> Entry&lt;?,?&gt;[initialCapacity];
-    threshold = (<span class="keyword">int</span>)Math.min(initialCapacity * loadFactor, MAX_ARRAY_SIZE + <span class="number">1</span>);     
-</code></pre><p>（4）视图不是用Set而是Enumeration实现的；</p>
-<h2 id="3-2_结构和操作">3.2 结构和操作</h2><p>属性不用多说核心的包括：table，count，threshold，loadFactor，modCount；</p>
-<h3 id="操作-1">操作</h3><p><strong>get：计算索引+链表查找</strong></p>
-<pre><code><span class="keyword">public</span> <span class="keyword">synchronized</span> V <span class="built_in">get</span>(<span class="keyword">Object</span> <span class="variable">key</span>) {
-    Entry&lt;?,?&gt; tab[] = table;
-    <span class="built_in">int</span> hash = <span class="variable">key</span>.hashCode();
-    <span class="comment">//计算是哪个桶</span>
-    <span class="built_in">int</span> index = (hash &amp; <span class="number">0x7FFFFFFF</span>) % tab.length;
-    <span class="keyword">for</span> (Entry&lt;?,?&gt; e = tab[index]; e != <span class="keyword">null</span>; e = e.next) {
-        <span class="comment">//不允许null的key</span>
-        <span class="keyword">if</span> ((e.hash == hash) &amp;&amp; e.<span class="variable">key</span>.equals(<span class="variable">key</span>)) {
-            <span class="keyword">return</span> (V)e.value;
-        }
-    }
-    <span class="keyword">return</span> <span class="keyword">null</span>;
-}
-</code></pre><p><strong>put：</strong><br>保证value不为null：</p>
-<pre><code><span class="keyword">if</span> (<span class="keyword">value</span> == <span class="keyword">null</span>) {
-    <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();
-}
-</code></pre><p>计算桶位置：</p>
-<pre><code>Entry&lt;?,?&gt; <span class="keyword">tab</span>[] = table;
-<span class="keyword">int</span> hash = key.hashCode();
-<span class="keyword">int</span> <span class="built_in">index</span> = (hash &amp; <span class="number">0</span>x7FFFFFFF) % <span class="keyword">tab</span>.length;
-</code></pre><p>查看表中是否已经存在：</p>
-<pre><code>for(; <span class="built_in">entry</span> <span class="comment">!= null ; entry = entry.next) {</span>
-        <span class="keyword">if</span> ((<span class="built_in">entry</span>.hash == hash) &amp;&amp; <span class="built_in">entry</span>.key.equals(key)) {
-            V old = <span class="built_in">entry</span>.<span class="keyword">value</span>;
-            <span class="built_in">entry</span>.<span class="keyword">value</span> = <span class="keyword">value</span>;
-            <span class="keyword">return</span> old;
-        }
-    }
-</code></pre><p>添加新键值对：</p>
-<pre><code>Entry&lt;?,?&gt; <span class="keyword">tab</span>[] = <span class="keyword">table</span>;
-    <span class="keyword">if</span> (<span class="keyword">count</span> &gt;= threshold) {
-        <span class="comment">// Rehash the table if the threshold is exceeded</span>
-        rehash();
+        <p>心得：<br>内存模型的就是为了在现代计算机平台中保证程序可以正确性的执行，但是不同的平台实现是不同的，比如重排序，x86中只会对Store-Load可能重排序，ia64可以在不存在数据依赖性的操作之间重排序。JMM就是为了屏蔽底层的细节，在不同平台JVM采用不同的实现，保证正确性的基础上，追求效率。<br>在理解了锁语义，volatile语义，final语义在内存模型中的定义后，对DCL的发展和演进有了更清晰的认识。</p>
+<p>学习参考资料：<br>（1）《Java并发编程实战》；<br>（2）《深入理解Java虚拟机》；<br>（3）jls8；<br>（4）jvms8；<br>（5）<a href="http://www.infoq.com/cn/minibooks/java_memory_model" target="_blank" rel="external">深入理解Java内存模型</a></p>
+<h1 id="1-_为什么需要Java内存模型">1. 为什么需要Java内存模型</h1><h2 id="编译/运行环境对可见性/原子性的影响：">编译/运行环境对可见性/原子性的影响：</h2><p>（1）编译器中生成的指令顺序，可以与源代码中的顺序不同；<br>（2）编译器可能把变量保存在寄存器而不是内存中；<br>（3）处理器可以采用乱序或并行等方式来执行指令；<br>（4）缓存可能会改变将写入变量提交到主内存的次序；<br>（5）保存在处理器本地缓存中的值，对其他处理器是不可见的；</p>
+<blockquote>
+<p>缓存的存在就是为了减少CPU的停顿，减少IO的次数，减少CPU等待I/O的时间。通过批处理的方式刷新写缓冲区，以及合并写缓冲区对同一内存地址的多次写。</p>
+<p>重排序，多核（并行性提升），CPU时钟频率的提升，多级缓存等等，编译器也进行指令重排，全局寄存器分配算法等可以大大提升计算性能；但这些可能会影响程序的正确性，那么必须要要保证的正确性的执行次序，JMM正是规定了JVM必须遵循的一组最小保证。</p>
+<p><strong>“次序”</strong>的正确是一个关键问题；</p>
+<p>并发编程需要处理两个关键问题是：线程之间如何<strong>通信</strong>及线程之间如何<strong>同步</strong>；命令式编程中，线程之间的通信机制有两种：<strong>共享内存</strong>和<strong>消息传递</strong>；</p>
+</blockquote>
+<h3 id="平台的内存模型">平台的内存模型</h3><p>提高CPU主频来提升计算性能出现了瓶颈，多核处理器是一个新的主要方向（也是是Amadhl定律为什么很重要的原因）；</p>
+<p>在多核处理器环境下，每个处理器有自己的缓存，定期与主内存进行协调。<strong>高速缓存</strong>的使用为了解决处理器速度和内存读取速度的矛盾（存储器越小，速度越快，价格越高。高速缓存的一个核心原理就是<strong>局部性原理</strong>，这也是为什么这种小块缓存方案可行的原因）。<br>当然也就需要解决<strong>缓存一致性</strong>的问题，比如在<strong>操作系统层面</strong>，有MESI，MSI等等协议，来保证程序执行在多核处理器环境下的正确性。<br>但Java是一款“一次编译到处运行”的语言，那JMM（Java内存模型）就是JVM需要保证的模型，屏蔽底层OS的差异（JVM规范对JMM的定义委托给了Java语言规范）。</p>
+<h3 id="重排序">重排序</h3><p>这里可以将：<br>（1）处理器的乱序执行，CPU将不存在数据依赖性的指令重叠执行（到流水线）；<br>（2）处理器并行执行，由于缓存和读/写缓冲区导致的行为上乱序；<br>（3）编译器的指令重排序；<br>使得为同步的程序的执行顺序的推断变“乱”的这些原因，统称为重排序；</p>
+<p>不同处理器平台上允许的重排序类型列表：<br>|    平台      | load-load|load-store|store-store|store-load |数据依赖  |<br>|:——-:|:——–:|:——–:|:———:|:———:|:——-:|<br>|sparc-TSO| N        |N            |N            |Y            |N          |<br>|x86      | N        |N            |N            |Y            |N          |<br>|ia64      | Y        |Y            |Y            |Y            |N          |<br>|PowerPC  | Y        |Y            |Y            |Y            |N          |<br>注：x86包括x64和AMD64；</p>
+<p><strong>内存屏障的类型</strong>：<br>（1）<strong>LoadLoad</strong>：load1; LoadLoad; load2;<br>（2）<strong>StoreStore</strong> ；<br>（3）<strong>LoadStore</strong>；<br>（4）<strong>StoreLoad</strong>：使得该屏障之前的所有内存访问指令（装载和存储）完成后，才执行屏障之后的内存访问指令；<br>StoreLoad，写读屏障是“全能屏障”，大多数处理器平台都支持这一屏障。该屏障的开销较大，因为要将缓存全部刷新到主存（LoadLoad和LoadStore只要保证顺序就好了）；</p>
+<h4 id="数据依赖性和as-if-serial语义（单线程内的正确性）">数据依赖性和as-if-serial语义（单线程内的正确性）</h4><p><strong>单个处理器</strong>指令执行序列中，如果两个操作访问同一个变量，并且有一个操作是写操作，那就存在数据依赖性，具有编译器和处理器不会改变存在数据依赖关系的两个操作的执行顺序。<br>注意是单个处理器，不同处理器并行就需要另外的保证了。</p>
+<p><strong>as-if-serial语义</strong>：<br>不管怎么重排序，（单线程）程序的执行结果不能被改变。as-if-serial语义可以保证单线程程序执行的正确性，但是并行情形下，这个是不够的。</p>
+<h4 id="内存屏障（内存可见性的“底层”实现手段）">内存屏障（内存可见性的“底层”实现手段）</h4><p>内存屏障</p>
+<h1 id="2-_Java内存模型的内容">2. Java内存模型的内容</h1><p>JMM决定一个线程对共享变量的写入何时对另一个线程可见。定义了线程（工作内存或本地内存）和主内存之间的抽象关系（当然这只是一种<strong>抽象</strong>的定义）。</p>
+<p>每个线程有自己的私有本地内存，存储主内存中共享变量的副本；这里的变量包括实例域，静态域，数组元素。<br>线程之间的内存互相不可见，只能通过主内存来传递。JMM通过定义<strong>缓存一致性协议</strong>来保证必要的<strong>可见性</strong>和<strong>原子性</strong>。</p>
+<h4 id="重排序和程序顺序规则（Happens-Before）">重排序和程序顺序规则（Happens-Before）</h4><p>上面说了as-if-serial可以保证在单线程环境下的正确性，但对于java程序来说这是远远不够的。</p>
+<p>JMM规定了一种偏序关系，也就是Happens-Before（具有反对称，自反，传递属性）；两个操作之间不存在Happends-Before关系，JVM可以进行任意地重排序。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a = <span class="number">1</span>; <span class="comment">//操作A</span></span><br><span class="line"><span class="keyword">int</span> b = <span class="number">2</span>; <span class="comment">//操作B</span></span><br><span class="line"><span class="keyword">int</span> c = a + b; <span class="comment">//操作C</span></span><br></pre></td></tr></table></figure></p>
+<p>操作A，C之间，B，C之间存在Happens-Before关系，不能进行重排序（无论是否在同一个线程）；<br>操作A，B之间不存在Happens-Before关系，因此可以重排序，并行等；</p>
+<p><strong>Happens-Before的规则有（8个）：</strong><br>（1）<strong>程序顺序规则</strong>：在一个线程内，书写在前面的操作先行发生于书写在后面的操作（主要考虑控制流顺序）；<br>（2）<strong>监视器锁规则</strong>：内置锁上的解锁操作必须先于发生于后面在同一个锁上的加锁操作；（之前我们总结过显式锁和内置锁具有相同的内存语义，后面是指绝对<strong>时间上</strong>先后）<br>（3）<strong>volatile变量规则</strong>：对volatile变量的写入操作必须先行发生于后面对该变量的读入操作（原子变量和volatile变量在读写操作上有相同的语义，后面同样是指时间上先后）；也就是说，如果在时间上，写操作发生在先面，那它的结果一定要被后面发生的读操作看到，无论是否在同一线程内，这就是可见性保证。<br>（4）<strong>线程启动规则</strong>：线程上对Thread.start()必须先行发生于对该线程中任务操作之前；<br>（5）<strong>线程终止规则</strong>：线程中所有操作必须先行发生于对此线程的终止检测；也就是说Thread.join()和Thread.alive()不可能在线程操作结束之前分别返回和返回true；<br>（6）<strong>线程中断规则</strong>：线程interrupt()方法的调用先行发生于被中断线程代码检测到中断事件的发生，保证Thread.interrupted()和Thread.currentThread().isInterruted()方法的正确性；<br>（7）<strong>终结器规则</strong>：对象的构造函数必须在启动它的终结器（finalize()方法）之前执行完成；<br>（8）<strong>传递性</strong>；</p>
+<blockquote>
+<p>as-if-serial语义保证了单线程内的正确性，Happens-Before更包含了并行环境下的正确性。</p>
+</blockquote>
+<h3 id="JMM和顺序一致性内存模型">JMM和顺序一致性内存模型</h3><p>首先说明JMM并不保证顺序一致性，所谓的顺序一致性内存模型保证一个线程的所有操作必须按照程序的顺序来执行；所有线程都只能看到一个单一的操作执行顺序，每个操作都必须原子执行且立刻对所有线程可见。</p>
+<p>所以顺序一致性内存模型是一个很严格的规定，在每个线程存在缓存的情况下保证每个操作对所有线程立即可见需要很大的代价。</p>
+<p>而JMM并不像这样严格，根据上面的8个Happens-Before，我们可以知道，在保证正确同步时，临界区是可以重排序的（当然要保证as-if-serial语义）：<br><img src="http://cdn2.infoqstatic.com/statics_s2_20160105-0313u5/resource/articles/java-memory-model-3/zh/resources/4.png" alt=""><br>（图片来源于info）</p>
+<blockquote>
+<p>所以JMM的目的在于保证程序执行正确性下，可以尽可能的利用并行，重排序等优化手段。</p>
+</blockquote>
+<p>对于未同步程序的执行特性，JMM只提供最小安全性：线程执行时读取到的值，要么是之前某个线程写入的值，要么是默认值（这也是为啥分配对象内存要清零初始化了）。</p>
+<p>虽然JMM不支持顺序一致性模型，但通过对比也可以更好的理解JMM。</p>
+<h3 id="long和double操作规则">long和double操作规则</h3><p>JMM要求<strong>lock</strong>，<strong>unlock</strong>，<strong>read</strong>，<strong>write</strong>，<strong>assign</strong>，<strong>use</strong>，<strong>load</strong>，<strong>store</strong>这8个操作具有原子性，对于64位的long和double来说，如果没有被volatile修饰，那可以鼓励但不保证原子性（可以划分为两个32位操作）。</p>
+<p>这样规定是处于对不同OS实现考虑的，对于32位处理器，总线宽度是32位，64位数据的原子性读写开销较大。因此如果分成2个32位分配到不同的总线事务（单个总线事务中内存读写具有原子性），那就不再具有原子性。<br><img src="http://cdn2.infoqstatic.com/statics_s2_20160105-0313u5/resource/articles/java-memory-model-3/zh/resources/6.png" alt=""></p>
+<blockquote>
+<p>但是大部分商业JVM实现都保证了long和double的原子性。</p>
+</blockquote>
+<h3 id="volatile语义">volatile语义</h3><p><strong>写-读内存语义</strong>：<br><strong>写语义：</strong><br>当写一个volatile变量时，JMM会把该线程对应的本地内存中的共享变量刷新到主内存。</p>
+<p><strong>读语义：</strong><br>主存更新后，当读一个volatile变量时，JMM会把该线程对应的本地内存置为无效，线程接下来将从主内存中读取共享变量。</p>
+<p><strong>JMM volatile语义实现和作用</strong>：<br>（1）<strong>保证可见性</strong>（之前的总结系列中也说过依赖当前值或者和其他变量组成不变性条件需要同步控制保证原子性）；<br>（2）<strong>禁止部分重排序</strong><br>|    是否能重排序    |    第二个操作    |            |            |<br>| :———— | :————:| :——–:|:———:|<br>|    第一个操作    |    普通读/写        |volatile读    | volatile写    |<br>|    普通读/写         |                |            |    NO        |<br>|    volatile读    |    NO            |    NO        |    NO        |<br>|    volatile写    |                 |    NO        |    NO        |</p>
+<p><strong>volatile和内存屏障：</strong><br>编译器在生成字节码时，JMM在指令序列中插入内存屏障来禁止特定类型的处理器重排序：<br>（1）在volatile变量写之前，插入一个StoreStore，之后插入一个StoreLoad；<br>（2）在volatile变量读之前，插入一个LoadLoad和LoadStore；<br>这是一种严格的保守规定，不同的处理器平台可以根据自己的特点进行设计，只要保证语义正确性就可以：<br>比如x86只规定在写操作之后插入一个StoreLoad就可以了，因为x86中只有Store-Load前后指令才可以重排序，所以其他3个Barrier实际没有必要。</p>
+<p>还有一个需要注意地方：如果写操作之后直接是return指令，也要保证插入一个StoreLoad，因为并不能确定之后的语句是什么；</p>
+<p>PS：<br>（1）JSR-133之前的内存模型并不禁止普通变量的读写和volatile变量之间的重排序，因此JDK1.5之前的双检锁是有问题的。JSR-133将volatile的内存可见性语义“升级”的和监视器锁一样，解决这个问题，但是volatile是保证单个变量，而后者是整个临界区。<br>（2）不同的处理器平台实现volatile语义的具体方式不一样，比如IA-32处理器和Intel 64处理器通过MESI（修改，独占，共享，失效）保证对volatile的写入刷新到主内存，其他处理器通过嗅探到更新使得自己的对应缓存行失效，这样保证下一次读取的时候从主存中读取新的值。</p>
+<p><strong>volatile语义和双检锁：</strong><br>之所以要使用双检锁就是为了减少同步的开销，提高效率，但是这要求检测到<code>helper != null</code> 时对象处于一致的状态。</p>
+<p>PS：当前比较好的做法是使用枚举或者静态内部类的方式实现，随着JDK1.6以来对synchronized的优化，这种简单判断语句同步与否没有那么耸人听闻，不过追求“最优”总是一件有意义的事。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Foo</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> Helper helper;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> Helper <span class="title">getHelper</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Helper result = helper;</span><br><span class="line">        <span class="keyword">if</span> (result == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">synchronized</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">                result = helper;</span><br><span class="line">                <span class="keyword">if</span> (result == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    helper = result = <span class="keyword">new</span> Helper();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// other functions and members...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在JDK 1.5之前会有问题，前面说过JDK1.5之前volatile语义和普通变量读写之间可以被重排序，因此<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">helper = result = <span class="keyword">new</span> Helper();</span><br></pre></td></tr></table></figure></p>
+<p>这里构造器中的读写操作可能逸出到构造函数返回对象引用之后的，这样另一个线程判断到<code>helper != null</code>时，对象可能存在不一致的状态中，而JSR-133增强了volatile的语义，解决这个问题。</p>
+<p>PS：这里使用一个本地变量result是为了减少volatile的访问，根据《Effective Java》（第2版）的说法，这样可以提高25%的效率。</p>
+<h3 id="final语义">final语义</h3><p><strong>final域与重排序规则</strong>：<br>（1）构造函数内对一个final域的写入，与随后把个被构造的引用赋给一个引用变量之间不能重排序；<br>在<strong>写入final指令</strong>和<strong>构造函数结束</strong>之间插入一个<strong>StoreStore</strong>屏障，防止写入final域逸出到构造函数之外，保证其他线程得到对象引用的时候，final域一定写入过了；<br>（2）初次读入一个包含final域的的对象引用和初次读入这个被包含的final域之间，不能重排序；<br>在<strong>读取final域之前</strong>插入一个<strong>LoadLoad</strong>屏障，这样可以保证获得一个非null的对象引用时，结合规则（1）已经初始化完成，在读取final域一定是正确的；<br>（3）如果final域是引用类型，构造函数内对final引用对象的成员域的写入和被构造对象的引用赋值给一个变量的，这两个操作之间不能重排序；</p>
+<p><strong>final语义与双检锁：</strong><br>基于JSR-133对final语义的加强，可以通过下面的方式实现安全的双检锁：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FinalWrapper</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> T value;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">FinalWrapper</span><span class="params">(T value)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.value = value;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Foo</span> </span>&#123;</span><br><span class="line">   <span class="keyword">private</span> FinalWrapper&lt;Helper&gt; helperWrapper;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">public</span> Helper <span class="title">getHelper</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      FinalWrapper&lt;Helper&gt; wrapper = helperWrapper;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span> (wrapper == <span class="keyword">null</span>) &#123;</span><br><span class="line">          <span class="keyword">synchronized</span>(<span class="keyword">this</span>) &#123;</span><br><span class="line">              <span class="keyword">if</span> (helperWrapper == <span class="keyword">null</span>) &#123;</span><br><span class="line">                  helperWrapper = <span class="keyword">new</span> FinalWrapper&lt;Helper&gt;(<span class="keyword">new</span> Helper());</span><br><span class="line">              &#125;</span><br><span class="line">              wrapper = helperWrapper;</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">return</span> wrapper.value;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>因为对构造器中对final域写不能“逸出”构造器，所以当<code>wrapper</code>不为null时，helperWrapper引用的对象已经被完成了正确的初始化了，所以不会在判断<code>wapper != null</code>时对象处于不一致的状态；</p>
 
-        <span class="keyword">tab</span> = <span class="keyword">table</span>;
-        hash = key.hashCode();
-        index = (hash &amp; 0x7FFFFFFF) % <span class="keyword">tab</span>.length;
-    }
-
-    <span class="comment">// Creates the new entry.</span>
-    @SuppressWarnings(<span class="string">"unchecked"</span>)
-    Entry&lt;K,V&gt; <span class="keyword">e</span> = (Entry&lt;K,V&gt;) <span class="keyword">tab</span>[index];
-    <span class="keyword">tab</span>[index] = new Entry&lt;&gt;(hash, key, value, <span class="keyword">e</span>);
-    <span class="keyword">count</span>++;
-</code></pre><p><strong>rehash：再散列（扩容+迁移）：</strong><br>扩容：</p>
-<pre><code><span class="keyword">int</span> newCapacity = (oldCapacity &lt;&lt; <span class="number">1</span>) + <span class="number">1</span>;
-<span class="keyword">if</span> (newCapacity - MAX_ARRAY_SIZE &gt; <span class="number">0</span>) {
-    <span class="keyword">if</span> (oldCapacity == MAX_ARRAY_SIZE)
-        <span class="comment">// Keep running with MAX_ARRAY_SIZE buckets</span>
-        <span class="keyword">return</span>;
-    newCapacity = MAX_ARRAY_SIZE;
-}
-Entry&lt;?,?&gt;[] newMap = <span class="keyword">new</span> Entry&lt;?,?&gt;[newCapacity];
-</code></pre><p>每个桶迁移，在链表头部插入：</p>
-<pre><code>for (<span class="built_in">int</span> i = oldCapacity ; i-- &gt; <span class="number">0</span> ;) {
-        for (<span class="built_in">Entry</span>&lt;K,V&gt; old = (<span class="built_in">Entry</span>&lt;K,V&gt;)oldMap[i] ; old <span class="comment">!= null ; ) {</span>
-            <span class="built_in">Entry</span>&lt;K,V&gt; e = old;
-            old = old.next;
-
-            <span class="built_in">int</span> <span class="built_in">index</span> = (e.hash &amp; x7FFFFFFF) % newCapacity;
-            e.next = (<span class="built_in">Entry</span>&lt;K,V&gt;)newMap[<span class="built_in">index</span>];
-            newMap[<span class="built_in">index</span>] = e;
-        }
-    }
-</code></pre><h1 id="4-_Collections同步容器">4. Collections同步容器</h1><p>结合Java容器类的体系结构，Collections中同步装饰器同样包含：<br><code>SynchronizedCollection</code>;<br><code>SynchronizedList</code>；<br><code>SynchronizedSet</code>；<br><code>SynchronizedMap</code>；<br>等等；</p>
-<h2 id="要点">要点</h2><p>（1）基于装饰器模式，大多操作方法都是对基本容器类的委托；<br>（2）基于额外的<code>final Object mutex;</code>互斥锁，但是在客户端同步仍然可以基于容器对象同步复合操作；<br>（3）迭代器需要额外的同步：</p>
-<pre><code><span class="keyword">public</span> ListIterator&lt;E&gt; listIterator() {
-        <span class="function"><span class="keyword">return</span> list.<span class="title">listIterator</span><span class="params">()</span></span>; <span class="comment">// Must be manually synched by user</span>
-    }
-    <span class="keyword">public</span> ListIterator&lt;E&gt; listIterator(<span class="keyword">int</span> index) {
-        <span class="function"><span class="keyword">return</span> list.<span class="title">listIterator</span><span class="params">(index)</span></span>; <span class="comment">// Must be manually synched by user</span>
-    }
-</code></pre><p>（4）子列表，Map的Set视图等提供的并不是实时的最新信息，因此可以根据需求基于这个事实指定同步策略，比如利用不可变对象，加强锁保护等等；</p>
-<h2 id="具体类实现要点">具体类实现要点</h2><p><strong>SynchronizedList：</strong><br>（1）List一般可以基于数组和链表两种实现，可以通过是否实现<code>RandomAccess</code>接口进行判断，这里区分的目的在与保持RandomAccess接口实现：</p>
-<pre><code><span class="function"><span class="keyword">public</span> List&lt;E&gt; <span class="title">subList</span><span class="params">(<span class="keyword">int</span> fromIndex, <span class="keyword">int</span> toIndex)</span> </span>{
-        <span class="keyword">synchronized</span> (mutex) {
-            <span class="keyword">return</span> <span class="keyword">new</span> SynchronizedRandomAccessList&lt;&gt;(
-                list.subList(fromIndex, toIndex), mutex);
-        }
-    }
-</code></pre><p>（2）subList提供另外副本（弱一致性）：</p>
-<pre><code><span class="function"><span class="keyword">public</span> List&lt;E&gt; <span class="title">subList</span><span class="params">(<span class="keyword">int</span> fromIndex, <span class="keyword">int</span> toIndex)</span> </span>{
-        <span class="keyword">synchronized</span> (mutex) {
-            <span class="keyword">return</span> <span class="keyword">new</span> SynchronizedList&lt;&gt;(list.subList(fromIndex, toIndex),
-                                        mutex);
-        }
-    }
-</code></pre>
       
     </div>
     
@@ -1680,11 +1644,11 @@ E elementData(<span class="keyword">int</span> <span class="keyword">index</span
 
 
   
-    <article id="post-Java基础知识总结（九）——序列化" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-Java并发（二）——同步容器" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2015/12/11/Java基础知识总结（九）——序列化/" class="article-date">
-  	<time datetime="2015-12-11T06:48:19.000Z" itemprop="datePublished">2015-12-11</time>
+      <a href="/2015/12/11/Java并发（二）——同步容器/" class="article-date">
+  	<time datetime="2015-12-11T06:48:41.000Z" itemprop="datePublished">2015-12-11</time>
 </a>
     </div>
   
@@ -1697,7 +1661,7 @@ E elementData(<span class="keyword">int</span> <span class="keyword">index</span
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/11/Java基础知识总结（九）——序列化/">Java基础知识总结（九）——序列化</a>
+      <a class="article-title" href="/2015/12/11/Java并发（二）——同步容器/">Java并发（二）——同步容器</a>
     </h1>
   
 
@@ -1706,115 +1670,119 @@ E elementData(<span class="keyword">int</span> <span class="keyword">index</span
     
     <div class="article-entry" itemprop="articleBody">
       
-        
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
-    <article id="post-反射工具——运行时打印对象状态（包括数组域）" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/12/09/反射工具——运行时打印对象状态（包括数组域）/" class="article-date">
-  	<time datetime="2015-12-09T08:38:24.000Z" itemprop="datePublished">2015-12-09</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/09/反射工具——运行时打印对象状态（包括数组域）/">反射工具——运行时打印对象状态（包括数组域）</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>这两天遇到一个需求像打印出一个对象的状态，包括private域和多维数组域，因此写了个小工具类，打印数组的函数用递归实现处理多维数组（使用java.lang.reflect.Array打印数组值）：</p>
-<pre><code><span class="comment">/**
- * 打印一个对象的实例数据状态
- * @param obj
- * @param out
- */</span>
-<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">printStatus</span>(<span class="params">Object obj, PrintStream <span class="keyword">out</span></span>)</span>{
-    Class&lt;?&gt; claz = obj.getClass();
-    Field[] fields = claz.getDeclaredFields();
-    <span class="keyword">try</span> {
-        <span class="keyword">for</span>(Field field : fields) {
-            field.setAccessible(<span class="keyword">true</span>);
-            <span class="keyword">out</span>.print(field);
-            <span class="keyword">out</span>.print(<span class="string">"\t"</span>);
-            Object fieldObj = field.<span class="keyword">get</span>(obj);
-
-            <span class="comment">//判断是否为空</span>
-            <span class="keyword">if</span>(fieldObj == <span class="keyword">null</span>)
-                <span class="keyword">out</span>.println(<span class="string">"null"</span>);
-            <span class="keyword">else</span> {
-                Class&lt;?&gt; fieldClass = fieldObj.getClass();
-                <span class="comment">//判断是否为数组</span>
-                <span class="keyword">if</span>(fieldClass.isArray()) {
-                    printArray(fieldObj, <span class="keyword">out</span>);
-                    <span class="keyword">out</span>.println();
-                } <span class="keyword">else</span> {
-                    <span class="keyword">out</span>.println(fieldObj);
-                }
-            }
+        <p>这些同步容器通常被称为“遗留集合”，和J.U.C中并发容器相比确实没有必要特地使用它们，但是我觉得了解它们是怎样工作的，并且理解它们为什么过时了，有什么缺点对理解并发容器的优点以及自己实际开发也是十分有用的。</p>
+<p>同步容器与并发容器相比：<br>同步容器锁整个容器，多个线程存在竞争，可能会导致吞吐量降低；<br>因此同步容器并发支持度不高；</p>
+<h1 id="1-_体系结构">1. 体系结构</h1><p>（1）Vector，Stack（派生自Vector），和ArrayList的结构很相似，也采用动态增长的数组+复制机制。实现了List接口，同时派生自AbstractList。Stack只是对Vector简单扩展，提供了一些栈的API而已。<br>（2）HashTable，之后也实现Map，和HashMap的内部表示比较相近，但是一些细节比如容量控制等没有HashMap那样的优化；<br>（3）Collections中基于各种synchronized～工厂方法的容器内部类实现，是基本容器类的装饰器同步包装类；</p>
+<h1 id="2-_Vector">2. Vector</h1><h2 id="2-1_Vector要点">2.1 Vector要点</h2><p>（1）基于动态增长数组实现，支持<code>RandomAccess</code>，但是结构性修改需要复制数组；<br>（2）支持克隆和序列化，但是基于同步，如果包含的元素很多，可能导致其他操作的长时间阻塞；<br>（3）与并发容器相比，Vector这样的同步容器是锁整个容器，而且读写都需要同步，包含的元素越多，阻塞的时间越长，伸缩性较差；<br>（4）线程安全，在使用Vector进行组合操作时（迭代，跳转，条件运算）需要额外的基于Vector内置锁（Vector对象）进行加锁保护；</p>
+<h2 id="2-2_结构和操作">2.2 结构和操作</h2><h3 id="核心属性">核心属性</h3><p>（1）数组缓存区：</p>
+<pre><code><span class="keyword">protected</span> <span class="keyword">Object</span>[] elementData;
+<span class="keyword">protected</span> <span class="built_in">int</span> elementCount;
+</code></pre><p>（2）容量控制：<br>如果没有通过构造器指定这个值，默认每次容量扩展为原数组的2倍，如果指定了就增加指定的增量；</p>
+<pre><code><span class="keyword">protected</span> <span class="keyword">int</span> capacityIncrement;
+</code></pre><h3 id="操作">操作</h3><p>由于总结过ArrayList的源码，细节就不再赘述了：<br><a href="http://blog.zerohuan.com/2015/12/11/Java%208%E9%9B%86%E5%90%88%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94ArrayList/">Java 8集合源码学习——ArrayList </a>;</p>
+<p>大致重复一下几个部分：<br>（1）容量控制：grow，ensureCapacity～系列，trimeToSize（压缩）等；<br>（2）List实现方法；<br>（3）迭代器：iterator和listIterator实现；</p>
+<h2 id="2-3_Vector的线程安全">2.3 Vector的线程安全</h2><p>Vector的主要操作方法都是使用内置锁的同步方法，但是是否线程安全还要看是否正确的使用了它，一些需要同时使用Vector几个方法组合时，就需要在客户端进行加锁保护，操作涉及：<strong>迭代</strong>，<strong>跳转</strong>，<strong>条件运算</strong>；</p>
+<h3 id="Vector的迭代器：">Vector的迭代器：</h3><p>同步容器，虽然本身是线程安全的，但是它的迭代器仍然实现了<strong>fail-fast</strong>机制。因为<code>Itr</code>迭代器的hashNext，next和remove等方法虽然本身是同步的，但是它们组合使用时需要在客户端进行加锁，fail-fast机制的意义在于快速发现bug，说明使用者误用了容器类，而不是一种恢复机制（RuntimeException一般都表示程序员自己的误用）；</p>
+<p><strong>隐藏迭代器</strong>：<br><code>toString</code>，<code>equals</code>，<code>hashCode</code>，<code>containsAll</code>等方法，实际是基于迭代器的，因此在封装基本容器类（ArrayList等），加锁保护同时要注意这些情况。<br>Vector的这些方法基于内置锁进行同步；</p>
+<h1 id="3-_HashTable">3. HashTable</h1><p>总的来说，排除同步的需求，HashTable效率也是远不如Java 8的HashMap的；</p>
+<h2 id="3-1_HashTable要点">3.1 HashTable要点</h2><p>（1）HashTable同样是基于“数组+链表”实现的，但显然它没有Java 8中HashMap那样的红黑树的实现；<br>（2）视图基于Collections.synchronizedSet实现同步，注意其迭代器需要在客户端实现同步控制；<br>（3）锁定整个表，并发支持度低；</p>
+<h3 id="与HashMap的不同点：">与HashMap的不同点：</h3><p>（1）key和value不能为null，HashMap中null对应的hash值为0；<br>（2）容量并不是2的幂次方，因此计算index时需要使用mod运算，效率不如HashMap；<br>（3）创建时的策略：并没有采用HashMap的延迟分配桶数组内存而是在构造器中创建数组，默认容量大小为11，并且没有最小容量的限制；</p>
+<pre><code><span class="keyword">if</span> (initialCapacity==<span class="number">0</span>)
+        initialCapacity = <span class="number">1</span>;
+    <span class="keyword">this</span>.loadFactor = loadFactor;
+    table = <span class="keyword">new</span> Entry&lt;?,?&gt;[initialCapacity];
+    threshold = (<span class="keyword">int</span>)Math.min(initialCapacity * loadFactor, MAX_ARRAY_SIZE + <span class="number">1</span>);     
+</code></pre><p>（4）视图不是用Set而是Enumeration实现的；</p>
+<h2 id="3-2_结构和操作">3.2 结构和操作</h2><p>属性不用多说核心的包括：table，count，threshold，loadFactor，modCount；</p>
+<h3 id="操作-1">操作</h3><p><strong>get：计算索引+链表查找</strong></p>
+<pre><code><span class="keyword">public</span> <span class="keyword">synchronized</span> V <span class="built_in">get</span>(<span class="keyword">Object</span> <span class="variable">key</span>) {
+    Entry&lt;?,?&gt; tab[] = table;
+    <span class="built_in">int</span> hash = <span class="variable">key</span>.hashCode();
+    <span class="comment">//计算是哪个桶</span>
+    <span class="built_in">int</span> index = (hash &amp; <span class="number">0x7FFFFFFF</span>) % tab.length;
+    <span class="keyword">for</span> (Entry&lt;?,?&gt; e = tab[index]; e != <span class="keyword">null</span>; e = e.next) {
+        <span class="comment">//不允许null的key</span>
+        <span class="keyword">if</span> ((e.hash == hash) &amp;&amp; e.<span class="variable">key</span>.equals(<span class="variable">key</span>)) {
+            <span class="keyword">return</span> (V)e.value;
         }
-    } <span class="keyword">catch</span> (IllegalAccessException e) {
-        e.printStackTrace();
     }
+    <span class="keyword">return</span> <span class="keyword">null</span>;
 }
-
-<span class="comment">/**
- * 反射打印数组，如果是多维数组递归打印
- * @param arr
- * @param out
- */</span>
-<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">printArray</span>(<span class="params">Object arr, PrintStream <span class="keyword">out</span></span>) </span>{
-    Class&lt;?&gt; arrClass = arr.getClass();
-    <span class="keyword">if</span>(arrClass.isArray()) {
-        <span class="keyword">int</span> length = Array.getLength(arr);
-        <span class="keyword">out</span>.print(<span class="string">'['</span>);
-        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; length; ++i) {
-            Object o = Array.<span class="keyword">get</span>(arr, i);
-            <span class="comment">//如果元素仍然是数组类型，递归打印</span>
-            <span class="keyword">if</span>(o.getClass().isArray()) {
-                printArray(o, <span class="keyword">out</span>);
-            } <span class="keyword">else</span> {
-                <span class="keyword">out</span>.print(o);
-                <span class="keyword">if</span>(i &lt; length - <span class="number">1</span>)
-                    <span class="keyword">out</span>.print(<span class="string">","</span>);
-            }
+</code></pre><p><strong>put：</strong><br>保证value不为null：</p>
+<pre><code><span class="keyword">if</span> (<span class="keyword">value</span> == <span class="keyword">null</span>) {
+    <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();
+}
+</code></pre><p>计算桶位置：</p>
+<pre><code>Entry&lt;?,?&gt; <span class="keyword">tab</span>[] = table;
+<span class="keyword">int</span> hash = key.hashCode();
+<span class="keyword">int</span> <span class="built_in">index</span> = (hash &amp; <span class="number">0</span>x7FFFFFFF) % <span class="keyword">tab</span>.length;
+</code></pre><p>查看表中是否已经存在：</p>
+<pre><code>for(; <span class="built_in">entry</span> <span class="comment">!= null ; entry = entry.next) {</span>
+        <span class="keyword">if</span> ((<span class="built_in">entry</span>.hash == hash) &amp;&amp; <span class="built_in">entry</span>.key.equals(key)) {
+            V old = <span class="built_in">entry</span>.<span class="keyword">value</span>;
+            <span class="built_in">entry</span>.<span class="keyword">value</span> = <span class="keyword">value</span>;
+            <span class="keyword">return</span> old;
         }
-        <span class="keyword">out</span>.print(<span class="string">']'</span>);
     }
+</code></pre><p>添加新键值对：</p>
+<pre><code>Entry&lt;?,?&gt; <span class="keyword">tab</span>[] = <span class="keyword">table</span>;
+    <span class="keyword">if</span> (<span class="keyword">count</span> &gt;= threshold) {
+        <span class="comment">// Rehash the table if the threshold is exceeded</span>
+        rehash();
+
+        <span class="keyword">tab</span> = <span class="keyword">table</span>;
+        hash = key.hashCode();
+        index = (hash &amp; 0x7FFFFFFF) % <span class="keyword">tab</span>.length;
+    }
+
+    <span class="comment">// Creates the new entry.</span>
+    @SuppressWarnings(<span class="string">"unchecked"</span>)
+    Entry&lt;K,V&gt; <span class="keyword">e</span> = (Entry&lt;K,V&gt;) <span class="keyword">tab</span>[index];
+    <span class="keyword">tab</span>[index] = new Entry&lt;&gt;(hash, key, value, <span class="keyword">e</span>);
+    <span class="keyword">count</span>++;
+</code></pre><p><strong>rehash：再散列（扩容+迁移）：</strong><br>扩容：</p>
+<pre><code><span class="keyword">int</span> newCapacity = (oldCapacity &lt;&lt; <span class="number">1</span>) + <span class="number">1</span>;
+<span class="keyword">if</span> (newCapacity - MAX_ARRAY_SIZE &gt; <span class="number">0</span>) {
+    <span class="keyword">if</span> (oldCapacity == MAX_ARRAY_SIZE)
+        <span class="comment">// Keep running with MAX_ARRAY_SIZE buckets</span>
+        <span class="keyword">return</span>;
+    newCapacity = MAX_ARRAY_SIZE;
 }
+Entry&lt;?,?&gt;[] newMap = <span class="keyword">new</span> Entry&lt;?,?&gt;[newCapacity];
+</code></pre><p>每个桶迁移，在链表头部插入：</p>
+<pre><code>for (<span class="built_in">int</span> i = oldCapacity ; i-- &gt; <span class="number">0</span> ;) {
+        for (<span class="built_in">Entry</span>&lt;K,V&gt; old = (<span class="built_in">Entry</span>&lt;K,V&gt;)oldMap[i] ; old <span class="comment">!= null ; ) {</span>
+            <span class="built_in">Entry</span>&lt;K,V&gt; e = old;
+            old = old.next;
+
+            <span class="built_in">int</span> <span class="built_in">index</span> = (e.hash &amp; x7FFFFFFF) % newCapacity;
+            e.next = (<span class="built_in">Entry</span>&lt;K,V&gt;)newMap[<span class="built_in">index</span>];
+            newMap[<span class="built_in">index</span>] = e;
+        }
+    }
+</code></pre><h1 id="4-_Collections同步容器">4. Collections同步容器</h1><p>结合Java容器类的体系结构，Collections中同步装饰器同样包含：<br><code>SynchronizedCollection</code>;<br><code>SynchronizedList</code>；<br><code>SynchronizedSet</code>；<br><code>SynchronizedMap</code>；<br>等等；</p>
+<h2 id="要点">要点</h2><p>（1）基于装饰器模式，大多操作方法都是对基本容器类的委托；<br>（2）基于额外的<code>final Object mutex;</code>互斥锁，但是在客户端同步仍然可以基于容器对象同步复合操作；<br>（3）迭代器需要额外的同步：</p>
+<pre><code><span class="keyword">public</span> ListIterator&lt;E&gt; listIterator() {
+        <span class="function"><span class="keyword">return</span> list.<span class="title">listIterator</span><span class="params">()</span></span>; <span class="comment">// Must be manually synched by user</span>
+    }
+    <span class="keyword">public</span> ListIterator&lt;E&gt; listIterator(<span class="keyword">int</span> index) {
+        <span class="function"><span class="keyword">return</span> list.<span class="title">listIterator</span><span class="params">(index)</span></span>; <span class="comment">// Must be manually synched by user</span>
+    }
+</code></pre><p>（4）子列表，Map的Set视图等提供的并不是实时的最新信息，因此可以根据需求基于这个事实指定同步策略，比如利用不可变对象，加强锁保护等等；</p>
+<h2 id="具体类实现要点">具体类实现要点</h2><p><strong>SynchronizedList：</strong><br>（1）List一般可以基于数组和链表两种实现，可以通过是否实现<code>RandomAccess</code>接口进行判断，这里区分的目的在与保持RandomAccess接口实现：</p>
+<pre><code><span class="function"><span class="keyword">public</span> List&lt;E&gt; <span class="title">subList</span><span class="params">(<span class="keyword">int</span> fromIndex, <span class="keyword">int</span> toIndex)</span> </span>{
+        <span class="keyword">synchronized</span> (mutex) {
+            <span class="keyword">return</span> <span class="keyword">new</span> SynchronizedRandomAccessList&lt;&gt;(
+                list.subList(fromIndex, toIndex), mutex);
+        }
+    }
+</code></pre><p>（2）subList提供另外副本（弱一致性）：</p>
+<pre><code><span class="function"><span class="keyword">public</span> List&lt;E&gt; <span class="title">subList</span><span class="params">(<span class="keyword">int</span> fromIndex, <span class="keyword">int</span> toIndex)</span> </span>{
+        <span class="keyword">synchronized</span> (mutex) {
+            <span class="keyword">return</span> <span class="keyword">new</span> SynchronizedList&lt;&gt;(list.subList(fromIndex, toIndex),
+                                        mutex);
+        }
+    }
 </code></pre>
       
     </div>
@@ -1823,7 +1791,7 @@ E elementData(<span class="keyword">int</span> <span class="keyword">index</span
       
       
 	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/思考和求解/">思考和求解</a></li></ul>
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java并发/">Java并发</a></li></ul>
 	</div>
 
       

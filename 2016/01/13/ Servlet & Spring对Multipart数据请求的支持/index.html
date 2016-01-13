@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Servlet &amp; Spring对Multipart数据请求的支持 | Zerohuan的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="参考资料：（1）RFC 1867（2）Java Servlet Specification 3.1；（3）《Java Web高级编程》；
+1. Multipart FormDataMultipart是HTML中表单文件上传的基本格式，一般通过如下方法可以通过HTTP上传文件：12345&amp;lt;form action=&quot;_URL_&quot; method=&quot;POST&quot; enctype=&quot;multipart/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Servlet & Spring对Multipart数据请求的支持">
+<meta property="og:url" content="http://blog.zerohuan.com/2016/01/13/ Servlet & Spring对Multipart数据请求的支持/index.html">
+<meta property="og:site_name" content="Zerohuan的博客">
+<meta property="og:description" content="参考资料：（1）RFC 1867（2）Java Servlet Specification 3.1；（3）《Java Web高级编程》；
+1. Multipart FormDataMultipart是HTML中表单文件上传的基本格式，一般通过如下方法可以通过HTTP上传文件：12345&amp;lt;form action=&quot;_URL_&quot; method=&quot;POST&quot; enctype=&quot;multipart/">
+<meta property="og:updated_time" content="2016-01-13T08:47:42.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Servlet & Spring对Multipart数据请求的支持">
+<meta name="twitter:description" content="参考资料：（1）RFC 1867（2）Java Servlet Specification 3.1；（3）《Java Web高级编程》；
+1. Multipart FormDataMultipart是HTML中表单文件上传的基本格式，一般通过如下方法可以通过HTTP上传文件：12345&amp;lt;form action=&quot;_URL_&quot; method=&quot;POST&quot; enctype=&quot;multipart/">
+  
+    <link rel="alternative" href="/atom.xml" title="Zerohuan的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+	<header id="header" class="inner">
+		<a href="/" class="profilepic">
+			
+			<img lazy-src="/avatar.jpg" class="js-avatar">
+			
+		</a>
+
+		<hgroup>
+		  <h1 class="header-author"><a href="/">Zerohuan</a></h1>
+		</hgroup>
+
+		
+		<p class="header-subtitle">Talk is cheap, show me the code!</p>
+		
+
+		
+			<div class="switch-btn">
+				<div class="icon">
+					<div class="icon-ctn">
+						<div class="icon-wrap icon-house" data-idx="0">
+							<div class="birdhouse"></div>
+							<div class="birdhouse_holes"></div>
+						</div>
+						<div class="icon-wrap icon-ribbon hide" data-idx="1">
+							<div class="ribbon"></div>
+						</div>
+						
+						<div class="icon-wrap icon-link hide" data-idx="2">
+							<div class="loopback_l"></div>
+							<div class="loopback_r"></div>
+						</div>
+						
+						
+						<div class="icon-wrap icon-me hide" data-idx="3">
+							<div class="user"></div>
+							<div class="shoulder"></div>
+						</div>
+						
+					</div>
+					
+				</div>
+				<div class="tips-box hide">
+					<div class="tips-arrow"></div>
+					<ul class="tips-inner">
+						<li>菜单</li>
+						<li>标签</li>
+						
+						<li>友情链接</li>
+						
+						
+						<li>关于我</li>
+						
+					</ul>
+				</div>
+			</div>
+		
+
+		<div class="switch-area">
+			<div class="switch-wrap">
+				<section class="switch-part switch-part1">
+					<nav class="header-menu">
+						<ul>
+						
+							<li><a href="/">主页</a></li>
+				        
+							<li><a href="/archives">所有文章</a></li>
+				        
+						</ul>
+					</nav>
+					<nav class="header-nav">
+						<div class="social">
+							
+								<a class="github" target="_blank" href="https://github.com/zerohuan" title="github">github</a>
+					        
+								<a class="weibo" target="_blank" href="/#" title="weibo">weibo</a>
+					        
+								<a class="zhihu" target="_blank" href="http://www.zhihu.com/people/yan-jin-heng" title="zhihu">zhihu</a>
+					        
+								<a class="mail" target="_blank" href="mailto:yanjinheng@qq.com" title="mail">mail</a>
+					        
+						</div>
+					</nav>
+				</section>
+				
+				
+				<section class="switch-part switch-part2">
+					<div class="widget tagcloud" id="js-tagcloud">
+						<a href="/tags/JVM/" style="font-size: 12px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 14px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java并发/" style="font-size: 16px;">Java并发</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12px;">TCP/IP</a> <a href="/tags/java-web/" style="font-size: 10px;">java web</a> <a href="/tags/思考和求解/" style="font-size: 18px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
+					</div>
+				</section>
+				
+				
+				
+				<section class="switch-part switch-part3">
+					<div id="js-friends">
+					
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">奥巴马的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">卡卡的美丽传说</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">本泽马的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">吉格斯的博客</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">习大大大不同</a>
+			        
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://localhost:4000/">托蒂的博客</a>
+			        
+			        </div>
+				</section>
+				
+
+				
+				
+				<section class="switch-part switch-part4">
+				
+					<div id="js-aboutme">现南京大学研究生一枚，目前专注于Java Web方向。</div>
+				</section>
+				
+			</div>
+		</div>
+	</header>				
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+  	<div class="overlay">
+  		<div class="slider-trigger"></div>
+  		<h1 class="header-author js-mobile-header hide">Zerohuan</h1>
+  	</div>
+	<div class="intrude-less">
+		<header id="header" class="inner">
+			<div class="profilepic">
+				<img lazy-src="/avatar.jpg" class="js-avatar">
+			</div>
+			<hgroup>
+			  <h1 class="header-author">Zerohuan</h1>
+			</hgroup>
+			
+			<p class="header-subtitle">Talk is cheap, show me the code!</p>
+			
+			<nav class="header-menu">
+				<ul>
+				
+					<li><a href="/">主页</a></li>
+		        
+					<li><a href="/archives">所有文章</a></li>
+		        
+		        <div class="clearfix"></div>
+				</ul>
+			</nav>
+			<nav class="header-nav">
+				<div class="social">
+					
+						<a class="github" target="_blank" href="https://github.com/zerohuan" title="github">github</a>
+			        
+						<a class="weibo" target="_blank" href="/#" title="weibo">weibo</a>
+			        
+						<a class="zhihu" target="_blank" href="http://www.zhihu.com/people/yan-jin-heng" title="zhihu">zhihu</a>
+			        
+						<a class="mail" target="_blank" href="mailto:yanjinheng@qq.com" title="mail">mail</a>
+			        
+				</div>
+			</nav>
+		</header>				
+	</div>
+</nav>
+      <div class="body-wrap"><article id="post- Servlet &amp; Spring对Multipart数据请求的支持" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2016/01/13/ Servlet & Spring对Multipart数据请求的支持/" class="article-date">
+  	<time datetime="2016-01-13T06:19:44.000Z" itemprop="datePublished">2016-01-13</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Servlet &amp; Spring对Multipart数据请求的支持
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/java-web/">java web</a></li></ul>
+	</div>
+
+        
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>参考资料：<br>（1）<a href="http://www.ietf.org/rfc/rfc1867" target="_blank" rel="external">RFC 1867</a><br>（2）Java Servlet Specification 3.1；<br>（3）《Java Web高级编程》；</p>
+<h1 id="1-_Multipart_FormData">1. Multipart FormData</h1><p>Multipart是HTML中表单文件上传的基本格式，一般通过如下方法可以通过HTTP上传文件：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">form</span> <span class="attribute">action</span>=<span class="value">"_URL_"</span> <span class="attribute">method</span>=<span class="value">"POST"</span> <span class="attribute">enctype</span>=<span class="value">"multipart/form-data"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"text"</span> <span class="attribute">name</span>=<span class="value">"username"</span> /&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"file"</span> <span class="attribute">name</span>=<span class="value">"userfile1"</span> /&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"submit"</span> <span class="attribute">value</span>=<span class="value">"submit"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">form</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>有两个地方是使用Multipart的关键：<br>（1）对于POST请求来说，enctype的默认值是application/x-www-form-urlencoded，而这里要是用<code>multipart/form-data</code>；<br>（2）<code>&lt;input /&gt;</code>的type设置为<code>file</code>；</p>
+<h2 id="1-1_Multipart的数据格式">1.1 Multipart的数据格式</h2><p>基于Multipart，请求的每个部分都有指定的边界分隔开，都有一个值为form-data的<strong>Content-Disposition</strong>和匹配表单输入名称的<strong>name</strong>。<br>如果是文件类型字段，还将有<strong>filename</strong>，匹配MIME类型的<strong>Content-Type</strong>；<br>使用下面的表单提交单个文件和其他文本域：</p>
+<h4 id="测试1：单文件上传">测试1：单文件上传</h4><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">form</span> <span class="attribute">action</span>=<span class="value">"/s/upload/1"</span> <span class="attribute">method</span>=<span class="value">"post"</span> <span class="attribute">enctype</span>=<span class="value">"multipart/form-data"</span>&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="title">fieldset</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">legend</span>&gt;</span>测试1：单文件上传<span class="tag">&lt;/<span class="title">legend</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">p</span>&gt;</span><span class="tag">&lt;<span class="title">label</span> <span class="attribute">for</span>=<span class="value">"name"</span>&gt;</span>名称 <span class="tag">&lt;/<span class="title">label</span>&gt;</span><span class="tag">&lt;<span class="title">input</span> <span class="attribute">id</span>=<span class="value">"name"</span> <span class="attribute">type</span>=<span class="value">"text"</span> <span class="attribute">name</span>=<span class="value">"name"</span> /&gt;</span><span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">p</span>&gt;</span><span class="tag">&lt;<span class="title">label</span> <span class="attribute">for</span>=<span class="value">"files"</span>&gt;</span>文件 <span class="tag">&lt;/<span class="title">label</span>&gt;</span><span class="tag">&lt;<span class="title">input</span> <span class="attribute">id</span>=<span class="value">"files"</span> <span class="attribute">type</span>=<span class="value">"file"</span> <span class="attribute">name</span>=<span class="value">"files"</span> /&gt;</span><span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">p</span>&gt;</span><span class="tag">&lt;<span class="title">label</span> <span class="attribute">for</span>=<span class="value">"location"</span>&gt;</span>地区 <span class="tag">&lt;/<span class="title">label</span>&gt;</span><span class="tag">&lt;<span class="title">input</span> <span class="attribute">id</span>=<span class="value">"location"</span> <span class="attribute">type</span>=<span class="value">"text"</span> <span class="attribute">name</span>=<span class="value">"location"</span> /&gt;</span><span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"submit"</span> /&gt;</span></span><br><span class="line">       <span class="tag">&lt;/<span class="title">fieldset</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="title">form</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>请求数据内容：<br><figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">------WebKitFormBoundaryBDujyAl87MaTQd9J</span></span><br><span class="line">Content-Disposition: form-data; <span class="property">name</span>=<span class="string">"name"</span></span><br><span class="line"></span><br><span class="line">串个沙</span><br><span class="line"><span class="comment">------WebKitFormBoundaryBDujyAl87MaTQd9J</span></span><br><span class="line">Content-Disposition: form-data; <span class="property">name</span>=<span class="string">"files"</span>; filename=<span class="string">"说明.txt"</span></span><br><span class="line">Content-Type: <span class="type">text</span>/plain</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">------WebKitFormBoundaryBDujyAl87MaTQd9J</span></span><br><span class="line">Content-Disposition: form-data; <span class="property">name</span>=<span class="string">"location"</span></span><br><span class="line"></span><br><span class="line">地球</span><br><span class="line"><span class="comment">------WebKitFormBoundaryBDujyAl87MaTQd9J--</span></span><br></pre></td></tr></table></figure></p>
+<p>可以看到每个部分有边界像分隔，这个边界值由客户端决定，是随机生成的（这里我使用chrome做的实验，因此可以看到“WebKit”）。</p>
+<h4 id="测试2：多文件上传">测试2：多文件上传</h4><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">form</span> <span class="attribute">action</span>=<span class="value">"/s/upload/1"</span> <span class="attribute">method</span>=<span class="value">"post"</span> <span class="attribute">enctype</span>=<span class="value">"multipart/form-data"</span>&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="title">fieldset</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">legend</span>&gt;</span>测试2：多文件上传<span class="tag">&lt;/<span class="title">legend</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">p</span>&gt;</span><span class="tag">&lt;<span class="title">label</span> <span class="attribute">for</span>=<span class="value">"name"</span>&gt;</span>名称 <span class="tag">&lt;/<span class="title">label</span>&gt;</span><span class="tag">&lt;<span class="title">input</span> <span class="attribute">id</span>=<span class="value">"name1"</span> <span class="attribute">type</span>=<span class="value">"text"</span> <span class="attribute">name</span>=<span class="value">"name"</span> /&gt;</span><span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">p</span>&gt;</span><span class="tag">&lt;<span class="title">label</span> <span class="attribute">for</span>=<span class="value">"files"</span>&gt;</span>文件 <span class="tag">&lt;/<span class="title">label</span>&gt;</span><span class="tag">&lt;<span class="title">input</span> <span class="attribute">id</span>=<span class="value">"files1"</span> <span class="attribute">type</span>=<span class="value">"file"</span> <span class="attribute">name</span>=<span class="value">"files1"</span> <span class="attribute">multiple</span>=<span class="value">"multiple"</span> /&gt;</span><span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">p</span>&gt;</span><span class="tag">&lt;<span class="title">label</span> <span class="attribute">for</span>=<span class="value">"location"</span>&gt;</span>地区 <span class="tag">&lt;/<span class="title">label</span>&gt;</span><span class="tag">&lt;<span class="title">input</span> <span class="attribute">id</span>=<span class="value">"location1"</span> <span class="attribute">type</span>=<span class="value">"text"</span> <span class="attribute">name</span>=<span class="value">"location"</span> /&gt;</span><span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"submit"</span> /&gt;</span></span><br><span class="line">       <span class="tag">&lt;/<span class="title">fieldset</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="title">form</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>请求头Content-Type：<br><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="constant">Content</span>-<span class="constant">Type</span><span class="symbol">:multipart/form-data</span>; boundary=----<span class="constant">WebKitFormBoundaryZGDkB6nM3LvHX0KI</span></span><br></pre></td></tr></table></figure></p>
+<p>请求数据内容：<br><figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">------WebKitFormBoundaryLnO8YOO2DPoP3M6y</span></span><br><span class="line">Content-Disposition: form-data; <span class="property">name</span>=<span class="string">"name"</span></span><br><span class="line"></span><br><span class="line"><span class="number">2</span>个文件</span><br><span class="line"><span class="comment">------WebKitFormBoundaryLnO8YOO2DPoP3M6y</span></span><br><span class="line">Content-Disposition: form-data; <span class="property">name</span>=<span class="string">"files1"</span>; filename=<span class="string">"说明.txt"</span></span><br><span class="line">Content-Type: <span class="type">text</span>/plain</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">------WebKitFormBoundaryLnO8YOO2DPoP3M6y</span></span><br><span class="line">Content-Disposition: form-data; <span class="property">name</span>=<span class="string">"files1"</span>; filename=<span class="string">"说明 (copy).txt"</span></span><br><span class="line">Content-Type: <span class="type">text</span>/plain</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">------WebKitFormBoundaryLnO8YOO2DPoP3M6y</span></span><br><span class="line">Content-Disposition: form-data; <span class="property">name</span>=<span class="string">"location"</span></span><br><span class="line"></span><br><span class="line">中国</span><br><span class="line"><span class="comment">------WebKitFormBoundaryLnO8YOO2DPoP3M6y--</span></span><br></pre></td></tr></table></figure></p>
+<p>基于chrome得到的结果，没有出现一个Content-type为<code>multipart/mixed</code>的嵌套部分，而是用多个文件字段部分表示。</p>
+<h1 id="2-_Servlet_3-0对Multipart的支持">2. Servlet 3.0对Multipart的支持</h1><p>在Servlet3.0之前对于文件上传的支持，可以通过Commons FileUpload等第三方工具来实现。Java EE 6中Servlet 3.0新增了对它的支持，这样可以不再依赖第三方库。主要通过HttpServletRequest的<code>getParts()</code>和<code>getPart()</code>方法。<br>结合前面的测试表单，我用一个Servlet和Jsp来演示处理的具体方法：<br>UploadServlet2：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@WebServlet</span> (</span><br><span class="line">        name = <span class="string">"uploadServlet2"</span>,</span><br><span class="line">        urlPatterns = <span class="string">"/upload2"</span>,</span><br><span class="line">        loadOnStartup = <span class="number">1</span></span><br><span class="line">)</span><br><span class="line"><span class="annotation">@MultipartConfig</span> (</span><br><span class="line">        fileSizeThreshold = <span class="number">5_242_880</span>,</span><br><span class="line">        maxFileSize = <span class="number">20_971_520L</span>,</span><br><span class="line">        maxRequestSize = <span class="number">41_943_040L</span></span><br><span class="line">)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UploadServlet2</span> <span class="keyword">extends</span> <span class="title">HttpServlet</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger logger = LogManager.getLogger();</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line">        req.getRequestDispatcher(<span class="string">"/p/upload/upload.jsp"</span>).forward(req, resp);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doPost</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line">        Collection&lt;Part&gt; parts = req.getParts();</span><br><span class="line">        logger.debug(<span class="string">"uploading..."</span>);</span><br><span class="line">        req.setAttribute(<span class="string">"parts"</span>, parts);</span><br><span class="line">        req.getRequestDispatcher(<span class="string">"/p/upload/resolvePart.jsp"</span>).forward(req, resp);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>通过ServletContainerInitializer配置：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@Override</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">contextInitialized</span><span class="params">(ServletContextEvent sce)</span> </span>&#123;</span><br><span class="line">       logger.info(<span class="string">"ServletContextListener invoked"</span>);</span><br><span class="line">       <span class="comment">//获取ServletContext对象</span></span><br><span class="line">       ServletContext servletContext = sce.getServletContext();</span><br><span class="line">       <span class="comment">//添加Servlet</span></span><br><span class="line">       ServletRegistration.Dynamic uploadRegistration = servletContext.addServlet(<span class="string">"uploadServlet"</span>, UploadServlet.class);</span><br><span class="line">       uploadRegistration.addMapping(<span class="string">"/upload/*"</span>);</span><br><span class="line">       uploadRegistration.setLoadOnStartup(<span class="number">1</span>);</span><br><span class="line">       MultipartConfigElement configElement = <span class="keyword">new</span> MultipartConfigElement(<span class="string">"."</span>, <span class="number">52428800</span>,</span><br><span class="line">               <span class="number">52428800</span>, <span class="number">0</span>);</span><br><span class="line">       uploadRegistration.setMultipartConfig(configElement);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></p>
+<p>必须启用multipart支持，配置一样有三种方法：注解，编程（ServletContextListener/ServletContainerInitializer），XML，但是基本的配置项是一样的：<br><code>location</code>：临时文件目录，一般可以使用默认的由服务器软件决定；<br><code>fileSizehreshold</code>：超过这个阈值放入临时文件目录，否则在内存中有垃圾回收处理；<br><code>maxFileSize</code>和<code>maxRequestSize</code>；</p>
+<p>location的配置需要注意，Servlet规范中的说明：</p>
+<blockquote>
+<p>location元被解析为一个绝对路径且默认为 javax.servlet.context.tempdir。如果指定了相对地址，它将是相对于 tempdir 位置。绝对路径与相对地址的测试必须使用 java.io.File.isAbsolute。</p>
+</blockquote>
+<h1 id="3-_Spring对Multipart的支持">3. Spring对Multipart的支持</h1><p>服务端主要就是解析Multipart数据。</p>
+<p>启用Multipart，这里通过Spring的WebApplicationInitializer初始化器进行配置，本质是通过ServletContainerInitializer。启用指定DispatcherServlet的Multipart支持。还是通过<code>Registration</code>配置的和上面的ServletContextListener一样。这里配置了自定义的临时目录，如果指定的目录不存在或是无法访问，通过”.”配置，因为前面引用的Serlvet规范已经说明了，相对目录是基于容器的临时目录的。</p>
+<p>Spring同时兼容了基于Commons FileUpload和Servlet 3.0标准API两种方式的解析。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@Order</span>(<span class="number">1</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BootStrap</span> <span class="keyword">implements</span> <span class="title">WebApplicationInitializer</span> </span>&#123;</span><br><span class="line">    <span class="comment">/* 略 */</span></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onStartup</span><span class="params">(ServletContext container)</span> <span class="keyword">throws</span> ServletException </span>&#123;</span><br><span class="line">        <span class="comment">/* 略 */</span></span><br><span class="line">        DispatcherServlet dispatcherServlet = <span class="keyword">new</span> DispatcherServlet(cgContext);</span><br><span class="line">        dispatcherServlet.setThrowExceptionIfNoHandlerFound(<span class="keyword">true</span>);</span><br><span class="line">        ServletRegistration.Dynamic dispatcherCG = container.addServlet(<span class="string">"cgServlet"</span>,</span><br><span class="line">                dispatcherServlet);</span><br><span class="line">        dispatcherCG.setLoadOnStartup(<span class="number">1</span>);</span><br><span class="line">        <span class="comment">//文件上传支持</span></span><br><span class="line">        <span class="comment">//设置临时文件目录</span></span><br><span class="line">        File path = <span class="keyword">new</span> File(container.getRealPath(<span class="string">"/tmp/web_yjh_files/"</span>));</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span>(path.exists() || path.mkdirs()) &#123;</span><br><span class="line">            dispatcherCG.setMultipartConfig(<span class="keyword">new</span> MultipartConfigElement(</span><br><span class="line">                    path.getAbsolutePath(), <span class="number">200_971_520L</span>, <span class="number">401_943_040L</span>, <span class="number">0</span></span><br><span class="line">            ));</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            dispatcherCG.setMultipartConfig(<span class="keyword">new</span> MultipartConfigElement(</span><br><span class="line">                    <span class="string">"."</span>, <span class="number">200_971_520L</span>, <span class="number">401_943_040L</span>, <span class="number">0</span></span><br><span class="line">            ));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">/* 略 */</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>Spring提供了一个Multipart的解析器：MultipartResolver，因此在<code>@Configuration</code>类中添加一个Bean，有两种选择<strong>CommonsMultipartResolver</strong>和<strong>StandardServletMultipartResolver</strong>，分别基于Commons File Upload和Servlet 3.0标准API；<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@Bean</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> MultipartResolver <span class="title">multipartResolver</span><span class="params">()</span> </span>&#123;</span><br><span class="line">       <span class="keyword">return</span> <span class="keyword">new</span> CommonsMultipartResolver();</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></p>
+<p>编写Controller method，使用Spring的<code>MultipartFile</code>：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@RequestMapping</span>(value = <span class="string">"upload"</span>, method = RequestMethod.POST, produces = <span class="string">"text/html"</span>)</span><br><span class="line">   <span class="annotation">@ResponseBody</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> String <span class="title">upload</span><span class="params">(String username,</span><br><span class="line">                        @RequestParam(value = <span class="string">"attachment"</span>)</span> MultipartFile parts) <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">       <span class="keyword">return</span> <span class="string">"success "</span> +</span><br><span class="line">               <span class="string">"name:"</span> + parts.getName() +</span><br><span class="line">               <span class="string">"size:"</span> + parts.getSize() +</span><br><span class="line">               <span class="string">"contentType:"</span> + parts.getContentType() +</span><br><span class="line">               (parts.getContentType() == <span class="keyword">null</span> ? <span class="string">""</span> : (<span class="string">"filename"</span> + parts.getOriginalFilename())) +</span><br><span class="line">               <span class="string">""</span> + IOUtils.toString(parts.getInputStream()) +</span><br><span class="line">               <span class="string">"size:"</span> + parts.getSize();</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="使用Part_API：">使用Part API：</h2><p>Serlvet Part的标准API包括：<br>（1）<strong>name</strong>：表单字段名；<br>（2）<strong>size</strong>：Part数据内容的大小；<br>（3）<strong>submittedFileName</strong>：Servlet 3.1新增方法，获取文件名，之前必须通过<code>getHeader(&quot;content-disposition&quot;)</code>解析；<br>（4）<strong>contentType</strong>：如果<code>&lt;input&gt;</code>类型是type这个值是<code>null</code>，如果是文件，可以获得它的MIME类型；<br>（5）<strong>getHeader</strong>：获取指定头；<br>（6）<strong>getInputStream</strong>：获取输入流；</p>
+<blockquote>
+<p>对于表单数据的 Content-Disposition,即使没有文件名,也可使用 part 的名称通过 HttpServletRequest 的<br>getParameter 和 getParameterValues 方法得到 part 的字符串值。</p>
+</blockquote>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">h1</span>&gt;</span>Multipart解析<span class="tag">&lt;/<span class="title">h1</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="title">c:forEach</span> <span class="attribute">items</span>=<span class="value">"$&#123;parts&#125;"</span> <span class="attribute">var</span>=<span class="value">"part"</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="title">p</span>&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="title">h3</span>&gt;</span>Part: $&#123;part.name&#125;<span class="tag">&lt;/<span class="title">h3</span>&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="title">span</span>&gt;</span>Size: $&#123;part.size&#125;<span class="tag">&lt;/<span class="title">span</span>&gt;</span><span class="tag">&lt;<span class="title">br</span> /&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="title">span</span>&gt;</span>SubmittedFileName: $&#123;part.submittedFileName&#125;，Servlet 3.1新增方法<span class="tag">&lt;/<span class="title">span</span>&gt;</span><span class="tag">&lt;<span class="title">br</span> /&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="title">span</span>&gt;</span>ContentType: $&#123;part.contentType&#125;<span class="tag">&lt;/<span class="title">span</span>&gt;</span><span class="tag">&lt;<span class="title">br</span> /&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="title">c:choose</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="title">c:when</span> <span class="attribute">test</span>=<span class="value">"$&#123;part.contentType == null || part.contentType eq 'text/plain'&#125;"</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">p</span>&gt;</span></span><br><span class="line">               $&#123;IOUtils.toString(part.inputStream)&#125;</span><br><span class="line">           <span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;/<span class="title">c:when</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="title">c:when</span> <span class="attribute">test</span>=<span class="value">"$&#123;part.contentType eq 'application/octet-stream'&#125;"</span>&gt;</span></span><br><span class="line">           <span class="tag">&lt;<span class="title">p</span>&gt;</span></span><br><span class="line">               $&#123;part.getHeader("content-disposition")&#125;</span><br><span class="line">           <span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;/<span class="title">c:when</span>&gt;</span></span><br><span class="line">       <span class="tag">&lt;/<span class="title">c:choose</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="title">c:forEach</span>&gt;</span></span><br><span class="line"> <span class="tag">&lt;<span class="title">c:import</span> <span class="attribute">url</span>=<span class="value">"upload.jsp"</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+      
+    </div>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2016/01/13/Servlet-Spring对Multipart数据请求的支持/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Servlet &amp; Spring对Multipart数据请求的支持</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<div class="share">
+	<!-- JiaThis Button BEGIN -->
+	<div class="jiathis_style">
+		<span class="jiathis_txt">分享到：</span>
+		<a class="jiathis_button_tsina"></a>
+		<a class="jiathis_button_cqq"></a>
+		<a class="jiathis_button_douban"></a>
+		<a class="jiathis_button_weixin"></a>
+		<a class="jiathis_button_tumblr"></a>
+		<a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jtico jtico_jiathis" target="_blank"></a>
+	</div>
+	<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=1405949716054953" charset="utf-8"></script>
+	<!-- JiaThis Button END -->
+</div>
+
+
+
+<div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key=" Servlet &amp; Spring对Multipart数据请求的支持" data-title="Servlet &amp; Spring对Multipart数据请求的支持" data-url="http://blog.zerohuan.com/2016/01/13/ Servlet &amp; Spring对Multipart数据请求的支持/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"true"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+
+
+</div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info">
+    	<div class="footer-left">
+    		&copy; 2016 Zerohuan
+    	</div>
+      	<div class="footer-right">
+      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
+      	</div>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+
+<script>
+	var yiliaConfig = {
+		fancybox: true,
+		mathjax: true,
+		animate: true,
+		isHome: false,
+		isPost: true,
+		isArchive: false,
+		isTag: false,
+		isCategory: false,
+		open_in_new: true
+	}
+</script>
+<script src="http://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js" type="text/javascript"></script>
+<script src="/js/main.js" type="text/javascript"></script>
+
+
+
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  </div>
+</body>
+</html>
