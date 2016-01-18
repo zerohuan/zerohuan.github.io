@@ -114,7 +114,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/JVM/" style="font-size: 12px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 14px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java并发/" style="font-size: 16px;">Java并发</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12px;">TCP/IP</a> <a href="/tags/java-web/" style="font-size: 10px;">java web</a> <a href="/tags/思考和求解/" style="font-size: 18px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
+						<a href="/tags/JVM/" style="font-size: 12px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 14px;">Java 8集合框架源码</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java并发/" style="font-size: 16px;">Java并发</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12px;">TCP/IP</a> <a href="/tags/java-web/" style="font-size: 10px;">java web</a> <a href="/tags/思考和求解/" style="font-size: 18px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
 					</div>
 				</section>
 				
@@ -195,6 +195,81 @@
 	</div>
 </nav>
       <div class="body-wrap">
+  
+    <article id="post-TCP-IP总结（一）——基本概念" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/05/TCP-IP总结（一）——基本概念/" class="article-date">
+  	<time datetime="2015-12-05T10:56:37.000Z" itemprop="datePublished">2015-12-05</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/05/TCP-IP总结（一）——基本概念/">TCP/IP学习笔记（一）——基本概念</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>心得：<br>（1）分层设计屏蔽细节，各司其职，但是不要过于拘泥定义，像ARP，RARP就不好定位，结合实际解决问题才是主题；<br>（2）“自由地接受，保守地发送”是TCP/IP协议族每一层的稳健性原则；<br>（3）封装和分用是相对的两个过程；</p>
+<p>其他资料：<br>（1）阮一峰老师两篇博文：<br><a href="http://www.ruanyifeng.com/blog/2012/05/internet_protocol_suite_part_i.html" target="_blank" rel="external">互联网协议入门（一）</a><br><a href="http://www.ruanyifeng.com/blog/2012/06/internet_protocol_suite_part_ii.html" target="_blank" rel="external">互联网协议入门（二）</a></p>
+<h2 id="1-_分层">1. 分层</h2><p>层的设计可以隐藏层之间的细节，使得上层可透明地使用下层。</p>
+<p><strong>四层协议系统（或者再加上“实体层”）：</strong><br><strong>（1）链路层：</strong>操作系统中的设备驱动程序和网络接口卡（网卡），它们一起处理与电缆的<strong>物理接口细节</strong>，比如以太网协议，每个网卡有独一无二的MAC地址，根据对方的MAC地址发送给对方，要获得对方MAC地址就需要使用<strong>ARP（地址解析，已知IP获取对方MAC地址）</strong>，发送数据在同一网络中进行<strong>广播</strong>，因此一共要发n-1个包，因此需要网络层划分子网；<br><strong>（2）网络层：</strong>处理分组在网络中的活动，在TCP/IP协议族中，包括IP协议和ICMP协议（Internet互联网控制报文协议）以及IGMP协议（Intenet组管理协议）；<br><strong>（3）传输层：</strong>提供两台主机间应用程序的<strong>端到端</strong>通信，包括TCP和UDP；<br><strong>（4）应用层：</strong>负责处理特定的应用程序细节。比如Telnet，FTP，SMTP，SNMP，HTTP；</p>
+<p><strong>注意</strong>：<br>（1）应用层和传输层是端到端（End-to-end）协议，只有端系统需要使用它们；<br>网络层提供逐跳（Hop-by-hop）协议，两端系统和中间系统都要使用它；<br>（2）底3层在操作系统的内核中进行，应用层处理应用程序的细节在应用进程；</p>
+<p>路由器（网关）：使用相同协议族连接两（多）个不同类型的<strong>物理网络</strong>，比如以太网和令牌环网络，它是在网络层对网络进行互连；<br>网桥：在链路层上对网络进行互连，使得多个LAN组合在一起，这样对上层来说就像一个局域网；</p>
+<h2 id="2-_TCP/IP协议族分层：">2. TCP/IP协议族分层：</h2><h3 id="网络层">网络层</h3><p><strong>IP</strong>：提供的是不可靠的服务，尽可能快的把分组从源结点发送到目标结点（路由），不提供可靠性保证；<br><strong>ICMP</strong>：是IP协议的附属协议，IP层使用ICMP与其他主机或路由器交换错误和其他重要信息，Ping和Traceroute都使用了ICMP；<br><strong>IGMP</strong>：Internet组管理协议，它用来把一个UDP数据报多播到多个主机；</p>
+<h3 id="传输层">传输层</h3><p><strong>TCP</strong>：在IP上建立了一个<strong>可靠</strong>的服务，比如超时重传，序列号+确认等等；<br><strong>UDP</strong>：没有确认号，数据报的到达顺序也不一定按顺序，因此它是“无连接的”；</p>
+<h3 id="链路层">链路层</h3><p><strong>ARP和RARP</strong>：地址解析协议和逆地址解析协议用来转换IP层和网络接口层使用的地址（IP地址和MAC地址）；</p>
+<h2 id="3-_IP地址">3. IP地址</h2><p>A：0    ，    8位网络号（0～127）；<br>B：10，16位网络号（128～191）；<br>C：110，24位网络号（192～223）；<br>D：1110，多播，28位多播组号（224～239）；<br>E：11110    ，27位留待后用（240～255）；</p>
+<p><strong>InterNIC</strong>（互联网络信息中心），分配网络号，主机号分配由系统管理员负责；<br>InterNIC由三部分：<strong>注册服务</strong>，<strong>目录和数据库服务</strong>，<strong>信息服务</strong>。 </p>
+<p><strong>IP地址分类</strong>：<br>（1）单播地址；<br>（2）广播地址；<br>（3）多播（组播）地址；</p>
+<h2 id="4-_域名系统">4. 域名系统</h2><p>DNS，一个分布式数据库，IP和主机名之间的映射信息。</p>
+<h2 id="5-_封装">5. 封装</h2><p>应用数据被送入<strong>协议栈</strong>，通过每一层增加首部信息（有时包括尾部信息）。<br>TCP段——&gt;IP数据报（最长65535）——&gt;帧（Frame，以太网传输的比特流，46～1500字节）；<br><strong>注意点</strong>：<br>（1）IP接受TCP，UDP，ICMP，IGMP的数据，因此有一个8位的协议域标识；<br>（2）IP，ARP和RARP数据，需要网络接口（网卡）发送和接受，因此以太网帧首部也有标识（16位帧类型域）指明生成数据的网络层协议；<br>（3）协议具体属于那一层并不是绝对可以划分的，比如ARP，RARP即使网络驱动程序一部分，也有以太网数据帧类型；ICMP和IGMP既被封装IP数据报，也是IP的附属协议；</p>
+<h2 id="6-_分用（Demultiplexing）">6. 分用（Demultiplexing）</h2><p><strong>分用</strong>：主机接受到以太网数据帧后，数据需要<strong>从底向上升</strong>去掉各层协议的首部。每层协议盒检查报文首部的协议标识，确定接收的上层协议。</p>
+<h2 id="7-_客户-服务器模型">7. 客户-服务器模型</h2><p><strong>分类</strong>：<strong>重复型</strong>和<strong>并发型</strong>；<br>一般来说，TCP服务器是并发的，UDP服务器是重复的；</p>
+<h2 id="8-_端口号">8. 端口号</h2><p>0-1023是系统占用端口号（保留端口号）<br>FTP：21；<br>Telnet：23；<br>TFTP：69；</p>
+<p>服务器使用知名端口号，客户端使用临时设定的端口号；</p>
+<p>/etc/services包含了知名端口号，查看<strong>知名端口号</strong>：<br>grep telnet /etc/services</p>
+<h2 id="9-_标准化过程">9. 标准化过程</h2><p>TCP/IP协议族的重要组织：<br>（1）ISOC：Internet协会；<br>（2）IAB：Internet体系结构委员会；<br>（3）IETF：Internet工程专门小组；<br>（4）IRIF：Internet研究专门小组；</p>
+<p>RFC：Internet正式标准：<br>（1）赋值RFC：1340，Internet协议中使用的数字和常数；<br>（2）Internet正式标准协议，RFC1600；<br>（3）主机需求RFC，1122和1123；<br>（4）路由器需求RFC，1009；</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/TCP-IP/">TCP/IP</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
   
     <article id="post-Java基础知识总结（一）——创建和销毁" class="article article-type-post" itemscope itemprop="blogPost">
   
@@ -1055,6 +1130,156 @@ aes.init(mode, <span class="variable">key</span>);
 
 
   
+    <article id="post-关于Java类初始化和实例化中的2个“雷区”" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/02/关于Java类初始化和实例化中的2个“雷区”/" class="article-date">
+  	<time datetime="2015-12-02T05:19:32.000Z" itemprop="datePublished">2015-12-02</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/02/关于Java类初始化和实例化中的2个“雷区”/">关于Java类初始化和实例化中的2个“雷区”</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在考虑类初始化时，我们都知道进行子类初始化时，如果父类没有初始化要先初始化子类。然而事情并没有一句话这么简单。</p>
+<p><strong>首先看看Java中初始化触发的条件：</strong><br>（1）在使用new实例化对象，访问静态数据和方法时，也就是遇到指令：new，getstatic/putstatic和invokestatic时；<br>（2）使用反射对类进行调用时；<br>（3）当初始化一个类时，父类如果没有进行初始化，先触发父类的初始化；<br>（4）执行入口main方法所在的类；<br>（5）JDK1.7动态语言支持中方法句柄所在的类，如果没有初始化触发起初始化；</p>
+<p>经过编译后生成一个<code>&lt;clinit&gt;</code>方法，类的初始化就在这个方法中进行，该方法只执行，由JVM保证这一点，并进行同步控制；</p>
+<p>其中条件（3），从方法调用的角度来看，是子类的<code>&lt;clinit&gt;</code>会在开始时递归的调用父类的<code>&lt;clinit&gt;</code>，这类似与我们在子类构造器中必须首先调用父类的构造器；</p>
+<p>但需要注意的是“触发”并不是完成初始化，这意味着有可能子类的初始化会提前于父类初始化结束，这就是“危险”的所在。</p>
+<h2 id="1-_一个类初始化的例子：">1. 一个类初始化的例子：</h2><p>这个例子我使用一个外围类包含2个有继承关系的静态成员类，因为外围类的初始化和静态成员类没有因果关系，因此这样展示是安全和方便的；<br>父类A和子类B分别包含main函数，由上面的触发条件（4）可知，通过分别调用这个两个main函数来触发不同的类初始化路径；<br>这个例子的问题在于父类包含子类的static引用并在定义处进行初始化的问题：</p>
+<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">WrapperClass</span> {
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title">A</span> {
+        <span class="keyword">static</span> {
+            System.<span class="keyword">out</span>.println(<span class="string">"类A初始化开始..."</span>);
+        }
+        <span class="comment">//父类包含子类的static引用</span>
+        <span class="keyword">private</span> <span class="keyword">static</span> B b = <span class="keyword">new</span> B();
+        <span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">int</span> aInt = <span class="number">9</span>;
+
+        <span class="keyword">static</span> {
+            System.<span class="keyword">out</span>.println(<span class="string">"类A初始化结束..."</span>);
+        }
+
+        <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
+
+        }
+    }
+
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title">B</span> <span class="title">extends</span> <span class="title">A</span> {
+        <span class="keyword">static</span> {
+            System.<span class="keyword">out</span>.println(<span class="string">"类B初始化开始..."</span>);
+        }
+        <span class="comment">//子类的域依赖于父类的域</span>
+        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> bInt = <span class="number">9</span> + A.aInt;
+
+        <span class="function"><span class="keyword">public</span> <span class="title">B</span>(<span class="params"></span>) </span>{
+            <span class="comment">//构造器依赖类的static域</span>
+            System.<span class="keyword">out</span>.println(<span class="string">"类B的构造器调用 "</span> + <span class="string">"bInt的值"</span> + bInt);
+        }
+
+        <span class="keyword">static</span> {
+            System.<span class="keyword">out</span>.println(<span class="string">"类B初始化结束... "</span> + <span class="string">"aInt的值："</span> + bInt);
+        }
+
+        <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
+
+        }
+    }
+}
+</code></pre><p>情景一：入口为类B的main函数时输出结果：</p>
+<pre><code>/<span class="keyword">*</span><span class="keyword">*</span>
+ <span class="keyword">*</span> 类A初始化开始...
+ <span class="keyword">*</span> 类B的构造器调用 bInt的值0
+ <span class="keyword">*</span> 类A初始化结束...
+ <span class="keyword">*</span> 类B初始化开始...
+ <span class="keyword">*</span> 类B初始化结束... aInt的值：18
+ <span class="keyword">*</span>/
+</code></pre><p><strong>分析</strong>：可以看到，main函数的调用触发了类B的初始化，进入类B的<code>&lt;clinit&gt;</code>方法，类A作为其父类先开始初始化进入了A的<code>&lt;clinit&gt;</code>方法，其中有一个语句<code>new B();</code>这时会进行B的实例化，这是已经在类B的<code>&lt;clinit&gt;</code>中了，main线程已经获得锁开始执行类B的<code>&lt;clinit&gt;</code>，我们开头说过JVM会保证一个类的初始化方法只被执行一次，JVM收到new指令后不会再进入类B的<code>&lt;clinit&gt;</code>方法而是直接进行实例化，但是此时类B还没有完成类初始化，所以可以看到bInt的值为0（这个0是类加载中准备阶段分配方法区内存后进行的置零初始化）；<br>因此，可以得出，再父类中包含子类类型的static域并进行赋值动作，会可能导致子类实例化在类初始化完成前进行；</p>
+<p>情景二：入口为类A的main函数时输出结果：</p>
+<pre><code>/<span class="keyword">*</span><span class="keyword">*</span>
+ <span class="keyword">*</span> 类A初始化开始...
+ <span class="keyword">*</span> 类B初始化开始...
+ <span class="keyword">*</span> 类B初始化结束... aInt的值：9
+ <span class="keyword">*</span> 类B的构造器调用 bInt的值9
+ <span class="keyword">*</span> 类A初始化结束...
+ <span class="keyword">*</span>/
+</code></pre><p><strong>分析</strong>：经过情景一的分析，我们知道，由类B的初始化触发类A的初始化，会导致类A中类变量b的实例化在类B初始化完成前进行，那如果先初始化类A是不是就可以在类变量实例化的时候先触发类B的初始化，从而使得初始化在实例化前呢？答案是肯定的，但是这仍然有问题。<br>根据输出，可以看到，类B的初始化在类A的初始化完成前进行了，这导致了像类变量aInt的变量在类B初始化完成后才进行初始化，所以类B中的域bInt获取到的aInt的值是“0”，而不是我们预期的“18”；</p>
+<h2 id="结论：">结论：</h2><p>综上，可以得出，在父类中包含子类类型的类变量，并在定义出进行实例化是非常危险的行为，具体情况可能不会向例子一样直白，调用方法在定义处赋值一样隐含着危险，即使要包含子类类型的static域，也应该通过static方法进行赋值，因为JVM可以保证在static方法调用前完成所有的初始化动作（当然这种保证也是你不应该包含static B b = new B();这样的初始化行为）；</p>
+<h1 id="2-_一个实例化的例子：">2. 一个实例化的例子：</h1><p>首先需要知道对象创建的过程：<br>（1）遇到new指令，检查类是否完成了加载，验证，准备，解析，初始化（解析过程就是符号引用解析成直接引用，比如方法名就是一个符号引用，可以在初始化完成后使用这个符号引用的时候进行，正是为了支持动态绑定），没有完成先进行这些过程；<br>（2）分配内存，采用空闲列表或者指针碰撞的方法，并将新分配的内存“置零”，因此所有的实例变量在此环节都进行了一次默认初始化为0（引用为null）的过程；<br>（3）执行<code>&lt;init&gt;</code>方法，包括检查调用父类的<code>&lt;init&gt;</code>方法（构造器），实例变量定义出的赋值动作，实例化器顺序执行，最后调用构造器中的动作。</p>
+<p>这个例子可能更为大家所熟知，也就是它违反了“不要在构造器，clone方法和readObject方法中调用可被覆盖的方法”。其原因就在于Java中的多态，也就是动态绑定。<br>父类A的构造器中包含一个protected方法，类B是其子类。</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WrongInstantiation</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>{
+        <span class="function"><span class="keyword">public</span> <span class="title">A</span><span class="params">()</span> </span>{
+            doSomething();
+        }
+
+    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span> </span>{
+        System.out.println(<span class="string">"A's doSomething"</span>);
+    }
+}
+
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">B</span> <span class="keyword">extends</span> <span class="title">A</span> </span>{
+    <span class="keyword">private</span> <span class="keyword">int</span> bInt = <span class="number">9</span>;
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span> </span>{
+        System.out.println(<span class="string">"B's doSomething, bInt: "</span> + bInt);
+    }
+}
+
+<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
+    B b = <span class="keyword">new</span> B();
+}
+</code></pre><p>}<br>输出结果：</p>
+<pre><code>/<span class="keyword">*</span><span class="keyword">*</span>
+ <span class="keyword">*</span> B's doSomething, bInt: 0
+ <span class="keyword">*</span>/
+</code></pre><p><strong>分析</strong>：首先需要知道，在没有显示提供构造器时Java编译器会生成默认构造器，并在开始处调用父类的构造器，因此类B的构造器开始会先调用类A的构造器。<br>类A中调用了protected方法doSomething，从输出结果中我们看到实际上调用的是子类的方法实现，而此时子类的实例化还未开始，因此bInt并没有如“预期”那样是9,而是0；</p>
+<p>这就是由于动态绑定，doSomething是一个protected方法，因此它是通过invokevirtual指令调用的，该指令根据对象实例的类型找到对应的方法实现（这里就是B的实例对象，对应方法就是类B的方法实现）执行，故而有此结果。</p>
+<h2 id="结论">结论</h2><p>正如前面说的“不要在构造器，clone方法和readObject方法中调用可被覆盖的方法”；<br>PS：在构造器中调用可被覆盖的方法的另一个风险是造成对象在构造过程中“逸出”，导致线程不安全；</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/思考和求解/">思考和求解</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+  
     <article id="post-基于WebSocket，Spring开发消息系统后台" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
@@ -1430,156 +1655,6 @@ HTTP/<span class="number">1.1</span> <span class="number">101</span> Switching P
 <p>user1收到消息：我是谁</p>
 <p>user1回复：Zerohuan<br><a href="http://localhost:8080/client1?message=Zerohuan&amp;replyUserId=1" target="_blank" rel="external">http://localhost:8080/client1?message=Zerohuan&amp;replyUserId=1</a></p>
 <p>好了，控制台的log我就不一一贴了，碎觉去了。。。</p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/思考和求解/">思考和求解</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
-    <article id="post-关于Java类初始化和实例化中的2个“雷区”" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/12/02/关于Java类初始化和实例化中的2个“雷区”/" class="article-date">
-  	<time datetime="2015-12-02T05:19:32.000Z" itemprop="datePublished">2015-12-02</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/02/关于Java类初始化和实例化中的2个“雷区”/">关于Java类初始化和实例化中的2个“雷区”</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>在考虑类初始化时，我们都知道进行子类初始化时，如果父类没有初始化要先初始化子类。然而事情并没有一句话这么简单。</p>
-<p><strong>首先看看Java中初始化触发的条件：</strong><br>（1）在使用new实例化对象，访问静态数据和方法时，也就是遇到指令：new，getstatic/putstatic和invokestatic时；<br>（2）使用反射对类进行调用时；<br>（3）当初始化一个类时，父类如果没有进行初始化，先触发父类的初始化；<br>（4）执行入口main方法所在的类；<br>（5）JDK1.7动态语言支持中方法句柄所在的类，如果没有初始化触发起初始化；</p>
-<p>经过编译后生成一个<code>&lt;clinit&gt;</code>方法，类的初始化就在这个方法中进行，该方法只执行，由JVM保证这一点，并进行同步控制；</p>
-<p>其中条件（3），从方法调用的角度来看，是子类的<code>&lt;clinit&gt;</code>会在开始时递归的调用父类的<code>&lt;clinit&gt;</code>，这类似与我们在子类构造器中必须首先调用父类的构造器；</p>
-<p>但需要注意的是“触发”并不是完成初始化，这意味着有可能子类的初始化会提前于父类初始化结束，这就是“危险”的所在。</p>
-<h2 id="1-_一个类初始化的例子：">1. 一个类初始化的例子：</h2><p>这个例子我使用一个外围类包含2个有继承关系的静态成员类，因为外围类的初始化和静态成员类没有因果关系，因此这样展示是安全和方便的；<br>父类A和子类B分别包含main函数，由上面的触发条件（4）可知，通过分别调用这个两个main函数来触发不同的类初始化路径；<br>这个例子的问题在于父类包含子类的static引用并在定义处进行初始化的问题：</p>
-<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">WrapperClass</span> {
-    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title">A</span> {
-        <span class="keyword">static</span> {
-            System.<span class="keyword">out</span>.println(<span class="string">"类A初始化开始..."</span>);
-        }
-        <span class="comment">//父类包含子类的static引用</span>
-        <span class="keyword">private</span> <span class="keyword">static</span> B b = <span class="keyword">new</span> B();
-        <span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">int</span> aInt = <span class="number">9</span>;
-
-        <span class="keyword">static</span> {
-            System.<span class="keyword">out</span>.println(<span class="string">"类A初始化结束..."</span>);
-        }
-
-        <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
-
-        }
-    }
-
-    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title">B</span> <span class="title">extends</span> <span class="title">A</span> {
-        <span class="keyword">static</span> {
-            System.<span class="keyword">out</span>.println(<span class="string">"类B初始化开始..."</span>);
-        }
-        <span class="comment">//子类的域依赖于父类的域</span>
-        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> bInt = <span class="number">9</span> + A.aInt;
-
-        <span class="function"><span class="keyword">public</span> <span class="title">B</span>(<span class="params"></span>) </span>{
-            <span class="comment">//构造器依赖类的static域</span>
-            System.<span class="keyword">out</span>.println(<span class="string">"类B的构造器调用 "</span> + <span class="string">"bInt的值"</span> + bInt);
-        }
-
-        <span class="keyword">static</span> {
-            System.<span class="keyword">out</span>.println(<span class="string">"类B初始化结束... "</span> + <span class="string">"aInt的值："</span> + bInt);
-        }
-
-        <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>{
-
-        }
-    }
-}
-</code></pre><p>情景一：入口为类B的main函数时输出结果：</p>
-<pre><code>/<span class="keyword">*</span><span class="keyword">*</span>
- <span class="keyword">*</span> 类A初始化开始...
- <span class="keyword">*</span> 类B的构造器调用 bInt的值0
- <span class="keyword">*</span> 类A初始化结束...
- <span class="keyword">*</span> 类B初始化开始...
- <span class="keyword">*</span> 类B初始化结束... aInt的值：18
- <span class="keyword">*</span>/
-</code></pre><p><strong>分析</strong>：可以看到，main函数的调用触发了类B的初始化，进入类B的<code>&lt;clinit&gt;</code>方法，类A作为其父类先开始初始化进入了A的<code>&lt;clinit&gt;</code>方法，其中有一个语句<code>new B();</code>这时会进行B的实例化，这是已经在类B的<code>&lt;clinit&gt;</code>中了，main线程已经获得锁开始执行类B的<code>&lt;clinit&gt;</code>，我们开头说过JVM会保证一个类的初始化方法只被执行一次，JVM收到new指令后不会再进入类B的<code>&lt;clinit&gt;</code>方法而是直接进行实例化，但是此时类B还没有完成类初始化，所以可以看到bInt的值为0（这个0是类加载中准备阶段分配方法区内存后进行的置零初始化）；<br>因此，可以得出，再父类中包含子类类型的static域并进行赋值动作，会可能导致子类实例化在类初始化完成前进行；</p>
-<p>情景二：入口为类A的main函数时输出结果：</p>
-<pre><code>/<span class="keyword">*</span><span class="keyword">*</span>
- <span class="keyword">*</span> 类A初始化开始...
- <span class="keyword">*</span> 类B初始化开始...
- <span class="keyword">*</span> 类B初始化结束... aInt的值：9
- <span class="keyword">*</span> 类B的构造器调用 bInt的值9
- <span class="keyword">*</span> 类A初始化结束...
- <span class="keyword">*</span>/
-</code></pre><p><strong>分析</strong>：经过情景一的分析，我们知道，由类B的初始化触发类A的初始化，会导致类A中类变量b的实例化在类B初始化完成前进行，那如果先初始化类A是不是就可以在类变量实例化的时候先触发类B的初始化，从而使得初始化在实例化前呢？答案是肯定的，但是这仍然有问题。<br>根据输出，可以看到，类B的初始化在类A的初始化完成前进行了，这导致了像类变量aInt的变量在类B初始化完成后才进行初始化，所以类B中的域bInt获取到的aInt的值是“0”，而不是我们预期的“18”；</p>
-<h2 id="结论：">结论：</h2><p>综上，可以得出，在父类中包含子类类型的类变量，并在定义出进行实例化是非常危险的行为，具体情况可能不会向例子一样直白，调用方法在定义处赋值一样隐含着危险，即使要包含子类类型的static域，也应该通过static方法进行赋值，因为JVM可以保证在static方法调用前完成所有的初始化动作（当然这种保证也是你不应该包含static B b = new B();这样的初始化行为）；</p>
-<h1 id="2-_一个实例化的例子：">2. 一个实例化的例子：</h1><p>首先需要知道对象创建的过程：<br>（1）遇到new指令，检查类是否完成了加载，验证，准备，解析，初始化（解析过程就是符号引用解析成直接引用，比如方法名就是一个符号引用，可以在初始化完成后使用这个符号引用的时候进行，正是为了支持动态绑定），没有完成先进行这些过程；<br>（2）分配内存，采用空闲列表或者指针碰撞的方法，并将新分配的内存“置零”，因此所有的实例变量在此环节都进行了一次默认初始化为0（引用为null）的过程；<br>（3）执行<code>&lt;init&gt;</code>方法，包括检查调用父类的<code>&lt;init&gt;</code>方法（构造器），实例变量定义出的赋值动作，实例化器顺序执行，最后调用构造器中的动作。</p>
-<p>这个例子可能更为大家所熟知，也就是它违反了“不要在构造器，clone方法和readObject方法中调用可被覆盖的方法”。其原因就在于Java中的多态，也就是动态绑定。<br>父类A的构造器中包含一个protected方法，类B是其子类。</p>
-<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WrongInstantiation</span> </span>{
-    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>{
-        <span class="function"><span class="keyword">public</span> <span class="title">A</span><span class="params">()</span> </span>{
-            doSomething();
-        }
-
-    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span> </span>{
-        System.out.println(<span class="string">"A's doSomething"</span>);
-    }
-}
-
-<span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">B</span> <span class="keyword">extends</span> <span class="title">A</span> </span>{
-    <span class="keyword">private</span> <span class="keyword">int</span> bInt = <span class="number">9</span>;
-
-    <span class="annotation">@Override</span>
-    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span> </span>{
-        System.out.println(<span class="string">"B's doSomething, bInt: "</span> + bInt);
-    }
-}
-
-<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
-    B b = <span class="keyword">new</span> B();
-}
-</code></pre><p>}<br>输出结果：</p>
-<pre><code>/<span class="keyword">*</span><span class="keyword">*</span>
- <span class="keyword">*</span> B's doSomething, bInt: 0
- <span class="keyword">*</span>/
-</code></pre><p><strong>分析</strong>：首先需要知道，在没有显示提供构造器时Java编译器会生成默认构造器，并在开始处调用父类的构造器，因此类B的构造器开始会先调用类A的构造器。<br>类A中调用了protected方法doSomething，从输出结果中我们看到实际上调用的是子类的方法实现，而此时子类的实例化还未开始，因此bInt并没有如“预期”那样是9,而是0；</p>
-<p>这就是由于动态绑定，doSomething是一个protected方法，因此它是通过invokevirtual指令调用的，该指令根据对象实例的类型找到对应的方法实现（这里就是B的实例对象，对应方法就是类B的方法实现）执行，故而有此结果。</p>
-<h2 id="结论">结论</h2><p>正如前面说的“不要在构造器，clone方法和readObject方法中调用可被覆盖的方法”；<br>PS：在构造器中调用可被覆盖的方法的另一个风险是造成对象在构造过程中“逸出”，导致线程不安全；</p>
 
       
     </div>
@@ -2156,60 +2231,6 @@ HttpURLConnection connection = (HttpURLConnection)url.openConnection();
       
 	<div class="article-tag tagcloud">
 		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
-    <article id="post-Java-Servlet-4-0-Specification解读" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/11/30/Java-Servlet-4-0-Specification解读/" class="article-date">
-  	<time datetime="2015-11-30T09:34:47.000Z" itemprop="datePublished">2015-11-30</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/11/30/Java-Servlet-4-0-Specification解读/">Java Servlet 4.0 Specification解读</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/技术更新/">技术更新</a></li></ul>
 	</div>
 
       

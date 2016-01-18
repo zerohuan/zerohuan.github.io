@@ -114,7 +114,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/JVM/" style="font-size: 12px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 14px;">Java 8集合框架源码</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java并发/" style="font-size: 16px;">Java并发</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12px;">TCP/IP</a> <a href="/tags/java-web/" style="font-size: 10px;">java web</a> <a href="/tags/思考和求解/" style="font-size: 18px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
+						<a href="/tags/JVM/" style="font-size: 12px;">JVM</a> <a href="/tags/Java-8集合框架源码/" style="font-size: 14px;">Java 8集合框架源码</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础知识/" style="font-size: 20px;">Java基础知识</a> <a href="/tags/Java并发/" style="font-size: 16px;">Java并发</a> <a href="/tags/Spring/" style="font-size: 10px;">Spring</a> <a href="/tags/TCP-IP/" style="font-size: 12px;">TCP/IP</a> <a href="/tags/java-web/" style="font-size: 10px;">java web</a> <a href="/tags/思考和求解/" style="font-size: 18px;">思考和求解</a> <a href="/tags/技术更新/" style="font-size: 10px;">技术更新</a> <a href="/tags/杂谈-感悟/" style="font-size: 10px;">杂谈/感悟</a> <a href="/tags/算法和数据结构/" style="font-size: 10px;">算法和数据结构</a>
 					</div>
 				</section>
 				
@@ -195,6 +195,173 @@
 	</div>
 </nav>
       <div class="body-wrap">
+  
+    <article id="post-Java并发（二）——同步容器" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/12/11/Java并发（二）——同步容器/" class="article-date">
+  	<time datetime="2015-12-11T06:48:41.000Z" itemprop="datePublished">2015-12-11</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/11/Java并发（二）——同步容器/">Java并发（二）——同步容器</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>这些同步容器通常被称为“遗留集合”，和J.U.C中并发容器相比确实没有必要特地使用它们，但是我觉得了解它们是怎样工作的，并且理解它们为什么过时了，有什么缺点对理解并发容器的优点以及自己实际开发也是十分有用的。</p>
+<p>同步容器与并发容器相比：<br>同步容器锁整个容器，多个线程存在竞争，可能会导致吞吐量降低；<br>因此同步容器并发支持度不高；</p>
+<h1 id="1-_体系结构">1. 体系结构</h1><p>（1）Vector，Stack（派生自Vector），和ArrayList的结构很相似，也采用动态增长的数组+复制机制。实现了List接口，同时派生自AbstractList。Stack只是对Vector简单扩展，提供了一些栈的API而已。<br>（2）HashTable，之后也实现Map，和HashMap的内部表示比较相近，但是一些细节比如容量控制等没有HashMap那样的优化；<br>（3）Collections中基于各种synchronized～工厂方法的容器内部类实现，是基本容器类的装饰器同步包装类；</p>
+<h1 id="2-_Vector">2. Vector</h1><h2 id="2-1_Vector要点">2.1 Vector要点</h2><p>（1）基于动态增长数组实现，支持<code>RandomAccess</code>，但是结构性修改需要复制数组；<br>（2）支持克隆和序列化，但是基于同步，如果包含的元素很多，可能导致其他操作的长时间阻塞；<br>（3）与并发容器相比，Vector这样的同步容器是锁整个容器，而且读写都需要同步，包含的元素越多，阻塞的时间越长，伸缩性较差；<br>（4）线程安全，在使用Vector进行组合操作时（迭代，跳转，条件运算）需要额外的基于Vector内置锁（Vector对象）进行加锁保护；</p>
+<h2 id="2-2_结构和操作">2.2 结构和操作</h2><h3 id="核心属性">核心属性</h3><p>（1）数组缓存区：</p>
+<pre><code><span class="keyword">protected</span> <span class="keyword">Object</span>[] elementData;
+<span class="keyword">protected</span> <span class="built_in">int</span> elementCount;
+</code></pre><p>（2）容量控制：<br>如果没有通过构造器指定这个值，默认每次容量扩展为原数组的2倍，如果指定了就增加指定的增量；</p>
+<pre><code><span class="keyword">protected</span> <span class="keyword">int</span> capacityIncrement;
+</code></pre><h3 id="操作">操作</h3><p>由于总结过ArrayList的源码，细节就不再赘述了：<br><a href="http://blog.zerohuan.com/2015/12/11/Java%208%E9%9B%86%E5%90%88%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94ArrayList/">Java 8集合源码学习——ArrayList </a>;</p>
+<p>大致重复一下几个部分：<br>（1）容量控制：grow，ensureCapacity～系列，trimeToSize（压缩）等；<br>（2）List实现方法；<br>（3）迭代器：iterator和listIterator实现；</p>
+<h2 id="2-3_Vector的线程安全">2.3 Vector的线程安全</h2><p>Vector的主要操作方法都是使用内置锁的同步方法，但是是否线程安全还要看是否正确的使用了它，一些需要同时使用Vector几个方法组合时，就需要在客户端进行加锁保护，操作涉及：<strong>迭代</strong>，<strong>跳转</strong>，<strong>条件运算</strong>；</p>
+<h3 id="Vector的迭代器：">Vector的迭代器：</h3><p>同步容器，虽然本身是线程安全的，但是它的迭代器仍然实现了<strong>fail-fast</strong>机制。因为<code>Itr</code>迭代器的hashNext，next和remove等方法虽然本身是同步的，但是它们组合使用时需要在客户端进行加锁，fail-fast机制的意义在于快速发现bug，说明使用者误用了容器类，而不是一种恢复机制（RuntimeException一般都表示程序员自己的误用）；</p>
+<p><strong>隐藏迭代器</strong>：<br><code>toString</code>，<code>equals</code>，<code>hashCode</code>，<code>containsAll</code>等方法，实际是基于迭代器的，因此在封装基本容器类（ArrayList等），加锁保护同时要注意这些情况。<br>Vector的这些方法基于内置锁进行同步；</p>
+<h1 id="3-_HashTable">3. HashTable</h1><p>总的来说，排除同步的需求，HashTable效率也是远不如Java 8的HashMap的；</p>
+<h2 id="3-1_HashTable要点">3.1 HashTable要点</h2><p>（1）HashTable同样是基于“数组+链表”实现的，但显然它没有Java 8中HashMap那样的红黑树的实现；<br>（2）视图基于Collections.synchronizedSet实现同步，注意其迭代器需要在客户端实现同步控制；<br>（3）锁定整个表，并发支持度低；</p>
+<h3 id="与HashMap的不同点：">与HashMap的不同点：</h3><p>（1）key和value不能为null，HashMap中null对应的hash值为0；<br>（2）容量并不是2的幂次方，因此计算index时需要使用mod运算，效率不如HashMap；<br>（3）创建时的策略：并没有采用HashMap的延迟分配桶数组内存而是在构造器中创建数组，默认容量大小为11，并且没有最小容量的限制；</p>
+<pre><code><span class="keyword">if</span> (initialCapacity==<span class="number">0</span>)
+        initialCapacity = <span class="number">1</span>;
+    <span class="keyword">this</span>.loadFactor = loadFactor;
+    table = <span class="keyword">new</span> Entry&lt;?,?&gt;[initialCapacity];
+    threshold = (<span class="keyword">int</span>)Math.min(initialCapacity * loadFactor, MAX_ARRAY_SIZE + <span class="number">1</span>);     
+</code></pre><p>（4）视图不是用Set而是Enumeration实现的；</p>
+<h2 id="3-2_结构和操作">3.2 结构和操作</h2><p>属性不用多说核心的包括：table，count，threshold，loadFactor，modCount；</p>
+<h3 id="操作-1">操作</h3><p><strong>get：计算索引+链表查找</strong></p>
+<pre><code><span class="keyword">public</span> <span class="keyword">synchronized</span> V <span class="built_in">get</span>(<span class="keyword">Object</span> <span class="variable">key</span>) {
+    Entry&lt;?,?&gt; tab[] = table;
+    <span class="built_in">int</span> hash = <span class="variable">key</span>.hashCode();
+    <span class="comment">//计算是哪个桶</span>
+    <span class="built_in">int</span> index = (hash &amp; <span class="number">0x7FFFFFFF</span>) % tab.length;
+    <span class="keyword">for</span> (Entry&lt;?,?&gt; e = tab[index]; e != <span class="keyword">null</span>; e = e.next) {
+        <span class="comment">//不允许null的key</span>
+        <span class="keyword">if</span> ((e.hash == hash) &amp;&amp; e.<span class="variable">key</span>.equals(<span class="variable">key</span>)) {
+            <span class="keyword">return</span> (V)e.value;
+        }
+    }
+    <span class="keyword">return</span> <span class="keyword">null</span>;
+}
+</code></pre><p><strong>put：</strong><br>保证value不为null：</p>
+<pre><code><span class="keyword">if</span> (<span class="keyword">value</span> == <span class="keyword">null</span>) {
+    <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();
+}
+</code></pre><p>计算桶位置：</p>
+<pre><code>Entry&lt;?,?&gt; <span class="keyword">tab</span>[] = table;
+<span class="keyword">int</span> hash = key.hashCode();
+<span class="keyword">int</span> <span class="built_in">index</span> = (hash &amp; <span class="number">0</span>x7FFFFFFF) % <span class="keyword">tab</span>.length;
+</code></pre><p>查看表中是否已经存在：</p>
+<pre><code>for(; <span class="built_in">entry</span> <span class="comment">!= null ; entry = entry.next) {</span>
+        <span class="keyword">if</span> ((<span class="built_in">entry</span>.hash == hash) &amp;&amp; <span class="built_in">entry</span>.key.equals(key)) {
+            V old = <span class="built_in">entry</span>.<span class="keyword">value</span>;
+            <span class="built_in">entry</span>.<span class="keyword">value</span> = <span class="keyword">value</span>;
+            <span class="keyword">return</span> old;
+        }
+    }
+</code></pre><p>添加新键值对：</p>
+<pre><code>Entry&lt;?,?&gt; <span class="keyword">tab</span>[] = <span class="keyword">table</span>;
+    <span class="keyword">if</span> (<span class="keyword">count</span> &gt;= threshold) {
+        <span class="comment">// Rehash the table if the threshold is exceeded</span>
+        rehash();
+
+        <span class="keyword">tab</span> = <span class="keyword">table</span>;
+        hash = key.hashCode();
+        index = (hash &amp; 0x7FFFFFFF) % <span class="keyword">tab</span>.length;
+    }
+
+    <span class="comment">// Creates the new entry.</span>
+    @SuppressWarnings(<span class="string">"unchecked"</span>)
+    Entry&lt;K,V&gt; <span class="keyword">e</span> = (Entry&lt;K,V&gt;) <span class="keyword">tab</span>[index];
+    <span class="keyword">tab</span>[index] = new Entry&lt;&gt;(hash, key, value, <span class="keyword">e</span>);
+    <span class="keyword">count</span>++;
+</code></pre><p><strong>rehash：再散列（扩容+迁移）：</strong><br>扩容：</p>
+<pre><code><span class="keyword">int</span> newCapacity = (oldCapacity &lt;&lt; <span class="number">1</span>) + <span class="number">1</span>;
+<span class="keyword">if</span> (newCapacity - MAX_ARRAY_SIZE &gt; <span class="number">0</span>) {
+    <span class="keyword">if</span> (oldCapacity == MAX_ARRAY_SIZE)
+        <span class="comment">// Keep running with MAX_ARRAY_SIZE buckets</span>
+        <span class="keyword">return</span>;
+    newCapacity = MAX_ARRAY_SIZE;
+}
+Entry&lt;?,?&gt;[] newMap = <span class="keyword">new</span> Entry&lt;?,?&gt;[newCapacity];
+</code></pre><p>每个桶迁移，在链表头部插入：</p>
+<pre><code>for (<span class="built_in">int</span> i = oldCapacity ; i-- &gt; <span class="number">0</span> ;) {
+        for (<span class="built_in">Entry</span>&lt;K,V&gt; old = (<span class="built_in">Entry</span>&lt;K,V&gt;)oldMap[i] ; old <span class="comment">!= null ; ) {</span>
+            <span class="built_in">Entry</span>&lt;K,V&gt; e = old;
+            old = old.next;
+
+            <span class="built_in">int</span> <span class="built_in">index</span> = (e.hash &amp; x7FFFFFFF) % newCapacity;
+            e.next = (<span class="built_in">Entry</span>&lt;K,V&gt;)newMap[<span class="built_in">index</span>];
+            newMap[<span class="built_in">index</span>] = e;
+        }
+    }
+</code></pre><h1 id="4-_Collections同步容器">4. Collections同步容器</h1><p>结合Java容器类的体系结构，Collections中同步装饰器同样包含：<br><code>SynchronizedCollection</code>;<br><code>SynchronizedList</code>；<br><code>SynchronizedSet</code>；<br><code>SynchronizedMap</code>；<br>等等；</p>
+<h2 id="要点">要点</h2><p>（1）基于装饰器模式，大多操作方法都是对基本容器类的委托；<br>（2）基于额外的<code>final Object mutex;</code>互斥锁，但是在客户端同步仍然可以基于容器对象同步复合操作；<br>（3）迭代器需要额外的同步：</p>
+<pre><code><span class="keyword">public</span> ListIterator&lt;E&gt; listIterator() {
+        <span class="function"><span class="keyword">return</span> list.<span class="title">listIterator</span><span class="params">()</span></span>; <span class="comment">// Must be manually synched by user</span>
+    }
+    <span class="keyword">public</span> ListIterator&lt;E&gt; listIterator(<span class="keyword">int</span> index) {
+        <span class="function"><span class="keyword">return</span> list.<span class="title">listIterator</span><span class="params">(index)</span></span>; <span class="comment">// Must be manually synched by user</span>
+    }
+</code></pre><p>（4）子列表，Map的Set视图等提供的并不是实时的最新信息，因此可以根据需求基于这个事实指定同步策略，比如利用不可变对象，加强锁保护等等；</p>
+<h2 id="具体类实现要点">具体类实现要点</h2><p><strong>SynchronizedList：</strong><br>（1）List一般可以基于数组和链表两种实现，可以通过是否实现<code>RandomAccess</code>接口进行判断，这里区分的目的在与保持RandomAccess接口实现：</p>
+<pre><code><span class="function"><span class="keyword">public</span> List&lt;E&gt; <span class="title">subList</span><span class="params">(<span class="keyword">int</span> fromIndex, <span class="keyword">int</span> toIndex)</span> </span>{
+        <span class="keyword">synchronized</span> (mutex) {
+            <span class="keyword">return</span> <span class="keyword">new</span> SynchronizedRandomAccessList&lt;&gt;(
+                list.subList(fromIndex, toIndex), mutex);
+        }
+    }
+</code></pre><p>（2）subList提供另外副本（弱一致性）：</p>
+<pre><code><span class="function"><span class="keyword">public</span> List&lt;E&gt; <span class="title">subList</span><span class="params">(<span class="keyword">int</span> fromIndex, <span class="keyword">int</span> toIndex)</span> </span>{
+        <span class="keyword">synchronized</span> (mutex) {
+            <span class="keyword">return</span> <span class="keyword">new</span> SynchronizedList&lt;&gt;(list.subList(fromIndex, toIndex),
+                                        mutex);
+        }
+    }
+</code></pre>
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java并发/">Java并发</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
   
     <article id="post-Java基础知识总结（九）——序列化" class="article article-type-post" itemscope itemprop="blogPost">
   
@@ -1657,81 +1824,6 @@ Pair &gt; Pair<span class="variable">&lt;?&gt;</span> &gt; Pair<span class="vari
       
 	<div class="article-tag tagcloud">
 		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java基础知识/">Java基础知识</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-  
-    <article id="post-TCP-IP总结（一）——基本概念" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/12/05/TCP-IP总结（一）——基本概念/" class="article-date">
-  	<time datetime="2015-12-05T10:56:37.000Z" itemprop="datePublished">2015-12-05</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/05/TCP-IP总结（一）——基本概念/">TCP/IP学习笔记（一）——基本概念</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>心得：<br>（1）分层设计屏蔽细节，各司其职，但是不要过于拘泥定义，像ARP，RARP就不好定位，结合实际解决问题才是主题；<br>（2）“自由地接受，保守地发送”是TCP/IP协议族每一层的稳健性原则；<br>（3）封装和分用是相对的两个过程；</p>
-<p>其他资料：<br>（1）阮一峰老师两篇博文：<br><a href="http://www.ruanyifeng.com/blog/2012/05/internet_protocol_suite_part_i.html" target="_blank" rel="external">互联网协议入门（一）</a><br><a href="http://www.ruanyifeng.com/blog/2012/06/internet_protocol_suite_part_ii.html" target="_blank" rel="external">互联网协议入门（二）</a></p>
-<h2 id="1-_分层">1. 分层</h2><p>层的设计可以隐藏层之间的细节，使得上层可透明地使用下层。</p>
-<p><strong>四层协议系统（或者再加上“实体层”）：</strong><br><strong>（1）链路层：</strong>操作系统中的设备驱动程序和网络接口卡（网卡），它们一起处理与电缆的<strong>物理接口细节</strong>，比如以太网协议，每个网卡有独一无二的MAC地址，根据对方的MAC地址发送给对方，要获得对方MAC地址就需要使用<strong>ARP（地址解析，已知IP获取对方MAC地址）</strong>，发送数据在同一网络中进行<strong>广播</strong>，因此一共要发n-1个包，因此需要网络层划分子网；<br><strong>（2）网络层：</strong>处理分组在网络中的活动，在TCP/IP协议族中，包括IP协议和ICMP协议（Internet互联网控制报文协议）以及IGMP协议（Intenet组管理协议）；<br><strong>（3）传输层：</strong>提供两台主机间应用程序的<strong>端到端</strong>通信，包括TCP和UDP；<br><strong>（4）应用层：</strong>负责处理特定的应用程序细节。比如Telnet，FTP，SMTP，SNMP，HTTP；</p>
-<p><strong>注意</strong>：<br>（1）应用层和传输层是端到端（End-to-end）协议，只有端系统需要使用它们；<br>网络层提供逐跳（Hop-by-hop）协议，两端系统和中间系统都要使用它；<br>（2）底3层在操作系统的内核中进行，应用层处理应用程序的细节在应用进程；</p>
-<p>路由器（网关）：使用相同协议族连接两（多）个不同类型的<strong>物理网络</strong>，比如以太网和令牌环网络，它是在网络层对网络进行互连；<br>网桥：在链路层上对网络进行互连，使得多个LAN组合在一起，这样对上层来说就像一个局域网；</p>
-<h2 id="2-_TCP/IP协议族分层：">2. TCP/IP协议族分层：</h2><h3 id="网络层">网络层</h3><p><strong>IP</strong>：提供的是不可靠的服务，尽可能快的把分组从源结点发送到目标结点（路由），不提供可靠性保证；<br><strong>ICMP</strong>：是IP协议的附属协议，IP层使用ICMP与其他主机或路由器交换错误和其他重要信息，Ping和Traceroute都使用了ICMP；<br><strong>IGMP</strong>：Internet组管理协议，它用来把一个UDP数据报多播到多个主机；</p>
-<h3 id="传输层">传输层</h3><p><strong>TCP</strong>：在IP上建立了一个<strong>可靠</strong>的服务，比如超时重传，序列号+确认等等；<br><strong>UDP</strong>：没有确认号，数据报的到达顺序也不一定按顺序，因此它是“无连接的”；</p>
-<h3 id="链路层">链路层</h3><p><strong>ARP和RARP</strong>：地址解析协议和逆地址解析协议用来转换IP层和网络接口层使用的地址（IP地址和MAC地址）；</p>
-<h2 id="3-_IP地址">3. IP地址</h2><p>A：0    ，    8位网络号（0～127）；<br>B：10，16位网络号（128～191）；<br>C：110，24位网络号（192～223）；<br>D：1110，多播，28位多播组号（224～239）；<br>E：11110    ，27位留待后用（240～255）；</p>
-<p><strong>InterNIC</strong>（互联网络信息中心），分配网络号，主机号分配由系统管理员负责；<br>InterNIC由三部分：<strong>注册服务</strong>，<strong>目录和数据库服务</strong>，<strong>信息服务</strong>。 </p>
-<p><strong>IP地址分类</strong>：<br>（1）单播地址；<br>（2）广播地址；<br>（3）多播（组播）地址；</p>
-<h2 id="4-_域名系统">4. 域名系统</h2><p>DNS，一个分布式数据库，IP和主机名之间的映射信息。</p>
-<h2 id="5-_封装">5. 封装</h2><p>应用数据被送入<strong>协议栈</strong>，通过每一层增加首部信息（有时包括尾部信息）。<br>TCP段——&gt;IP数据报（最长65535）——&gt;帧（Frame，以太网传输的比特流，46～1500字节）；<br><strong>注意点</strong>：<br>（1）IP接受TCP，UDP，ICMP，IGMP的数据，因此有一个8位的协议域标识；<br>（2）IP，ARP和RARP数据，需要网络接口（网卡）发送和接受，因此以太网帧首部也有标识（16位帧类型域）指明生成数据的网络层协议；<br>（3）协议具体属于那一层并不是绝对可以划分的，比如ARP，RARP即使网络驱动程序一部分，也有以太网数据帧类型；ICMP和IGMP既被封装IP数据报，也是IP的附属协议；</p>
-<h2 id="6-_分用（Demultiplexing）">6. 分用（Demultiplexing）</h2><p><strong>分用</strong>：主机接受到以太网数据帧后，数据需要<strong>从底向上升</strong>去掉各层协议的首部。每层协议盒检查报文首部的协议标识，确定接收的上层协议。</p>
-<h2 id="7-_客户-服务器模型">7. 客户-服务器模型</h2><p><strong>分类</strong>：<strong>重复型</strong>和<strong>并发型</strong>；<br>一般来说，TCP服务器是并发的，UDP服务器是重复的；</p>
-<h2 id="8-_端口号">8. 端口号</h2><p>0-1023是系统占用端口号（保留端口号）<br>FTP：21；<br>Telnet：23；<br>TFTP：69；</p>
-<p>服务器使用知名端口号，客户端使用临时设定的端口号；</p>
-<p>/etc/services包含了知名端口号，查看<strong>知名端口号</strong>：<br>grep telnet /etc/services</p>
-<h2 id="9-_标准化过程">9. 标准化过程</h2><p>TCP/IP协议族的重要组织：<br>（1）ISOC：Internet协会；<br>（2）IAB：Internet体系结构委员会；<br>（3）IETF：Internet工程专门小组；<br>（4）IRIF：Internet研究专门小组；</p>
-<p>RFC：Internet正式标准：<br>（1）赋值RFC：1340，Internet协议中使用的数字和常数；<br>（2）Internet正式标准协议，RFC1600；<br>（3）主机需求RFC，1122和1123；<br>（4）路由器需求RFC，1009；</p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/TCP-IP/">TCP/IP</a></li></ul>
 	</div>
 
       
